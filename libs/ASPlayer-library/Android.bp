@@ -1,0 +1,45 @@
+package {
+    // See: http://go/android-license-faq
+    // A large-scale-change added 'default_applicable_licenses' to import
+    // all of the 'license_kinds' from "vendor_amlogic_common_license"
+    // to get the below license kinds:
+    //   SPDX-license-identifier-Apache-2.0
+    default_applicable_licenses: ["vendor_amlogic_common_license"],
+}
+
+java_library {
+    name: "droidlogic.jasplayer",
+
+    defaults: ["asplayer-module-sdk-version-defaults"],
+
+    vendor: true,
+    sdk_version: "system_current",
+    //installable: true,
+
+    dxflags: ["--core-library"],
+
+//    dex_preopt: {
+//        enabled: false,
+//    },
+
+    srcs: [
+        "src/main/**/*.java",
+    ],
+
+    static_libs: [
+        "androidx.annotation_annotation",
+    ],
+
+    required: [
+        "droidlogic.jasplayer.xml",
+    ]
+}
+
+//copy xml to permissions directory
+prebuilt_etc {
+    name: "droidlogic.jasplayer.xml",
+
+    vendor: true,
+    src: "droidlogic.jasplayer.xml",
+    sub_dir: "permissions",
+}

@@ -1,0 +1,76 @@
+plugins {
+    id 'com.android.library'
+}
+
+// 是否调用板卡中的libjniasplayer-jni.so
+def useSystemJniASPlayer = USE_SYSTEM_ASPLAYER.toBoolean() ? 1 : 0
+
+android {
+    compileSdkVersion rootProject.ext.android.compileSdkVersion
+    buildToolsVersion rootProject.ext.android.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.android.minSdkVersion
+        targetSdkVersion rootProject.ext.android.targetSdkVersion
+        versionCode rootProject.ext.build.versionCode
+        versionName rootProject.ext.build.versionName
+
+        externalNativeBuild {
+            cmake {
+                cppFlags "-DUSE_SYSTEM_SO=${useSystemJniASPlayer}"
+                arguments "-DUSE_SYSTEM_SO=${useSystemJniASPlayer}"
+            }
+        }
+
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a'
+        }
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    sourceSets {
+        main {
+            java.srcDirs = ['src/main/java', 'src/main/no_framework']
+            jni {
+                srcDirs 'src\\main\\jni'
+            }
+            jniLibs.srcDir 'src/main/jniLibs'
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField("Boolean", "USE_SYSTEM_ASPLAYER", USE_SYSTEM_ASPLAYER.toBoolean() ? "true" : "false")
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField("Boolean", "USE_SYSTEM_ASPLAYER", USE_SYSTEM_ASPLAYER.toBoolean() ? "true" : "false")
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    compileOnly files('sdk/tuner_framework.jar')
+
+    implementation project(":JNI-ASPlayer-library")
+
+    testImplementation rootProject.ext.testDep.junit
+    androidTestImplementation rootProject.ext.testDep.androidJunit
+    androidTestImplementation rootProject.ext.testDep.espresso
+}

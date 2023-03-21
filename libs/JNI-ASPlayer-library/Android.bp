@@ -1,0 +1,103 @@
+package {
+    // See: http://go/android-license-faq
+    // A large-scale-change added 'default_applicable_licenses' to import
+    // all of the 'license_kinds' from "vendor_amlogic_common_license"
+    // to get the below license kinds:
+    //   SPDX-license-identifier-Apache-2.0
+    default_applicable_licenses: ["vendor_amlogic_common_license"],
+}
+
+java_library {
+    name: "droidlogic.jniasplayer",
+
+    defaults: ["asplayer-module-sdk-version-defaults"],
+
+    vendor: true,
+    sdk_version: "system_current",
+    //installable: true,
+
+    dxflags: ["--core-library"],
+
+//    dex_preopt: {
+//        enabled: false,
+//    },
+
+    srcs: [
+        "src/main/**/*.java",
+    ],
+
+    required: [
+        "droidlogic.jniasplayer.xml",
+    ],
+
+    static_libs: [
+        "androidx.annotation_annotation",
+        "droidlogic.jasplayer",
+    ],
+}
+
+cc_library_headers {
+    name: "libjniasplayer-headers",
+
+    vendor_available:true,
+    system_ext_specific: true,
+
+    export_include_dirs: [
+        "src/main/jni/include",
+    ]
+}
+
+cc_library_shared {
+    name: "libjniasplayer-jni",
+
+    vendor_available:true,
+    system_ext_specific: true,
+
+    srcs: [
+        "src/main/jni/JNIASPlayer.cpp",
+        "src/main/jni/JniASPlayerJNI.cpp",
+        "src/main/jni/JniMediaFormat.cpp",
+        "src/main/jni/NativeHelper.cpp",
+        "src/main/jni/JniPlaybackListener.cpp",
+    ],
+
+    cppflags: [
+        "-Wno-unused-parameter",
+        "-Wno-unused-function",
+    ],
+
+    //include_dirs
+    header_libs: [
+        "jni_headers",
+        "libjniasplayer-headers",
+    ],
+
+//    arch: {
+//        arm: {
+//            instruction_set: "arm",
+//        },
+//        arm64: {
+//            enabled: true,
+//        },
+//    },
+
+    shared_libs: [
+        "liblog",
+        "libbase",
+        "libcutils",
+        "libutils",
+    ],
+
+    local_include_dirs: [
+        "src/main/jni/common",
+    ],
+}
+
+//copy xml to permissions directory
+prebuilt_etc {
+    name: "droidlogic.jniasplayer.xml",
+
+    vendor: true,
+    src: "droidlogic.jniasplayer.xml",
+    sub_dir: "permissions",
+}

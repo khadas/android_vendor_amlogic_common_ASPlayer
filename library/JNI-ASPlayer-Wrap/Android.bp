@@ -1,0 +1,127 @@
+package {
+    // See: http://go/android-license-faq
+    // A large-scale-change added 'default_applicable_licenses' to import
+    // all of the 'license_kinds' from "vendor_amlogic_common_license"
+    // to get the below license kinds:
+    //   SPDX-license-identifier-Apache-2.0
+    default_applicable_licenses: ["vendor_amlogic_common_license"],
+}
+
+cc_library_shared {
+    name: "libjniasplayer-wrapper",
+
+    vendor_available:true,
+    system_ext_specific: true,
+
+    srcs: [
+        "src/main/jni/ASPlayerJni.cpp",
+        "src/main/jni/DynamicJniASPlayerWrapper.cpp",
+        "src/main/jni/JniASPlayerWrapper.cpp",
+        "src/main/jni/native-lib.cpp",
+        "src/main/jni/PlaybackListenerWrapper.cpp",
+        "src/main/jni/common/utils/AutoEnv.cpp",
+    ],
+
+// Method 1, use /system_ext/lib/libjniasplayer-jni.so(/vendor/lib/libjniasplayer-jni.so)
+/*
+    cflags: [
+        "-Wno-unused-parameter",
+        "-DUSE_SYSTEM_SO=1",
+    ],
+*/
+// Method 2, use app/lib/libjniasplayer-jni.so
+    cflags: [
+        "-Wno-unused-parameter",
+        "-DUSE_SYSTEM_SO=0",
+    ],
+
+    //include_dirs
+    header_libs: [
+        "jni_headers",
+        "libjniasplayer-headers",
+    ],
+
+    arch: {
+        arm: {
+            instruction_set: "arm",
+        },
+        arm64: {
+            enabled: true,
+        },
+    },
+
+    shared_libs: [
+        "liblog",
+        "libbase",
+        "libjniasplayer-jni",
+    ],
+
+    include_dirs: [
+        "frameworks/native/include",
+    ],
+
+    local_include_dirs: [
+        "src/main/jni/common",
+        "src/main/jni/include",
+    ],
+}
+
+//copy xml to permissions directory
+prebuilt_etc {
+    name: "droidlogic.jniasplayer.wrapper.xml",
+
+    vendor: true,
+    src: "droidlogic.jniasplayer.wrapper.xml",
+    sub_dir: "permissions",
+}
+
+java_library {
+    name: "droidlogic.jniasplayer.wrapper",
+
+    vendor: true,
+    sdk_version: "system_current",
+    installable: true,
+
+    dxflags: ["--core-library"],
+//    dex_preopt: {
+//        enabled: false,
+//    },
+
+    required: [
+        "droidlogic.jniasplayer.wrapper.xml",
+    ],
+
+// Method 1: jniasplayer-wrapper -> normal java_library, jniasplayer -> framework
+// don't build droidlogic.jniasplayer.wrapper as framework, just as normal java_library
+// jniasplayer was built as framework, so use as libs(runtime dependencience)
+//    srcs: [
+//        "src/main/java/**/*.java",
+//        "src/main/jniasplayer_framework/**/*.java",
+//    ],
+/*
+    static_libs: [
+
+    ],
+
+    libs: [
+        "androidx.annotation_annotation",
+        "droidlogic.jniasplayer",
+    ]
+*/
+
+// Method 2: jniasplayer-wrapper -> static_libs, jniasplayer -> static_libs, no framework
+// build jniasplayer-wrapper and jniasplayer into app
+    srcs: [
+        "src/main/java/**/*.java",
+        "src/main/no_framework/**/*.java",
+    ],
+
+    static_libs: [
+        "androidx.annotation_annotation",
+        "droidlogic.jniasplayer",
+    ],
+
+    libs: [
+    ],
+
+}

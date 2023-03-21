@@ -1,0 +1,89 @@
+package {
+    // See: http://go/android-license-faq
+    // A large-scale-change added 'default_applicable_licenses' to import
+    // all of the 'license_kinds' from "vendor_amlogic_common_license"
+    // to get the below license kinds:
+    //   SPDX-license-identifier-Apache-2.0
+    default_applicable_licenses: ["vendor_amlogic_common_license"],
+}
+
+prebuilt_etc {
+    name: "privapp_whitelist_com.amlogic.asplayer.demo",
+    system_ext_specific: true,
+    sub_dir: "permissions",
+    src: "com.amlogic.asplayer.demo.xml",
+    filename_from_src: true,
+}
+
+android_app {
+    name: "ASPlayerDemo",
+
+    srcs: ["src/main/**/*.java"],
+
+    resource_dirs: ["src/main/res"],
+
+    platform_apis: true,
+    system_ext_specific: true,
+    privileged: true,
+
+    certificate: "platform",
+
+    dex_preopt: {
+        enabled: false,
+    },
+
+    optimize: {
+        enabled: false,
+    },
+
+    required: [
+        "privapp_whitelist_com.amlogic.asplayer.demo",
+    ],
+
+// Method 1: jniasplayer-wrapper -> static_libs, jniasplayer -> framework
+// use jniasplayer-wrapper as normal java_library, need package jniasplayer-wrapper into apk
+// so, use droidlogic.jniasplayer.wrapper as static_libs
+// jniasplayer built into /vendor/framework/xx.jar
+// so, use droidlogic.jniasplayer as libs(runtime dependencience)
+/*
+    manifest: "src/jniasplayer_framework/AndroidManifest.xml",
+    static_libs: [
+        "androidx.recyclerview_recyclerview",
+        "androidx.appcompat_appcompat",
+        "androidx.annotation_annotation",
+        "androidx-constraintlayout_constraintlayout",
+        "droidlogic.jniasplayer.wrapper",
+    ],
+
+    libs: [
+        "droidlogic.jniasplayer",
+    ],
+
+    jni_libs: [
+        "libjniasplayer-wrapper",
+    ],
+*/
+
+// Method 2: jniasplayer-wrapper -> static_libs, jniasplayer -> static_libs
+// built jniasplayer-wrapper as normal java_library
+// built jniasplayer as normal java_library
+    manifest: "src/main/AndroidManifest.xml",
+    static_libs: [
+        "androidx.recyclerview_recyclerview",
+        "androidx.appcompat_appcompat",
+        "androidx.annotation_annotation",
+        "androidx-constraintlayout_constraintlayout",
+        "droidlogic.jniasplayer.wrapper",
+        "droidlogic.jniasplayer",
+    ],
+
+    libs: [
+
+    ],
+
+    jni_libs: [
+        "libjniasplayer-jni",
+        "libjniasplayer-wrapper",
+    ],
+
+}

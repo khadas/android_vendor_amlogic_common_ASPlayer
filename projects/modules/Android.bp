@@ -1,0 +1,40 @@
+package {
+    // See: http://go/android-license-faq
+    // A large-scale-change added 'default_applicable_licenses' to import
+    // all of the 'license_kinds' from "vendor_amlogic_common_license"
+    // to get the below license kinds:
+    //   SPDX-license-identifier-Apache-2.0
+    default_applicable_licenses: ["vendor_amlogic_common_license"],
+}
+
+ASPlayerPrefix = "ASPlayer"
+
+// ASPlayerVersionMajor: Architecture changes
+// ASPlayerVersionMinor: Feature changes
+// ASPlayerVersionPatch: Incremental number on every release
+// ASPlayerVersionPhase: -R (Release) or +D (Development)
+ASPlayerVersionMajor = "0"
+ASPlayerVersionMinor = "1"
+ASPlayerVersionPatch = "0"
+ASPlayerVersionPhase = "+D"
+
+version_name = ASPlayerPrefix + "." + ASPlayerVersionMajor + "." + ASPlayerVersionMinor + "." + ASPlayerVersionPatch + ASPlayerVersionPhase
+version_code = ASPlayerVersionMajor + ASPlayerVersionMinor + ASPlayerVersionPatch
+
+java_defaults{
+    name: "asplayer-module-app-version-defaults",
+
+    aaptflags: [
+        "--version-name",
+        version_name,
+        "--version-code",
+        version_code,
+    ],
+}
+
+java_defaults{
+    name: "asplayer-module-sdk-version-defaults",
+
+    //sdk_version: "system_current",
+    min_sdk_version: "29",
+}

@@ -1,0 +1,12 @@
+* text=auto
+
+*.c text eof=lf
+*.h text eof=lf
+*.cpp text eof=lf
+
+*.java text eof=lf
+*.xml text eof=lf
+
+*.bp text eof=lf
+*.mk text eof=lf
+

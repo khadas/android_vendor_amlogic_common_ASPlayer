@@ -1,0 +1,39 @@
+static def gitVersionCode() {
+    def cmd = 'git rev-list HEAD --count'
+    return cmd.execute().text.trim().toInteger()
+}
+
+static def releaseBuildTime() {
+    return new Date().format("yyyy.MM.dd", TimeZone.getTimeZone("UTC"))
+}
+
+ext {
+    android = [
+            // compilation
+            compileSdkVersion:  30,
+            minSdkVersion: 29,
+            targetSdkVersion: 30,
+            buildToolsVersion: "30.0.0"
+    ]
+
+    // build
+    build = [
+            versionCode: 1,
+            versionName: "1.0",
+            buildTime: releaseBuildTime()
+    ]
+
+    dep = [
+            appcompat: "androidx.appcompat:appcompat:1.1.0",
+            annotation: "androidx.annotation:annotation:1.1.0",
+            constraintlayout: "androidx.constraintlayout:constraintlayout:2.1.3",
+            material: "com.google.android.material:material:1.1.0",
+            recyclerView: "androidx.recyclerview:recyclerview:1.1.0"
+    ]
+
+    testDep = [
+            junit: "junit:junit:4.13.2",
+            androidJunit: "androidx.test.ext:junit:1.1.3",
+            espresso: "androidx.test.espresso:espresso-core:3.4.0"
+    ]
+}

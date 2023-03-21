@@ -1,0 +1,74 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    compileSdkVersion rootProject.ext.android.compileSdkVersion
+    buildToolsVersion rootProject.ext.android.buildToolsVersion
+
+    defaultConfig {
+        applicationId "com.amlogic.asplayer.demo"
+        minSdkVersion rootProject.ext.android.minSdkVersion
+        targetSdkVersion rootProject.ext.android.targetSdkVersion
+        versionCode rootProject.ext.build.versionCode
+        versionName rootProject.ext.build.versionName
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile 'src/main/AndroidManifest.xml'
+        }
+    }
+
+    signingConfigs {
+        platform {
+            keyAlias 'platform'
+            keyPassword 'android'
+            storeFile file("${gradle.ext.keystoreDir}/platform_aosp.keystore")
+            storePassword 'android'
+
+            v1SigningEnabled true
+            v2SigningEnabled true
+        }
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.platform
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.platform
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    packagingOptions {
+        pickFirst 'lib/armeabi-v7a/libjniasplayer-jni.so'
+        pickFirst 'lib/arm64-v8a/libjniasplayer-jni.so'
+    }
+}
+
+dependencies {
+    compileOnly files('sdk/tuner_framework.jar')
+
+    implementation project(":JNI-ASPlayer-Wrap")
+    implementation project(":ASPlayer-library")
+
+    implementation rootProject.ext.dep.appcompat
+    implementation rootProject.ext.dep.material
+    implementation rootProject.ext.dep.constraintlayout
+
+    testImplementation rootProject.ext.testDep.junit
+    androidTestImplementation rootProject.ext.testDep.androidJunit
+    androidTestImplementation rootProject.ext.testDep.espresso
+}

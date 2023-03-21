@@ -1,0 +1,54 @@
+gradle.ext.targetProduct = "ASPlayer"
+println("Target product: " + gradle.ext.targetProduct)
+
+def isWindows() {
+    String osname = System.properties['os.name']
+    return osname.contains('windows') || osname.contains("Windows");
+}
+
+// get root dir
+def getAospDir = {
+    // try to find root dir with root path of project
+    // it supposes that path has the following pattern:
+    // ../xxx/amlogic/common/apps/ASPlayer/projects/yyy/dtvmodules
+    def vendorPos = rootDir.getPath().indexOf("vendor");
+    if (vendorPos != -1)
+        return rootDir.getPath().substring(0, vendorPos);
+
+    // pattern does not match, use env variable ANDROID_BUILD_TOP
+    return System.getenv('ANDROID_BUILD_TOP')
+}
+
+if (isWindows()) {
+    println("System: Windows")
+    gradle.ext.rootDir = String.format("%s/../../../%s", rootDir.getPath(), gradle.ext.targetProduct)
+    gradle.ext.projectDir = String.format("%s/../../../%s/projects", rootDir.getPath(), gradle.ext.targetProduct)
+    gradle.ext.keystoreDir = String.format("%s/modules/keystore", gradle.ext.projectDir)
+} else {
+    gradle.ext.aospDir = getAospDir()
+    gradle.ext.rootDir = String.format("%s/vendor/amlogic/common/apps/%s", gradle.ext.aospDir, gradle.ext.targetProduct)
+    gradle.ext.projectDir = String.format("%s/vendor/amlogic/common/apps/%s/projects", gradle.ext.aospDir, gradle.ext.targetProduct)
+    gradle.ext.keystoreDir = String.format("%s/modules/keystore", gradle.ext.projectDir)
+}
+println("root dir: " + gradle.ext.rootDir)
+println("projects dir: " + gradle.ext.projectDir)
+println("keystore dir: " + gradle.ext.keystoreDir)
+
+def rootProjectDir = gradle.ext.rootDir
+def projectDir = gradle.ext.projectDir
+
+include ':ASPlayer-library'
+project(":ASPlayer-library").projectDir = file("${rootProjectDir}/libs/ASPlayer-library")
+gradle.ext.ASPlayerLibraryDir = project(":ASPlayer-library").projectDir.getAbsolutePath()
+
+include ':JNI-ASPlayer-library'
+project(":JNI-ASPlayer-library").projectDir = file("${rootProjectDir}/libs/JNI-ASPlayer-library")
+
+include ':JNI-ASPlayer-Wrap'
+project(":JNI-ASPlayer-Wrap").projectDir = file("${rootProjectDir}/library/JNI-ASPlayer-Wrap")
+gradle.ext.jniASPlayerWrapperDir = project(":JNI-ASPlayer-Wrap").projectDir.getAbsolutePath()
+
+include ':ASPlayerDemo'
+project(":ASPlayerDemo").projectDir = file("${rootProjectDir}/apps/ASPlayerDemo")
+
+rootProject.name = "ASPlayer"

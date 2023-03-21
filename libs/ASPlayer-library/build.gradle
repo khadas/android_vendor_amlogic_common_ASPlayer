@@ -1,0 +1,55 @@
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    compileSdkVersion rootProject.ext.android.compileSdkVersion
+    buildToolsVersion rootProject.ext.android.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.android.minSdkVersion
+        targetSdkVersion rootProject.ext.android.targetSdkVersion
+        versionCode rootProject.ext.build.versionCode
+        versionName rootProject.ext.build.versionName
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    compileOnly files('sdk/tuner_framework.jar')
+
+    testImplementation rootProject.ext.testDep.junit
+    androidTestImplementation rootProject.ext.testDep.androidJunit
+    androidTestImplementation rootProject.ext.testDep.espresso
+}
+
+task clearJar(type: Delete) {
+    delete "build/libs/" + ASPlayerJarName + ".jar"
+}
+
+// make asplayer.jar
+task makeJar(type: Copy) {
+    from "build/intermediates/aar_main_jar/release/"
+    into 'build/sdk/'
+
+    include 'classes.jar'
+    rename ('classes.jar', ASPlayerJarName + ".jar")
+}
+
+makeJar.dependsOn(clearJar, build)

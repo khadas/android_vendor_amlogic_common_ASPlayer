@@ -1,0 +1,124 @@
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    compileSdkVersion rootProject.ext.android.compileSdkVersion
+    buildToolsVersion rootProject.ext.android.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.android.minSdkVersion
+        targetSdkVersion rootProject.ext.android.targetSdkVersion
+        versionCode rootProject.ext.build.versionCode
+        versionName rootProject.ext.build.versionName
+
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++11"
+            }
+        }
+
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a'
+        }
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+}
+
+dependencies {
+    compileOnly files('sdk/tuner_framework.jar')
+
+    api project(":ASPlayer-library")
+
+    testImplementation rootProject.ext.testDep.junit
+    androidTestImplementation rootProject.ext.testDep.androidJunit
+    androidTestImplementation rootProject.ext.testDep.espresso
+}
+
+task clearSo(type: Delete) {
+    delete 'build/libs/libs/'
+}
+
+// release Jni_ASPlayer so
+task releaseSo(type: Copy) {
+    from "build/intermediates/cmake/release/obj/"
+    into 'build/sdk/libs/'
+
+    include '**/*.so'
+}
+
+releaseSo.dependsOn(clearSo, build)
+
+task releaseInclude(type: Copy) {
+    from "src/main/jni/include/"
+    into "build/sdk/include/"
+
+    include "JNIASPlayer.h"
+}
+
+task releaseJniASPlayer(type: Jar) {
+    // merge ASPlayer.jar and JniASPlayer.jar
+    archivesBaseName = JniASPlayerJarName
+    from(project.zipTree('build/intermediates/aar_main_jar/release/classes.jar'))
+    from(project.zipTree(gradle.ext.ASPlayerLibraryDir + "/build/sdk/" + ASPlayerJarName + ".jar"))
+    getDestinationDirectory().set(getProject().file('build/sdk/'))
+}
+
+// release Jni_ASPlayer (so / include / jar)
+releaseJniASPlayer.dependsOn(build, releaseSo, releaseInclude)
+
+void copyJniAsPlayerToJniASPlayerWrapper() {
+    // copy so to Jni_ASPlayer_Wrapper
+    String soDir = project.projectDir.getAbsolutePath() + "/build/intermediates/cmake/release/obj/"
+    String destDir = gradle.ext.jniASPlayerWrapperDir + "/src/main/jniLibs/"
+    println(String.format("copy so from: %s => %s", soDir, destDir))
+
+    copy {
+        from soDir
+        into destDir
+        include('**/*.so')
+    }
+
+    // copy jni_asplayer include to JniASPlayerWrapper
+    String destIncludeDir = gradle.ext.jniASPlayerWrapperDir + "/src/main/jni/include/"
+    String srcIncludeDir = project.projectDir.getAbsolutePath() + "/src/main/jni/include/"
+    copy {
+        from srcIncludeDir
+        into destIncludeDir
+        include "JNIASPlayer.h"
+    }
+    println(String.format("copy AmASPlayer.h from: %s => %s", srcIncludeDir, destIncludeDir))
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name.equalsIgnoreCase("assembleRelease")) {
+        println("task: " + task.name + ", need copy JNI-ASPlayer so to JNI-ASPlayer-Wrap")
+        task.doLast {
+            copyJniAsPlayerToJniASPlayerWrapper()
+        }
+    }
+}
