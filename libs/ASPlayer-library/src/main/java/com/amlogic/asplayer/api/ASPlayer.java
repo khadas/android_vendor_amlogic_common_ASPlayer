@@ -15,6 +15,7 @@ import android.os.Looper;
 import android.util.Log;
 import android.view.Surface;
 
+import com.amlogic.asplayer.BuildConfiguration;
 import com.amlogic.asplayer.core.BaseAppContext;
 import com.amlogic.asplayer.core.ASPlayerConfig;
 import com.amlogic.asplayer.core.ASPlayerImpl;
@@ -50,6 +51,25 @@ public class ASPlayer implements IASPlayer {
             looper = Looper.getMainLooper();
         }
         mPlayer = new ASPlayerImpl(mId, appContext, tuner, mConfig, looper);
+
+        logVersionInfo();
+    }
+
+    private void logVersionInfo() {
+        if (BuildConfiguration.HAVE_VERSION_INFO) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("------------------------------------\n");
+            sb.append(String.format("branch name:          %s\n", BuildConfiguration.BRANCH_NAME));
+            sb.append(String.format("%s\n", BuildConfiguration.COMMIT_CHANGE_ID));
+            sb.append(String.format("ID:                   %s\n", BuildConfiguration.COMMIT_PD));
+            sb.append(String.format("last changed:         %s\n", BuildConfiguration.LAST_CHANGED));
+            sb.append(String.format("build-time:           %s\n", BuildConfiguration.BUILD_TIME));
+            sb.append(String.format("build-name:           %s\n", BuildConfiguration.BUILD_NAME));
+            sb.append(String.format("uncommitted-file-num: %s\n", BuildConfiguration.GIT_UN_COMMIT_FILE_NUM));
+            sb.append(String.format("version:              %s\n", BuildConfiguration.VERSION_NAME));
+            sb.append("------------------------------------\n");
+            ASPlayerLog.i("%s", sb.toString());
+        }
     }
 
     @Override

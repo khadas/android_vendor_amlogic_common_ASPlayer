@@ -13,8 +13,8 @@ ASPlayerPrefix = "ASPlayer"
 // ASPlayerVersionMinor: Feature changes
 // ASPlayerVersionPatch: Incremental number on every release
 // ASPlayerVersionPhase: -R (Release) or +D (Development)
-ASPlayerVersionMajor = "0"
-ASPlayerVersionMinor = "1"
+ASPlayerVersionMajor = "1"
+ASPlayerVersionMinor = "0"
 ASPlayerVersionPatch = "0"
 ASPlayerVersionPhase = "+D"
 

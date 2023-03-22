@@ -507,7 +507,33 @@ jclass JniASPlayerJNI::findClass(const char *name) {
 
 JniASPlayer::JniASPlayer() : mJavaPlayer(nullptr), mPlaybackListener(nullptr),
     mEventCallback(nullptr), mEventUserData(nullptr) {
-
+#ifdef HAVE_VERSION_INFO
+    ALOGI("\n--------------------------------\n"
+            "ARCH:                 %s\n"
+            "branch name:          %s\n"
+            "%s\n"
+            "ID:                   %s\n"
+            "last changed:         %s\n"
+            "build-time:           %s\n"
+            "build-name:           %s\n"
+            "uncommitted-file-num: %s\n"
+            "version:              %s\n"
+            "--------------------------------\n",
+#if defined(__aarch64__)
+            "arm64",
+#else
+            "arm",
+#endif
+            BRANCH_NAME,
+            COMMIT_CHANGEID,
+            COMMIT_PD,
+            LAST_CHANGED,
+            BUILD_TIME,
+            BUILD_NAME,
+            GIT_UNCOMMIT_FILE_NUM,
+            ASPLAYER_VERSION
+    );
+#endif
 }
 
 JniASPlayer::~JniASPlayer() {

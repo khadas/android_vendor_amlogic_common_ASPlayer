@@ -7,10 +7,32 @@ package {
     default_applicable_licenses: ["vendor_amlogic_common_license"],
 }
 
+bootstrap_go_package {
+    name: "asplayer_sharelibAndGitInfo",
+    pkgPath: "android/soong/asplayerSharelibAndGitInfo",
+    deps: [
+        "blueprint",
+        "soong",
+        "soong-android",
+        "soong-java",
+        "soong-genrule",
+        "blueprint-bootstrap",
+        "soong-java-config",
+    ],
+    srcs: [
+        "asplayerSharelibAndGitInfo.go",
+    ],
+    pluginFor: ["soong_build"],
+}
+
+asplayerSharelibAndGitInfo_defaults {
+    name: "asplayer_sharelibAndGitInfo_defaults",
+}
+
 java_library {
     name: "droidlogic.jasplayer",
 
-    defaults: ["asplayer-module-sdk-version-defaults"],
+    defaults: [ "asplayer-module-sdk-version-defaults", "asplayer_sharelibAndGitInfo_defaults" ],
 
     vendor: true,
     sdk_version: "system_current",

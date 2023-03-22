@@ -7,6 +7,28 @@ package {
     default_applicable_licenses: ["vendor_amlogic_common_license"],
 }
 
+bootstrap_go_package {
+    name: "jniasplayer_sharelibAndGitInfo",
+    pkgPath: "android/soong/jniasplayerSharelibAndGitInfo",
+    deps: [
+        "blueprint",
+        "soong",
+        "soong-android",
+        "soong-cc",
+        "soong-genrule",
+        "blueprint-bootstrap",
+        "soong-cc-config",
+    ],
+    srcs: [
+        "jniasplayerSharelibAndGitInfo.go",
+    ],
+    pluginFor: ["soong_build"],
+}
+
+jniasplayerSharelibAndGitInfo_defaults {
+    name: "jniasplayer_sharelibAndGitInfo_defaults",
+}
+
 java_library {
     name: "droidlogic.jniasplayer",
 
@@ -50,6 +72,8 @@ cc_library_headers {
 cc_library_shared {
     name: "libjniasplayer-jni",
 
+    defaults: [ "jniasplayer_sharelibAndGitInfo_defaults" ],
+
     vendor_available:true,
     system_ext_specific: true,
 
@@ -61,7 +85,9 @@ cc_library_shared {
         "src/main/jni/JniPlaybackListener.cpp",
     ],
 
-    cppflags: [
+    cflags: [
+        "-Wall",
+        "-Werror",
         "-Wno-unused-parameter",
         "-Wno-unused-function",
     ],
