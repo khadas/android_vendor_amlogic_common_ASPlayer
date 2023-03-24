@@ -193,12 +193,12 @@ public class JniASPlayerWrapper implements IASPlayer {
 
     @Override
     public int startFast(float scale) {
-        return 0;
+        return native_startFast(scale);
     }
 
     @Override
     public int stopFast() {
-        return 0;
+        return native_stopFast();
     }
 
     @Override
@@ -433,5 +433,7 @@ public class JniASPlayerWrapper implements IASPlayer {
     private native int native_setAudioMute(boolean analogMute, boolean digitMute);
     private native void native_setAudioVolume(int volume);
     private native int native_getAudioVolume();
+    private native int native_startFast(float scale);
+    private native int native_stopFast();
     private native void native_release();
 }

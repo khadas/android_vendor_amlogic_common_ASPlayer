@@ -109,6 +109,10 @@ public:
 
     bool getAudioVolume(int *volume);
 
+    int startFast(float scale);
+
+    int stopFast();
+
     void setEventCallback(event_callback callback, void *eventUserData);
 
     bool getEventCallback(event_callback *callback, void **userdata);

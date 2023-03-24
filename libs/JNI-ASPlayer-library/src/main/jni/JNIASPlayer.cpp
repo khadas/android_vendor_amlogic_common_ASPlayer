@@ -354,6 +354,39 @@ jni_asplayer_result  JniASPlayer_getAudioVolume(jni_asplayer_handle handle, int3
 }
 
 /**
+ *@brief:        Start Fast play for specified JniASPlayer instance.
+ *@param:        Handle     JniASPlayer handle.
+ *@param:        scale      Fast play speed.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_startFast(jni_asplayer_handle handle, float scale) {
+    if (handle == 0) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
+    int ret = player->startFast(scale);
+    ALOGV("%s return: %d", __func__, ret);
+    return static_cast<jni_asplayer_result>(ret);
+}
+
+/**
+ *@brief:        Stop Fast play for specified JniASPlayer instance.
+ *@param:        Handle       JniASPlayer handle.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_stopFast(jni_asplayer_handle handle) {
+    if (handle == 0) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
+    int ret = player->stopFast();
+    ALOGV("%s return: %d", __func__, ret);
+    return static_cast<jni_asplayer_result>(ret);
+}
+
+/**
  *@brief:        Release specified JniASPlayer instance.
  *@param:        handle     JniASPlayer handle.
  *@return:       The JniASPlayer result.

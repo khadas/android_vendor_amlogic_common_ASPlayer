@@ -54,6 +54,8 @@ struct asplayer_t {
     jmethodID setAudioMuteMID;
     jmethodID setAudioVolumeMID;
     jmethodID getAudioVolumeMID;
+    jmethodID startFastMID;
+    jmethodID stopFastMID;
     jmethodID releaseMID;
     jmethodID addPlaybackListenerMID;
     jmethodID removePlaybackListenerMID;
@@ -413,6 +415,8 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
     gASPlayerCtx.setAudioMuteMID = GetMethodIDOrDie(env, gASPlayerCls, "setAudioMute", "(ZZ)I");
     gASPlayerCtx.setAudioVolumeMID = GetMethodIDOrDie(env, gASPlayerCls, "setAudioVolume", "(I)V");
     gASPlayerCtx.getAudioVolumeMID = GetMethodIDOrDie(env, gASPlayerCls, "getAudioVolume", "()I");
+    gASPlayerCtx.startFastMID = GetMethodIDOrDie(env, gASPlayerCls, "startFast", "(F)I");
+    gASPlayerCtx.stopFastMID = GetMethodIDOrDie(env, gASPlayerCls, "stopFast", "()I");
     gASPlayerCtx.addPlaybackListenerMID = GetMethodIDOrDie(env, gASPlayerCls, "addPlaybackListener", "(Lcom/amlogic/asplayer/api/TsPlaybackListener;)V");
     gASPlayerCtx.removePlaybackListenerMID = GetMethodIDOrDie(env, gASPlayerCls, "removePlaybackListener", "(Lcom/amlogic/asplayer/api/TsPlaybackListener;)V");
     gASPlayerCtx.releaseMID = GetMethodIDOrDie(env, gASPlayerCls, "release", "()V");
@@ -848,6 +852,28 @@ bool JniASPlayer::getAudioVolume(int *volume) {
     jint vol = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.getAudioVolumeMID);
     *volume = vol;
     return true;
+}
+
+int JniASPlayer::startFast(float scale) {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        ALOGE("%s[%d] error, failed to get jni env", __func__, __LINE__);
+        return -1;
+    }
+
+    jint ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.startFastMID, scale);
+    return ret;
+}
+
+int JniASPlayer::stopFast() {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        ALOGE("%s[%d] error, failed to get jni env", __func__, __LINE__);
+        return -1;
+    }
+
+    jint ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.stopFastMID);
+    return ret;
 }
 
 void JniASPlayer::setEventCallback(event_callback callback, void *eventUserData) {

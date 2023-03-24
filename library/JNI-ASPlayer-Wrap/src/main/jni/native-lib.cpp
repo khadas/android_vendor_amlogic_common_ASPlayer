@@ -105,9 +105,9 @@ static void create_asplayer(JNIEnv *env, jobject thiz, jobject initParams, jobje
     }
 
     jni_asplayer_handle handle = 0;
-    ALOGD("%s[%d] AmASPlayer_create start", __func__, __LINE__);
+    ALOGD("%s[%d] JniASPlayer_create start", __func__, __LINE__);
     jni_asplayer_result ret = asPlayer->create(params, (void*)jTuner, &handle);
-    ALOGD("%s[%d] AmASPlayer_create end", __func__, __LINE__);
+    ALOGD("%s[%d] JniASPlayer_create end", __func__, __LINE__);
     if (ret != JNI_ASPLAYER_OK) {
         ALOGE("failed to create ts player, ret: %d", ret);
         return;
@@ -708,6 +708,60 @@ native_get_audio_volume(JNIEnv *env, jobject thiz) {
 }
 
 static void
+asplayer_start_fast(JNIEnv *env, jobject thiz, jfloat scale) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return;
+    }
+
+    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
+    if (player == nullptr) {
+        LOG_GET_PLAYER_FAILED();
+        return;
+    }
+
+    jni_asplayer_result ret = player->startFast(scale);
+    LOG_FUNCTION_INT_END(ret);
+}
+
+static jint
+native_start_fast(JNIEnv *env, jobject thiz, jfloat scale) {
+    LOG_FUNCTION_ENTER();
+    jint result = JNI_ASPLAYER_OK;
+    asplayer_start_fast(env, thiz, scale);
+    LOG_FUNCTION_END();
+    return result;
+}
+
+static void
+asplayer_stop_fast(JNIEnv *env, jobject thiz) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return;
+    }
+
+    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
+    if (player == nullptr) {
+        LOG_GET_PLAYER_FAILED();
+        return;
+    }
+
+    jni_asplayer_result ret = player->stopFast();
+    LOG_FUNCTION_INT_END(ret);
+}
+
+static jint
+native_stop_fast(JNIEnv *env, jobject thiz) {
+    LOG_FUNCTION_ENTER();
+    jint result = JNI_ASPLAYER_OK;
+    asplayer_stop_fast(env, thiz);
+    LOG_FUNCTION_END();
+    return result;
+}
+
+static void
 asplayer_release(JNIEnv* env, jobject thiz) {
     LOG_FUNCTION_ENTER();
     if (env == nullptr) {
@@ -765,6 +819,8 @@ static JNINativeMethod methods[] = {
         {"native_setAudioMute", "(ZZ)I", (void*)native_set_audio_mute },
         {"native_setAudioVolume", "(I)V", (void*)native_set_audio_volume },
         {"native_getAudioVolume", "()I", (void*)native_get_audio_volume },
+        {"native_startFast", "(F)I", (void*)native_start_fast },
+        {"native_stopFast", "()I", (void*)native_stop_fast },
         {"native_release", "()V", (void*)native_release },
 };
 
@@ -818,7 +874,7 @@ jint JNI_OnLoad(JavaVM* vm, void* /*reserved*/) {
 #endif
 
     if (ret != JNI_ASPLAYER_OK) {
-        ALOGE("ERROR: AmASPlayer register jni env failed");
+        ALOGE("ERROR: JniASPlayer register jni env failed");
     }
 
     if (registerNatives(env) != JNI_TRUE) {

@@ -363,10 +363,22 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         mRendererScheduler.setSpeed(scale);
     }
 
+    private void handleStopFast() {
+        mRendererScheduler.setSpeed(1.0f);
+    }
+
     @Override
     public int stopFast() {
         if (DEBUG) ASPlayerLog.d("%s-%d stopFast start", TAG, mId);
-        return 0;
+        if (mPlayerHandler != null) {
+            mPlayerHandler.post(() -> {
+                handleStopFast();
+            });
+            return 0;
+        } else {
+            ASPlayerLog.w("%s-%d stopFast called, but playerHandler is null", TAG, mId);
+            return -1;
+        }
     }
 
     @Override

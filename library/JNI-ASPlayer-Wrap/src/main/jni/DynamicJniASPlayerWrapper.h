@@ -117,6 +117,8 @@ public:
     jni_asplayer_result setAudioMute(bool analogMute, bool digitMute);
     jni_asplayer_result setAudioVolume(int volume);
     jni_asplayer_result getAudioVolume(int *volume);
+    jni_asplayer_result startFast(float scale);
+    jni_asplayer_result stopFast();
     jni_asplayer_result release();
 
     void notifyPlaybackListeners(jni_asplayer_event *event);
