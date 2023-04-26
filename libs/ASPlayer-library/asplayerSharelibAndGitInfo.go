@@ -57,7 +57,7 @@ func setversion(ctx android.BaseContext) {
 
     // sdkVersion := ctx.DeviceConfig().PlatformVndkVersion()
 
-    sourceDir := dir + "/vendor/amlogic/ASPlayer"
+    sourceDir := dir + "/vendor/amlogic/common/ASPlayer"
     versionFile := sourceDir + "/version/VERSION"
     fmt.Println("ASPlayer versionFile: ", versionFile)
 
