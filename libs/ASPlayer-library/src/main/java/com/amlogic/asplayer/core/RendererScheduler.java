@@ -402,4 +402,11 @@ class RendererScheduler implements Runnable {
             mFirstAudioFrameShowed = true;
         }
     }
+
+    void flush() {
+        mVideoOutputPath.flush();
+        mAudioOutputPath.reset();
+        mPositionHandler.unsetOrigin();
+    }
+
 }

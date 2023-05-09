@@ -184,6 +184,12 @@ public class ASPlayer implements IASPlayer {
         }
     }
 
+    @Override
+    public void flushDvr() {
+        ASPlayerLog.i("%s-%d flushDvr start", TAG, mId);
+        mPlayer.flushDvr();
+    }
+
     /**
      * Set work mode to ASPlayer instance.
      *
@@ -352,12 +358,6 @@ public class ASPlayer implements IASPlayer {
         return mPlayer.setSurface(surface);
     }
 
-    @Override
-    public int setFccDummySurface(Surface surface) {
-        ASPlayerLog.i("%s-%d setFccDummySurface start surface: %s", TAG, mId, surface);
-        return 0;
-    }
-
     /**
      * Set video display match mode for ASPlayer instance.
      *
@@ -377,9 +377,9 @@ public class ASPlayer implements IASPlayer {
      * @param params Params need by demuxer and video decoder.
      */
     @Override
-    public int setVideoParams(VideoParams params) {
+    public void setVideoParams(VideoParams params) throws NullPointerException, IllegalArgumentException, IllegalStateException {
         if (DEBUG) ASPlayerLog.d("%s-%d setVideoParams start, params: %s", TAG, mId, params);
-        return mPlayer.setVideoParams(params);
+        mPlayer.setVideoParams(params);
     }
 
     /**
@@ -526,9 +526,9 @@ public class ASPlayer implements IASPlayer {
      * @param params Params need by demuxer and audio decoder
      */
     @Override
-    public int setAudioParams(AudioParams params) {
+    public void setAudioParams(AudioParams params) throws NullPointerException, IllegalArgumentException, IllegalStateException{
         ASPlayerLog.i("%s-%d setAudioParams start, params: %s", TAG, mId, params);
-        return mPlayer.setAudioParams(params);
+        mPlayer.setAudioParams(params);
     }
 
     /**

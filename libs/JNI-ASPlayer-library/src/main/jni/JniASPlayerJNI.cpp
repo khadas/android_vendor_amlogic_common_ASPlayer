@@ -48,6 +48,7 @@ struct asplayer_t {
     jmethodID setVideoParamsMID;
     jmethodID setAudioParamsMID;
     jmethodID flushMID;
+    jmethodID flushDvrMID;
 //    jmethodID writeByteBufferMID;
     jmethodID writeDataMID;
     jmethodID setSurfaceMID;
@@ -105,6 +106,12 @@ struct input_buffer_t {
     jfieldID bufferSize;
 };
 
+struct exceptions_t {
+    jclass nullPointerExceptionCls;
+    jclass illegalArgumentExceptionCls;
+    jclass illegalStateExceptionCls;
+};
+
 static jclass gASPlayerCls;
 static asplayer_t gASPlayerCtx;
 static jclass gInitParamsCls;
@@ -116,6 +123,7 @@ static audio_param_t gAudioParamsCtx;
 static jclass gInputBufferCls;
 static input_buffer_t gInputBufferCtx;
 
+static exceptions_t gExceptionsCtx;
 
 static volatile bool gJniInit = false;
 
@@ -406,9 +414,10 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
     gASPlayerCtx.stopAudioDecodingMID = GetMethodIDOrDie(env, gASPlayerCls, "stopAudioDecoding", "()I");
     gASPlayerCtx.pauseAudioDecodingMID = GetMethodIDOrDie(env, gASPlayerCls, "pauseAudioDecoding", "()I");
     gASPlayerCtx.resumeAudioDecodingMID = GetMethodIDOrDie(env, gASPlayerCls, "resumeAudioDecoding", "()I");
-    gASPlayerCtx.setVideoParamsMID = GetMethodIDOrDie(env, gASPlayerCls, "setVideoParams", "(Lcom/amlogic/asplayer/api/VideoParams;)I");
-    gASPlayerCtx.setAudioParamsMID = GetMethodIDOrDie(env, gASPlayerCls, "setAudioParams", "(Lcom/amlogic/asplayer/api/AudioParams;)I");
+    gASPlayerCtx.setVideoParamsMID = GetMethodIDOrDie(env, gASPlayerCls, "setVideoParams", "(Lcom/amlogic/asplayer/api/VideoParams;)V");
+    gASPlayerCtx.setAudioParamsMID = GetMethodIDOrDie(env, gASPlayerCls, "setAudioParams", "(Lcom/amlogic/asplayer/api/AudioParams;)V");
     gASPlayerCtx.flushMID = GetMethodIDOrDie(env, gASPlayerCls, "flush", "()V");
+    gASPlayerCtx.flushDvrMID = GetMethodIDOrDie(env, gASPlayerCls, "flushDvr", "()V");
 //    gASPlayerCtx.writeByteBufferMID = GetMethodIDOrDie(env, gASPlayerCls, "writeData", "(I[BJJJ)I");
     gASPlayerCtx.writeDataMID = GetMethodIDOrDie(env, gASPlayerCls, "writeData", "(Lcom/amlogic/asplayer/api/InputBuffer;J)I");
     gASPlayerCtx.setSurfaceMID = GetMethodIDOrDie(env, gASPlayerCls, "setSurface", "(Landroid/view/Surface;)I");
@@ -474,9 +483,16 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
 
     initASPlayerNotify(env);
 
+    jclass nullPointerExceptionCls = env->FindClass("java/lang/NullPointerException");
+    gExceptionsCtx.nullPointerExceptionCls = static_cast<jclass>(env->NewGlobalRef(nullPointerExceptionCls));
+    jclass illegalArgumentExceptionCls = env->FindClass("java/lang/IllegalArgumentException");
+    gExceptionsCtx.illegalArgumentExceptionCls = static_cast<jclass>(env->NewGlobalRef(illegalArgumentExceptionCls));
+    jclass illegalStateExceptionCls = env->FindClass("java/lang/IllegalStateException");
+    gExceptionsCtx.illegalStateExceptionCls = static_cast<jclass>(env->NewGlobalRef(illegalStateExceptionCls));
+
     gJniInit = true;
 
-    ALOGV("init ts player jni interface success");
+    ALOGV("init JNIASPlayer interface success");
     return gJniInit;
 }
 
@@ -499,7 +515,7 @@ int JniASPlayerJNI::initJNIEnv(JNIEnv *env) {
     gClassLoader = env->NewGlobalRef(classLoader);
     gFindClassMethod = env->GetMethodID(classLoaderClass, "findClass",
                                         "(Ljava/lang/String;)Ljava/lang/Class;");
-    ALOGV("init ts player jni env, success to find ts player class");
+    ALOGV("init jni env, success to find JNIASPlayer class");
     return 0;
 }
 
@@ -626,7 +642,7 @@ int JniASPlayer::prepare() {
     }
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.prepareMID);
-    ALOGV("ts player prepare result: %d", result);
+    ALOGV("prepare result: %d", result);
     return result;
 }
 
@@ -657,7 +673,7 @@ int JniASPlayer::startVideoDecoding() {
     }
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.startVideoDecodingMID);
-    ALOGV("ts player startVideoDecoding result: %d", result);
+    ALOGV("startVideoDecoding result: %d", result);
     return result;
 }
 
@@ -668,7 +684,7 @@ int JniASPlayer::stopVideoDecoding() {
     }
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.stopVideoDecodingMID);
-    ALOGV("ts player stopVideoDecoding result: %d", result);
+    ALOGV("stopVideoDecoding result: %d", result);
     return result;
 }
 
@@ -679,7 +695,7 @@ int JniASPlayer::pauseVideoDecoding() {
     }
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.pauseVideoDecodingMID);
-    ALOGV("ts player pauseVideoDecoding result: %d", result);
+    ALOGV("pauseVideoDecoding result: %d", result);
     return result;
 }
 
@@ -690,7 +706,7 @@ int JniASPlayer::resumeVideoDecoding() {
     }
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.resumeVideoDecodingMID);
-    ALOGV("ts player resumeVideoDecoding result: %d", result);
+    ALOGV("resumeVideoDecoding result: %d", result);
     return result;
 }
 
@@ -701,7 +717,7 @@ int JniASPlayer::startAudioDecoding() {
     }
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.startAudioDecodingMID);
-    ALOGV("ts player startAudioDecoding result: %d", result);
+    ALOGV("startAudioDecoding result: %d", result);
     return result;
 }
 
@@ -712,7 +728,7 @@ int JniASPlayer::stopAudioDecoding() {
     }
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.stopAudioDecodingMID);
-    ALOGV("ts player stopAudioDecoding result: %d", result);
+    ALOGV("stopAudioDecoding result: %d", result);
     return result;
 }
 
@@ -723,7 +739,7 @@ int JniASPlayer::pauseAudioDecoding() {
     }
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.pauseAudioDecodingMID);
-    ALOGV("ts player pauseAudioDecoding result: %d", result);
+    ALOGV("pauseAudioDecoding result: %d", result);
     return result;
 }
 
@@ -734,26 +750,42 @@ int JniASPlayer::resumeAudioDecoding() {
     }
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.resumeAudioDecodingMID);
-    ALOGV("ts player resumeAudioDecoding result: %d", result);
+    ALOGV("resumeAudioDecoding result: %d", result);
     return result;
 }
 
 int JniASPlayer::setVideoParams(jni_asplayer_video_params *params) {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
-        return -1;
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
     jobject videoParam;
     if (!JniASPlayerJNI::createVideoParams(env, params, &videoParam)) {
         ALOGE("%s[%d] failed to convert VideoParams", __func__, __LINE__);
-        return -1;
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
-    int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setVideoParamsMID, videoParam);
+    env->ExceptionClear();
+
+    env->CallVoidMethod(mJavaPlayer, gASPlayerCtx.setVideoParamsMID, videoParam);
+
+    jthrowable exception = env->ExceptionOccurred();
+
     env->DeleteLocalRef(videoParam);
 
-    ALOGV("ts player setVideoParams result: %d", result);
+    int result = JNI_ASPLAYER_OK;
+    if (exception != nullptr) {
+        if (env->IsInstanceOf(exception, gExceptionsCtx.nullPointerExceptionCls)
+            || env->IsInstanceOf(exception, gExceptionsCtx.illegalArgumentExceptionCls)) {
+            result = JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+        } else if (env->IsInstanceOf(exception, gExceptionsCtx.illegalStateExceptionCls)) {
+            result = JNI_ASPLAYER_ERROR_INVALID_OPERATION;
+        }
+        result = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    ALOGV("setVideoParams result: %d", result);
 
     return result;
 }
@@ -761,17 +793,33 @@ int JniASPlayer::setVideoParams(jni_asplayer_video_params *params) {
 int JniASPlayer::setAudioParams(jni_asplayer_audio_params *params) {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
-        return -1;
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
     jobject audioParam;
     if (!JniASPlayerJNI::createAudioParams(env, params, &audioParam)) {
         ALOGE("%s[%d] failed to convert AudioParams", __func__, __LINE__);
-        return -1;
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
-    int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setAudioParamsMID, audioParam);
+    env->ExceptionClear();
+
+    env->CallVoidMethod(mJavaPlayer, gASPlayerCtx.setAudioParamsMID, audioParam);
+
+    jthrowable exception = env->ExceptionOccurred();
+
     env->DeleteLocalRef(audioParam);
+
+    int result = JNI_ASPLAYER_OK;
+    if (exception != nullptr) {
+        if (env->IsInstanceOf(exception, gExceptionsCtx.nullPointerExceptionCls)
+            || env->IsInstanceOf(exception, gExceptionsCtx.illegalArgumentExceptionCls)) {
+            result = JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+        } else if (env->IsInstanceOf(exception, gExceptionsCtx.illegalStateExceptionCls)) {
+            result = JNI_ASPLAYER_ERROR_INVALID_OPERATION;
+        }
+        result = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
 
     LOG_FUNCTION_INT_END(result);
     return result;
@@ -784,6 +832,15 @@ void JniASPlayer::flush() {
     }
 
     env->CallVoidMethod(mJavaPlayer, gASPlayerCtx.flushMID);
+}
+
+void JniASPlayer::flushDvr() {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        return;
+    }
+
+    env->CallVoidMethod(mJavaPlayer, gASPlayerCtx.flushDvrMID);
 }
 
 int JniASPlayer::writeData(jni_asplayer_input_buffer *buffer, uint64_t timeout_ms) {
@@ -801,7 +858,7 @@ int JniASPlayer::writeData(jni_asplayer_input_buffer *buffer, uint64_t timeout_m
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.writeDataMID, inputBuffer, timeout_ms);
     env->DeleteLocalRef(inputBuffer);
 
-    ALOGV("ts player writeData result: %d", result);
+    ALOGV("writeData result: %d", result);
     return result;
 }
 

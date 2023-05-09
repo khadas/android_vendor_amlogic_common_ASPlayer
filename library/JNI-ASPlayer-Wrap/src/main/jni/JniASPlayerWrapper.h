@@ -45,6 +45,7 @@ public:
     jni_asplayer_result setVideoParams(jni_asplayer_video_params *params);
     jni_asplayer_result setAudioParams(jni_asplayer_audio_params *params);
     jni_asplayer_result flush();
+    jni_asplayer_result flushDvr();
     jni_asplayer_result writeData(jni_asplayer_input_buffer *buf, uint64_t timeout_ms);
     jni_asplayer_result setSurface(void *surface);
     jni_asplayer_result setAudioMute(bool analogMute, bool digitMute);

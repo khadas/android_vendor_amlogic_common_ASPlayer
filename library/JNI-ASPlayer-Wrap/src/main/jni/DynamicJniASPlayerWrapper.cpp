@@ -99,6 +99,7 @@ JniASPlayer_startSub_FUNC DynamicJniASPlayerWrapper::ASPlayer_startSub = nullptr
 JniASPlayer_stopSub_FUNC DynamicJniASPlayerWrapper::ASPlayer_stopSub = nullptr;
 JniASPlayer_getFirstPts_FUNC DynamicJniASPlayerWrapper::ASPlayer_getFirstPts = nullptr;
 JniASPlayer_flush_FUNC DynamicJniASPlayerWrapper::ASPlayer_flush = nullptr;
+JniASPlayer_flushDvr_FUNC DynamicJniASPlayerWrapper::ASPlayer_flushDvr = nullptr;
 
 
 static void asplayer_callback(void *user_data, jni_asplayer_event *event) {
@@ -230,7 +231,9 @@ void DynamicJniASPlayerWrapper::initSymbols() {
     ASPlayer_setSurface = (JniASPlayer_setSurface_FUNC)(dlsym(handle, "JniASPlayer_setSurface"));
     CHECK_SYMBOL(ASPlayer_setSurface, "JniASPlayer_setSurface");
     ASPlayer_flush = (JniASPlayer_flush_FUNC)(dlsym(handle, "JniASPlayer_flush"));
-    CHECK_SYMBOL(ASPlayer_flush, "JniASPlayer_setSurface");
+    CHECK_SYMBOL(ASPlayer_flush, "ASPlayer_flush");
+    ASPlayer_flushDvr = (JniASPlayer_flush_FUNC)(dlsym(handle, "JniASPlayer_flushDvr"));
+    CHECK_SYMBOL(ASPlayer_flushDvr, "ASPlayer_flushDvr");
     ASPlayer_showVideo = (JniASPlayer_showVideo_FUNC)(dlsym(handle, "JniASPlayer_showVideo"));
     CHECK_SYMBOL(ASPlayer_showVideo, "JniASPlayer_showVideo");
     ASPlayer_hideVideo = (JniASPlayer_hideVideo_FUNC)(dlsym(handle, "JniASPlayer_hideVideo"));
@@ -686,6 +689,29 @@ jni_asplayer_result DynamicJniASPlayerWrapper::flush() {
     }
 
     jni_asplayer_result ret = ASPlayer_flush(handle);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result DynamicJniASPlayerWrapper::flushDvr() {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_flushDvr == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_flushDvr(handle);
     if (ret != JNI_ASPLAYER_OK) {
         LOG_PLAYER_OP_FAILED(ret);
     }

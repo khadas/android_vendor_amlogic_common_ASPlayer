@@ -91,10 +91,10 @@ task releaseJniASPlayer(type: Jar) {
 // release Jni_ASPlayer (so / include / jar)
 releaseJniASPlayer.dependsOn(build, releaseSo, releaseInclude)
 
-void copyJniAsPlayerToJniASPlayerWrapper() {
+void copyJniAsPlayerToJniASPlayerWrapper(soType) {
     // copy so to Jni_ASPlayer_Wrapper
-    String soDir = project.projectDir.getAbsolutePath() + "/build/intermediates/cmake/release/obj/"
-    String destDir = gradle.ext.jniASPlayerWrapperDir + "/src/main/jniLibs/"
+    String soDir = project.projectDir.getAbsolutePath() + "/build/intermediates/cmake/" + soType + "/obj/"
+    String destDir = gradle.ext.JniASPlayerWrapperDir + "/src/main/jniLibs/" + soType + "/"
     println(String.format("copy so from: %s => %s", soDir, destDir))
 
     copy {
@@ -104,21 +104,26 @@ void copyJniAsPlayerToJniASPlayerWrapper() {
     }
 
     // copy jni_asplayer include to JniASPlayerWrapper
-    String destIncludeDir = gradle.ext.jniASPlayerWrapperDir + "/src/main/jni/include/"
+    String destIncludeDir = gradle.ext.JniASPlayerWrapperDir + "/src/main/jni/include/"
     String srcIncludeDir = project.projectDir.getAbsolutePath() + "/src/main/jni/include/"
     copy {
         from srcIncludeDir
         into destIncludeDir
         include "JNIASPlayer.h"
     }
-    println(String.format("copy AmASPlayer.h from: %s => %s", srcIncludeDir, destIncludeDir))
+    println(String.format("copy JNIASPlayer.h from: %s => %s", srcIncludeDir, destIncludeDir))
 }
 
 tasks.whenTaskAdded { task ->
-    if (task.name.equalsIgnoreCase("assembleRelease")) {
-        println("task: " + task.name + ", need copy JNI-ASPlayer so to JNI-ASPlayer-Wrap")
+    if (task.name.equalsIgnoreCase("externalNativeBuildRelease")) {
         task.doLast {
-            copyJniAsPlayerToJniASPlayerWrapper()
+            println("task: " + task.name + ", need copy JNI-ASPlayer release so to JNI-ASPlayer-Wrap")
+            copyJniAsPlayerToJniASPlayerWrapper("release")
+        }
+    } else if (task.name.equalsIgnoreCase("externalNativeBuildDebug")) {
+        task.doLast {
+            println("task: " + task.name + ", need copy JNI-ASPlayer debug so to JNI-ASPlayer-Wrap")
+            copyJniAsPlayerToJniASPlayerWrapper("debug")
         }
     }
 }

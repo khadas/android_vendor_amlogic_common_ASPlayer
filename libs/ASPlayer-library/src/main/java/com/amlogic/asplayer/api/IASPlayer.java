@@ -150,6 +150,11 @@ public interface IASPlayer {
     public void flush();
 
     /**
+     * Flush DvrPlayback of ASPlayer instance.
+     */
+    public void flushDvr();
+
+    /**
      * Set work mode to ASPlayer instance.
      *
      * @see WorkMode
@@ -260,13 +265,6 @@ public interface IASPlayer {
     public int setSurface(Surface surface);
 
     /**
-     * Set FCC dummy surface to ASPlayer Instance.
-     *
-     * @param surface
-     */
-    public int setFccDummySurface(Surface surface);
-
-    /**
      * Set video display match mode for ASPlayer instance.
      *
      * @see VideoMatchMode
@@ -280,7 +278,7 @@ public interface IASPlayer {
      *
      * @param params Params need by demuxer and video decoder.
      */
-    public int setVideoParams(VideoParams params);
+    public void setVideoParams(VideoParams params) throws NullPointerException, IllegalArgumentException, IllegalStateException;
 
     /**
      * Set if need keep last frame for video display for ASPlayer instance.
@@ -368,7 +366,7 @@ public interface IASPlayer {
      *
      * @param params Params need by demuxer and audio decoder
      */
-    public int setAudioParams(AudioParams params);
+    public void setAudioParams(AudioParams params) throws NullPointerException, IllegalArgumentException, IllegalStateException;
 
     /**
      * Set audio output mode to ASPlayer instance.

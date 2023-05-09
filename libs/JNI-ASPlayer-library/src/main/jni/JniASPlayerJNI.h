@@ -99,6 +99,8 @@ public:
 
     void flush();
 
+    void flushDvr();
+
     int writeData(jni_asplayer_input_buffer *buffer, uint64_t timeout_ms);
 
     int setSurface(void *surface);

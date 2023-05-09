@@ -157,6 +157,11 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
+    public void flushDvr() {
+        native_flushDvr();
+    }
+
+    @Override
     public int setWorkMode(int mode) {
         return 0;
     }
@@ -227,18 +232,20 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
-    public int setFccDummySurface(Surface surface) {
-        return 0;
-    }
-
-    @Override
     public void setVideoMatchMode(int videoMatchMode) {
 
     }
 
     @Override
-    public int setVideoParams(VideoParams params) {
-        return native_setVideoParams(params);
+    public void setVideoParams(VideoParams params) throws NullPointerException, IllegalArgumentException, IllegalStateException {
+        int ret = native_setVideoParams(params);
+        if (ret == ErrorCode.ERROR_INVALID_OBJECT) {
+            throw new IllegalStateException("setVideoParams failed");
+        } else if (ret == ErrorCode.ERROR_INVALID_PARAMS) {
+            throw new IllegalArgumentException("invalid params");
+        } else if (ret == ErrorCode.ERROR_INVALID_OPERATION) {
+            throw new IllegalStateException("setVideoParams failed,  invalid operation");
+        }
     }
 
     @Override
@@ -312,8 +319,15 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
-    public int setAudioParams(AudioParams params) {
-        return native_setAudioParams(params);
+    public void setAudioParams(AudioParams params)  throws NullPointerException, IllegalArgumentException, IllegalStateException {
+        int ret =  native_setAudioParams(params);
+        if (ret == ErrorCode.ERROR_INVALID_PARAMS) {
+            throw new IllegalArgumentException("invalid argument");
+        } else if (ret == ErrorCode.ERROR_INVALID_OBJECT) {
+            throw new IllegalStateException("setAudioParams failed");
+        } else if (ret == ErrorCode.ERROR_INVALID_OPERATION) {
+            throw new IllegalStateException("setAudioParams failed, invalid operation");
+        }
     }
 
     @Override
@@ -428,12 +442,13 @@ public class JniASPlayerWrapper implements IASPlayer {
     private native int native_setVideoParams(VideoParams params);
     private native int native_setAudioParams(AudioParams params);
     private native void native_flush();
+    private native void native_flushDvr();
     private native int native_writeData(InputBuffer buffer, long timeoutMillSecond);
     private native int native_setSurface(Surface surface);
     private native int native_setAudioMute(boolean analogMute, boolean digitMute);
     private native void native_setAudioVolume(int volume);
     private native int native_getAudioVolume();
-    private native int native_startFast(float scale);
+    private native int native_startFast(float speed);
     private native int native_stopFast();
     private native void native_release();
 }

@@ -446,22 +446,25 @@ native_resume_audio_decoding(JNIEnv* env, jobject thiz) {
 }
 
 static void
-asplayer_set_video_params(JNIEnv* env, jobject thiz, jobject videoParams) {
+asplayer_set_video_params(JNIEnv* env, jobject thiz, jobject videoParams, jint *result) {
     LOG_FUNCTION_ENTER();
     if (env == nullptr) {
         LOG_GET_JNIENV_FAILED();
+        *result = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
         return;
     }
 
     BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
     if (player == nullptr) {
         LOG_GET_PLAYER_FAILED();
+        *result = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
         return;
     }
 
     jni_asplayer_video_params params;
     if (!gASPlayerJni.convertVideoParams(env, videoParams, &params)) {
         ALOGE("%s[%d] failed to setVideoParams, failed to convert video params", __func__, __LINE__);
+        *result = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
         return;
     }
 
@@ -471,34 +474,41 @@ asplayer_set_video_params(JNIEnv* env, jobject thiz, jobject videoParams) {
         delete[] params.mimeType;
         params.mimeType = nullptr;
     }
+
     LOG_FUNCTION_INT_END(ret);
+
+    *result = ret;
 }
 
 static jint
 native_set_video_params(JNIEnv* env, jobject thiz, jobject videoParams) {
     LOG_FUNCTION_ENTER();
-    asplayer_set_video_params(env, thiz, videoParams);
+    jint result = JNI_ASPLAYER_OK;
+    asplayer_set_video_params(env, thiz, videoParams, &result);
     LOG_FUNCTION_END();
-    return 0;
+    return result;
 }
 
 static void
-asplayer_set_audio_params(JNIEnv* env, jobject thiz, jobject audioParams) {
+asplayer_set_audio_params(JNIEnv* env, jobject thiz, jobject audioParams, jint *result) {
     LOG_FUNCTION_ENTER();
     if (env == nullptr) {
         LOG_GET_JNIENV_FAILED();
+        *result = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
         return;
     }
 
     BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
     if (player == nullptr) {
         LOG_GET_PLAYER_FAILED();
+        *result = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
         return;
     }
 
     jni_asplayer_audio_params params;
     if (!gASPlayerJni.convertAudioParams(env, audioParams, &params)) {
         ALOGE("%s[%d] failed to setVideoParams, failed to convert video params", __func__, __LINE__);
+        *result = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
         return;
     }
 
@@ -510,14 +520,17 @@ asplayer_set_audio_params(JNIEnv* env, jobject thiz, jobject audioParams) {
     }
 
     LOG_FUNCTION_INT_END(ret);
+
+    *result = ret;
 }
 
 static jint
 native_set_audio_params(JNIEnv* env, jobject thiz, jobject audioParams) {
     LOG_FUNCTION_ENTER();
-    asplayer_set_audio_params(env, thiz, audioParams);
+    jint result = JNI_ASPLAYER_OK;
+    asplayer_set_audio_params(env, thiz, audioParams, &result);
     LOG_FUNCTION_END();
-    return 0;
+    return result;
 }
 
 static void
@@ -542,6 +555,31 @@ static void
 native_flush(JNIEnv* env, jobject thiz) {
     LOG_FUNCTION_ENTER();
     asplayer_flush(env, thiz);
+    LOG_FUNCTION_END();
+}
+
+static void
+asplayer_flush_dvr(JNIEnv* env, jobject thiz) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return;
+    }
+
+    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
+    if (player == nullptr) {
+        LOG_GET_PLAYER_FAILED();
+        return;
+    }
+
+    player->flushDvr();
+    LOG_FUNCTION_END();
+}
+
+static void
+native_flush_dvr(JNIEnv* env, jobject thiz) {
+    LOG_FUNCTION_ENTER();
+    asplayer_flush_dvr(env, thiz);
     LOG_FUNCTION_END();
 }
 
@@ -579,10 +617,8 @@ asplayer_write_data(JNIEnv* env, jobject thiz, jobject jInputBuffer, jlong jTime
 
 static jint
 native_write_data(JNIEnv* env, jobject thiz, jobject jInputBuffer, jlong jTimeoutMillSecond) {
-    LOG_FUNCTION_ENTER();
     int32_t result = 0;
     asplayer_write_data(env, thiz, jInputBuffer, jTimeoutMillSecond, &result);
-    LOG_FUNCTION_END();
     return result;
 }
 
@@ -814,6 +850,7 @@ static JNINativeMethod methods[] = {
         {"native_setVideoParams", "(Lcom/amlogic/asplayer/api/VideoParams;)I", (void*)native_set_video_params },
         {"native_setAudioParams", "(Lcom/amlogic/asplayer/api/AudioParams;)I", (void*)native_set_audio_params },
         {"native_flush", "()V", (void*)native_flush },
+        {"native_flushDvr", "()V", (void*)native_flush_dvr },
         {"native_writeData", "(Lcom/amlogic/asplayer/api/InputBuffer;J)I", (void*)native_write_data },
         {"native_setSurface", "(Landroid/view/Surface;)I", (void*)native_set_surface },
         {"native_setAudioMute", "(ZZ)I", (void*)native_set_audio_mute },

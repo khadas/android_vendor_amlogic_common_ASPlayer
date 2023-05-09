@@ -40,7 +40,7 @@ dependencies {
 }
 
 task clearJar(type: Delete) {
-    delete "build/libs/" + ASPlayerJarName + ".jar"
+    delete "build/sdk/" + ASPlayerJarName + ".jar"
 }
 
 // make asplayer.jar

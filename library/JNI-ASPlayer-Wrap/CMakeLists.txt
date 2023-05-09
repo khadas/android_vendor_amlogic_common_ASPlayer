@@ -8,12 +8,15 @@ cmake_minimum_required(VERSION 3.4.1)
 set(JNI_DIR ${CMAKE_SOURCE_DIR}/src/main/jni)
 
 message(USE_SYSTEM_SO=${USE_SYSTEM_SO})
+
+string(TOLOWER ${CMAKE_BUILD_TYPE} buildTypeLower)
+
 if (NOT USE_SYSTEM_SO)
         add_library(libjniasplayer SHARED IMPORTED)
         set_target_properties(libjniasplayer
                 PROPERTIES
                 IMPORTED_LOCATION
-                ${CMAKE_SOURCE_DIR}/src/main/jniLibs/${ANDROID_ABI}/libjniasplayer-jni.so)
+                ${CMAKE_SOURCE_DIR}/src/main/jniLibs/${buildTypeLower}/${ANDROID_ABI}/libjniasplayer-jni.so)
         message(STATUS ANDROID_ABI=${ANDROID_ABI})
         message(STATUS "Add libjniasplayer.so")
 else()

@@ -46,7 +46,7 @@ project(":JNI-ASPlayer-library").projectDir = file("${rootProjectDir}/libs/JNI-A
 
 include ':JNI-ASPlayer-Wrap'
 project(":JNI-ASPlayer-Wrap").projectDir = file("${rootProjectDir}/library/JNI-ASPlayer-Wrap")
-gradle.ext.jniASPlayerWrapperDir = project(":JNI-ASPlayer-Wrap").projectDir.getAbsolutePath()
+gradle.ext.JniASPlayerWrapperDir = project(":JNI-ASPlayer-Wrap").projectDir.getAbsolutePath()
 
 include ':ASPlayerDemo'
 project(":ASPlayerDemo").projectDir = file("${rootProjectDir}/apps/ASPlayerDemo")

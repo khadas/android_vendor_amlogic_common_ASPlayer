@@ -212,7 +212,7 @@ public class DvrPlayer extends TvPlayer {
         if (!mDataSource.isOpened()) {
             mDataSource.open();
 
-            mASPlayer.flush();
+            mASPlayer.flushDvr();
         }
 
         synchronized (this) {

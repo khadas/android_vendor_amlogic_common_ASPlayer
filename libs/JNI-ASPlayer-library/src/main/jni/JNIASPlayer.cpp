@@ -265,6 +265,21 @@ jni_asplayer_result  JniASPlayer_flush(jni_asplayer_handle handle) {
 }
 
 /**
+ *@brief:        Flush DvrPlayback of specified JniASPlayer instance.
+ *@param:        Handle         JniASPlayer handle.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_flushDvr(jni_asplayer_handle handle) {
+    if (handle == 0) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
+    player->flushDvr();
+    return JNI_ASPLAYER_OK;
+}
+
+/**
  *@brief:        Write data to specified JniASPlayer instance.
  *               It will only work when TS input's source type is TS_MEMORY.
  *@param:        handle         JniASPlayer handle.

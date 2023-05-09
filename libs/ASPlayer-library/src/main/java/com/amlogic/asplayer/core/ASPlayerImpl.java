@@ -294,12 +294,28 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     @Override
     public void flush() {
         ASPlayerLog.i("%s-%d flush start", TAG, mId);
+        if (mPlayerHandler != null) {
+            mPlayerHandler.post(() -> {
+                handleFlush();
+            });
+        } else {
+            ASPlayerLog.e("%s-%d flush called, but playerHandler is null", TAG, mId);
+        }
+    }
+
+    private void handleFlush() {
+        mRendererScheduler.flush();
+    }
+
+    @Override
+    public void flushDvr() {
+        ASPlayerLog.i("%s-%d flushDvr start", TAG, mId);
         if (mTsPlayback != null) {
             mTsPlayback.stop();
             mTsPlayback.flush();
             mTsPlayback.start();
         } else {
-            ASPlayerLog.e("%s-%d flush failed, mTsPlayback is null", TAG, mId);
+            ASPlayerLog.e("%s-%d flushDvr failed, mTsPlayback is null", TAG, mId);
         }
     }
 
@@ -421,28 +437,35 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     @Override
-    public int setFccDummySurface(Surface surface) {
-        ASPlayerLog.i("%s-%d setFccDummySurface start", TAG, mId);
-        return 0;
-    }
-
-    @Override
     public void setVideoMatchMode(int videoMatchMode) {
         if (DEBUG) ASPlayerLog.d("%s-%d setVideoMatchMode start", TAG, mId);
 
     }
 
     @Override
-    public int setVideoParams(VideoParams params) {
+    public void setVideoParams(VideoParams params) throws NullPointerException, IllegalArgumentException, IllegalStateException {
         ASPlayerLog.i("%s-%d setVideoParams start, params: %s", TAG, mId, params);
+        if (params == null) {
+            throw new NullPointerException("VideoParams can not be null");
+        }
+
+        int playbackMode = mConfig.getPlaybackMode();
+        if (playbackMode == ASPlayerConfig.PLAYBACK_MODE_PASSTHROUGH) {
+            int filterId = params.getTrackFilterId();
+            int avSyncHwId = params.getAvSyncHwId();
+            if (filterId < 0) {
+                throw new IllegalArgumentException(String.format("invalid filter id: %d", filterId));
+            } else if (avSyncHwId < 0) {
+                throw new IllegalArgumentException(String.format("invalid avSyncHwId id: %d", avSyncHwId));
+            }
+        }
+
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
                 handleSetVideoParams(params);
             });
-            return 0;
         } else {
-            ASPlayerLog.i("%s-%d failed to set video params, playerHandler is null", TAG, mId);
-            return -1;
+            ASPlayerLog.e("%s-%d failed to set video params, playerHandler is null", TAG, mId);
         }
     }
 
@@ -511,6 +534,10 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     private void handleStart() {
+        if (mTsPlayback != null) {
+            mTsPlayback.start();
+        }
+
         mRendererScheduler.prepareStart();
     }
 
@@ -650,20 +677,29 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     @Override
-    public int setAudioParams(AudioParams params) {
+    public void setAudioParams(AudioParams params) throws NullPointerException, IllegalArgumentException, IllegalStateException {
         if (DEBUG) ASPlayerLog.d("%s-%d setAudioParams start, params: %s", TAG, mId, params);
         if (params == null) {
-            return 0;
+            throw new NullPointerException("AudioParams can not be null");
+        }
+
+        int playbackMode = mConfig.getPlaybackMode();
+        if (playbackMode == ASPlayerConfig.PLAYBACK_MODE_PASSTHROUGH) {
+            int filterId = params.getTrackFilterId();
+            int avSyncHwId = params.getAvSyncHwId();
+            if (filterId < 0) {
+                throw new IllegalArgumentException(String.format("invalid filter id: %d", filterId));
+            } else if (avSyncHwId < 0) {
+                throw new IllegalArgumentException(String.format("invalid avSyncHw id: %d", avSyncHwId));
+            }
         }
 
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
                 handleSetAudioParams(params);
             });
-            return 0;
         } else {
-            ASPlayerLog.i("%s-%d setAudioParams failed, playerHandler is null", TAG, mId);
-            return -1;
+            ASPlayerLog.e("%s-%d setAudioParams failed, playerHandler is null", TAG, mId);
         }
     }
 

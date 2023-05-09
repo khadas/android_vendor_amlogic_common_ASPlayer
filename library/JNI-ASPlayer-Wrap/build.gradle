@@ -36,7 +36,14 @@ android {
             jni {
                 srcDirs 'src\\main\\jni'
             }
-            jniLibs.srcDir 'src/main/jniLibs'
+        }
+
+        debug {
+            jniLibs.srcDir 'src/main/jniLibs/debug/'
+        }
+
+        release {
+            jniLibs.srcDir 'src/main/jniLibs/release'
         }
     }
 
