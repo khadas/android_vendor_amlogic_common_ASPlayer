@@ -89,6 +89,7 @@ public class LiveTvPlayerActivity extends Activity implements TsPlaybackListener
                 mSurface = null;
             }
         });
+        mSurfaceView.getHolder().setKeepScreenOn(true);
     }
 
     private void createTvPlayer() {

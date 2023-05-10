@@ -98,6 +98,7 @@ public class LocalTvPlayerActivity extends Activity implements TsPlaybackListene
                 mSurface = null;
             }
         });
+        mSurfaceView.getHolder().setKeepScreenOn(true);
     }
 
     private void createTvPlayer() {
