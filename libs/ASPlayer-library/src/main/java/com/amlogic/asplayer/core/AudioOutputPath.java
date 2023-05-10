@@ -166,101 +166,7 @@ class AudioOutputPath extends MediaOutputPath {
 
     @Override
     public boolean configure() {
-        if (hasConfigurationError()) {
-            return false;
-        }
-        if (isConfigured()) {
-            ASPlayerLog.w("AudioOutputPath-%d already configured", mId);
-            return false;
-        }
-        if (waitForConfigurationRetry()) {
-            return false;
-        }
-
-        if (mMediaFormat == null)
-            return false;
-
-        String errorMessage;
-
-        String mimeType = mMediaFormat.getString(MediaFormat.KEY_MIME);
-
-        // check if we must use passthrough mode, ie if
-        //  - output supports dolby formats
-        //  - secure mode not activated
-        boolean passthrough = false;
-
-        MediaDescrambler descrambler = getMediaDescrambler();
-        if (Build.VERSION.SDK_INT >= 30) {
-            mSecurePlayback =
-                    mMediaFormat.containsFeature(FEATURE_SecurePlayback) &&
-                            mMediaFormat.getFeatureEnabled(FEATURE_SecurePlayback);
-        } else {
-            mSecurePlayback = descrambler!=null;
-        }
-
-
-        switch (mimeType) {
-            case MediaFormat.MIMETYPE_AUDIO_AAC:
-                break;
-            case MediaFormat.MIMETYPE_AUDIO_AC3:
-                if (mAudioCaps.isEncodingSupported(AudioFormat.ENCODING_AC3))
-                    passthrough = !mSecurePlayback;
-                break;
-            case MediaFormat.MIMETYPE_AUDIO_EAC3:
-                if (mAudioCaps.isEncodingSupported(AudioFormat.ENCODING_E_AC3))
-                    passthrough = !mSecurePlayback;
-                break;
-            case MediaFormat.MIMETYPE_AUDIO_MPEG:
-            default:
-                break;
-        }
-
-        boolean mustReleaseRenderer = false;
-        if (passthrough && mAudioCodecRenderer instanceof AudioCodecRendererMediaCodec)
-            mustReleaseRenderer = true;
-        if (!passthrough && mAudioCodecRenderer instanceof AudioCodecRendererPassthrough)
-            mustReleaseRenderer = true;
-        if (mustReleaseRenderer) {
-            mAudioCodecRenderer.release();
-            mAudioCodecRenderer = null;
-        }
-
-        if (mAudioCodecRenderer == null) {
-            if (passthrough) {
-                mAudioCodecRenderer =
-                        new AudioCodecRendererPassthrough(mClock, getHandler());
-            } else {
-                mAudioCodecRenderer = new AudioCodecRendererMediaCodec(mClock, getHandler());
-            }
-            mAudioCodecRenderer.setOutputBufferListener(new AudioCodecRenderer.OutputBufferListener() {
-                @Override
-                public void onRender(long presentationTimeUs) {
-                    notifyFrameDisplayed(presentationTimeUs);
-                    mTimestampKeeper.removeTimestamp(presentationTimeUs);
-                }
-
-                @Override
-                public void onConsume(long presentationTimeUs) {
-                    mTimestampKeeper.removeTimestamp(presentationTimeUs);
-                }
-            });
-        }
-
-        String transformation = passthrough ? "passthrough" : "decode";
-        ASPlayerLog.i("AudioOutputPath-%d %s, source:%s, tunneled:%b", mId, transformation, mimeType, mTunneledPlayback);
-        mAudioCodecRenderer.setAudioSessionId(mAudioSessionId);
-        mAudioCodecRenderer.setTunneledPlayback(mTunneledPlayback);
-        mAudioCodecRenderer.setAudioCaps(mAudioCaps);
-        mAudioCodecRenderer.setVolume(mGain);
-
-        mAudioCodecRenderer.configure(mMediaFormat, descrambler);
-        errorMessage = mAudioCodecRenderer.getErrorMessage();
-        if (errorMessage == null) {
-            setConfigured(true);
-        }
-
-        handleConfigurationError(errorMessage);
-        return (errorMessage == null);
+        return false;
     }
 
     @Override
@@ -350,6 +256,18 @@ class AudioOutputPath extends MediaOutputPath {
         return false;
     }
 
+    public void pause() {
+        if (mAudioCodecRenderer != null) {
+            mAudioCodecRenderer.pause();
+        }
+    }
+
+    public void resume() {
+        if (mAudioCodecRenderer != null) {
+            mAudioCodecRenderer.resume();
+        }
+    }
+
     @Override
     public void reset() {
 //        TvLog.i("AudioOutputPath-%d reset", mId);
@@ -413,24 +331,4 @@ class AudioOutputPath extends MediaOutputPath {
         mAudioCaps = caps;
     }
 
-    void checkCaps(AudioCaps audioCapabilities) {
-        boolean reset = false;
-        String resetReason = "";
-        if (mAudioCodecRenderer instanceof AudioCodecRendererMediaCodec) {
-            if (audioCapabilities.isEncodingSupported(AudioFormat.ENCODING_AC3) ||
-                    audioCapabilities.isEncodingSupported(AudioFormat.ENCODING_E_AC3))
-                reset = true;
-            resetReason = "audio output supports now DD/DD+, will try passthrough";
-        } else if (mAudioCodecRenderer instanceof AudioCodecRendererPassthrough) {
-            if (!audioCapabilities.isEncodingSupported(AudioFormat.ENCODING_AC3) &&
-                    !audioCapabilities.isEncodingSupported(AudioFormat.ENCODING_E_AC3))
-                reset = true;
-            resetReason = "audio output don't support DD/DD+ anymore, must decode now";
-        }
-        // reset only because we don't want to flush input data
-        if (reset) {
-            ASPlayerLog.i("AudioOutputPath-%d reset because %s", mId, resetReason);
-            reset();
-        }
-    }
 }

@@ -105,7 +105,7 @@ class VideoOutputPath extends MediaOutputPath {
     protected VideoMediaCodecCallback mMediaCodecCallback;
     protected boolean mSecurePlayback;
 
-    protected int mAudioSessionId;
+    protected int mAudioSessionId = Constant.INVALID_AUDIO_SESSION_ID;
     protected boolean mTunneledPlayback;
     protected MediaCodec.OnFrameRenderedListener mMediaCodecOnFrameCallback;
 

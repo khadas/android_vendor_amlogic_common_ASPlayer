@@ -214,4 +214,8 @@ interface AudioCodecRenderer {
      * @return true if the audio track has data and is in play state
      */
     boolean isPlaying();
+
+    void pause();
+
+    void resume();
 }

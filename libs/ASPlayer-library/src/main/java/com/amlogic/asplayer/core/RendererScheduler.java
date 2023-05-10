@@ -290,7 +290,11 @@ class RendererScheduler implements Runnable {
         if (mCurrentSpeedTask != null) {
             mCurrentSpeedTask.stopVideo();
         }
-        mVideoOutputPath.reset();
+
+        if (mConfig.getPlaybackMode() == ASPlayerConfig.PLAYBACK_MODE_PASSTHROUGH) {
+            // we can not pause video only
+            pauseAudioDecoding();
+        }
     }
 
     void resumeVideoDecoding() {
@@ -301,6 +305,10 @@ class RendererScheduler implements Runnable {
             mCurrentSpeedTask.startVideo();
         }
         startRendererTaskIfNeed();
+
+        if (mConfig.getPlaybackMode() == ASPlayerConfig.PLAYBACK_MODE_PASSTHROUGH) {
+            resumeAudioDecoding();
+        }
     }
 
     void startAudioDecoding() {
@@ -334,7 +342,7 @@ class RendererScheduler implements Runnable {
         if (mCurrentSpeedTask != null) {
             mCurrentSpeedTask.stopAudio();
         }
-        mAudioOutputPath.reset();
+        mAudioOutputPath.pause();
     }
 
     void resumeAudioDecoding() {
@@ -345,6 +353,7 @@ class RendererScheduler implements Runnable {
             mCurrentSpeedTask.startAudio();
         }
         startRendererTaskIfNeed();
+        mAudioOutputPath.resume();
     }
 
     void onSetVideoParams() {

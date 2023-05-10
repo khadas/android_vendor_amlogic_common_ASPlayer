@@ -20,6 +20,9 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.amlogic.asplayer.core.MediaContainerExtractor.INVALID_AV_SYNC_HW_ID;
+import static com.amlogic.asplayer.core.MediaContainerExtractor.INVALID_FILTER_ID;
+
 
 public class AudioCodecRendererV3 implements AudioCodecRenderer {
     private static final int[] SAMPLE_RATES = { 48000, 44100, 32000 };
@@ -30,8 +33,8 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     private float mGain;
     private float mMixLevel;
     private final MediaClock mClock;
-    private int mAudioFilterId;
-    private int mAvSyncHwId;
+    private int mAudioFilterId = INVALID_FILTER_ID;
+    private int mAvSyncHwId = INVALID_AV_SYNC_HW_ID;
     private AudioTrack mAudioTrack;
     private int mInputEncoding;
     DecoderThread mDecoderThread;
@@ -43,6 +46,8 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     private final ByteBuffer mMetadataPacket = ByteBuffer.allocate(AUDIO_BUFFER_SIZE);
     private final List<Metadata> mMetadata = new ArrayList<>();
     private String mErrorMessage;
+
+    private boolean mPaused = true;
 
     AudioCodecRendererV3(int id, MediaClock clock, Handler handler) {
         mId = id;
@@ -135,6 +140,9 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     if (AudioTrack.isDirectPlaybackSupported(audioFormat, audioAttributes)) {
+                        ASPlayerLog.d("AudioCodecRendererV3-%d audio format, encoding: %d, samplerate: %d, channelMask: %d",
+                                mId, encoding, sampleRate, channel);
+                        ASPlayerLog.d("AudioCodecRendererV3-%d select audio format: %s", mId, audioFormat);
                         return audioFormat;
                     }
                 }
@@ -307,6 +315,24 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
             mAudioTrack.pause();
         } else {
             mAudioTrack.play();
+        }
+    }
+
+    @Override
+    public void pause() {
+        if (mAudioTrack != null) {
+            mAudioTrack.pause();
+        }
+        mPaused = true;
+    }
+
+    @Override
+    public void resume() {
+        if (mPaused) {
+            if (mAudioTrack != null) {
+                mAudioTrack.play();
+            }
+            mPaused = false;
         }
     }
 

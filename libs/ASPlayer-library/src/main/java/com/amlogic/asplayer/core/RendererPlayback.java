@@ -427,8 +427,6 @@ class RendererPlayback extends Renderer {
             mAudioOutputPath.setTunneledPlayback(mTunneledPlayback);
             mVideoOutputPath.reset();
             mAudioOutputPath.reset();
-        } else {
-            mAudioOutputPath.checkCaps(audioCapabilities);
         }
     }
 

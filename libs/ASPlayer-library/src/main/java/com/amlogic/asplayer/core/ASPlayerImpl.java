@@ -203,13 +203,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     public void release() {
         if (DEBUG) ASPlayerLog.d("%s-%d release start", TAG, mId);
         if (mPlayerHandler == null) {
-            mRendererScheduler.setDataListener(null);
-            mRendererScheduler.setVideoListener(null);
-            mRendererScheduler.release();
-            releaseTsPlayback();
-            mVideoOutputPath = null;
-            mAudioOutputPath = null;
-            mTuner = null;
+            ASPlayerLog.d("%s-%d already released", TAG, mId);
             return;
         }
 
@@ -222,8 +216,14 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             }
         });
         lock.block();
+
         mPlayerThread.quitSafely();
         mPlayerThread = null;
+
+        mPlayerHandler = null;
+
+        mVideoOutputPath = null;
+        mAudioOutputPath = null;
 
         mTuner = null;
         mState = State.STATE_NONE;
@@ -237,6 +237,9 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         mRendererScheduler.release();
 
         releaseTsPlayback();
+
+        mVideoOutputPath.release();
+        mAudioOutputPath.release();
     }
 
     private void releaseTsPlayback() {

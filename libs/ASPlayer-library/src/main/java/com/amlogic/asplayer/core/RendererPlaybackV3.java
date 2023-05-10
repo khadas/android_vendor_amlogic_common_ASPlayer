@@ -304,7 +304,6 @@ class RendererPlaybackV3 extends Renderer {
 
     private void onAudioCapabilitiesChanged(AudioCaps audioCapabilities) {
         ASPlayerLog.i("RendererPlaybackV3-%d output audio caps have changed to %s", mId, audioCapabilities);
-        mAudioOutputPath.checkCaps(audioCapabilities);
     }
 
     private void checkSynchroSubtitles() {
