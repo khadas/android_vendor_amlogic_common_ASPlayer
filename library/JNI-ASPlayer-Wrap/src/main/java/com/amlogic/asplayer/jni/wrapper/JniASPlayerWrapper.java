@@ -25,54 +25,20 @@ import com.amlogic.asplayer.api.TsPlaybackListener;
 import com.amlogic.asplayer.api.ASPlayer;
 import com.amlogic.asplayer.api.VideoDecoderStat;
 import com.amlogic.asplayer.api.VideoParams;
-import com.amlogic.asplayer.jni.config.Config;
 
 
 public class JniASPlayerWrapper implements IASPlayer {
 
     private static final String TAG = "JniASPlayerWrapper";
 
-    private static final boolean USE_SYSTEM_ASPLAYER = Config.USE_SYSTEM_ASPLAYER;
-
     private long mNativeContext;
 
     private ASPlayer mRealASPlayer = null;
 
-    private static final String[] LIB_PATHS = {
-        "/system_ext/lib/libjniasplayer-wrapper.so",
-        "/vendor/lib/libjniasplayer-wrapper.so",
-        "/system/lib/libjniasplayer-wrapper.so",
-        "/product/lib/libjniasplayer-wrapper.so"
-    };
-
     static {
-        if (USE_SYSTEM_ASPLAYER) {
-            // JniASPlayerWrapper built in app
-            // use JniASPlayer in /vendor/framework/yy.jar
-            loadSystemSo();
-        } else {
-            // JniASPlayerWrapper built in app
-            // JniASPlayer built in app
-            loadAppSo();
-        }
-    }
-
-    static void loadSystemSo() {
-        // load libjniasplayer-wrapper.so from system
-        for (String libpath : LIB_PATHS) {
-            // load first lib
-            try {
-                System.load(libpath);
-            } catch (UnsatisfiedLinkError error) {
-                Log.d(TAG, "loadSystemSo() Error load library:" + libpath + ", try next");
-                continue;
-            }
-
-            Log.d(TAG, "loadSystemSo() Loaded library:" + libpath);
-            // load first lib only
-            native_init();
-            break;
-        }
+        // JniASPlayerWrapper built in app
+        // JniASPlayer built in app
+        loadAppSo();
     }
 
     static void loadAppSo() {

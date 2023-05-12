@@ -29,7 +29,8 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ASPlayerDemo">
 
-<!--        <uses-library android:name="droidlogic.jniasplayer" />-->
+        <!-- use framework library: /vendor/framework/droidlogic.jniasplayer.jar -->
+        <uses-library android:name="droidlogic.jniasplayer" android:required="false" />
 
         <activity
             android:name=".MainActivity"

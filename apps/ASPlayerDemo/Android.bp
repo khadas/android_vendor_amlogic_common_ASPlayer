@@ -9,7 +9,7 @@ package {
 
 prebuilt_etc {
     name: "privapp_whitelist_com.amlogic.asplayer.demo",
-    system_ext_specific: true,
+    vendor: true,
     sub_dir: "permissions",
     src: "com.amlogic.asplayer.demo.xml",
     filename_from_src: true,
@@ -22,12 +22,13 @@ android_app {
 
     resource_dirs: ["src/main/res"],
 
-    platform_apis: true,
-    system_ext_specific: true,
-    privileged: true,
+    vendor: true,
+    // privileged: true,
+    sdk_version: "system_current",
 
     certificate: "platform",
 
+    enforce_uses_libs: false,
     dex_preopt: {
         enabled: false,
     },
@@ -40,33 +41,6 @@ android_app {
         "privapp_whitelist_com.amlogic.asplayer.demo",
     ],
 
-// Method 1: jniasplayer-wrapper -> static_libs, jniasplayer -> framework
-// use jniasplayer-wrapper as normal java_library, need package jniasplayer-wrapper into apk
-// so, use droidlogic.jniasplayer.wrapper as static_libs
-// jniasplayer built into /vendor/framework/xx.jar
-// so, use droidlogic.jniasplayer as libs(runtime dependencience)
-/*
-    manifest: "src/jniasplayer_framework/AndroidManifest.xml",
-    static_libs: [
-        "androidx.recyclerview_recyclerview",
-        "androidx.appcompat_appcompat",
-        "androidx.annotation_annotation",
-        "androidx-constraintlayout_constraintlayout",
-        "droidlogic.jniasplayer.wrapper",
-    ],
-
-    libs: [
-        "droidlogic.jniasplayer",
-    ],
-
-    jni_libs: [
-        "libjniasplayer-wrapper",
-    ],
-*/
-
-// Method 2: jniasplayer-wrapper -> static_libs, jniasplayer -> static_libs
-// built jniasplayer-wrapper as normal java_library
-// built jniasplayer as normal java_library
     manifest: "src/main/AndroidManifest.xml",
     static_libs: [
         "androidx.recyclerview_recyclerview",
@@ -74,15 +48,13 @@ android_app {
         "androidx.annotation_annotation",
         "androidx-constraintlayout_constraintlayout",
         "droidlogic.jniasplayer.wrapper",
-        "droidlogic.jniasplayer",
     ],
 
     libs: [
-
+        "droidlogic.jniasplayer",
     ],
 
     jni_libs: [
-        "libjniasplayer-jni",
         "libjniasplayer-wrapper",
     ],
 

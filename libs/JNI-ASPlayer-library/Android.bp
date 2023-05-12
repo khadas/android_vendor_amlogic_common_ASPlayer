@@ -36,7 +36,7 @@ java_library {
 
     vendor: true,
     sdk_version: "system_current",
-    //installable: true,
+    installable: true,
 
     dxflags: ["--core-library"],
 
@@ -74,8 +74,8 @@ cc_library_shared {
 
     defaults: [ "jniasplayer_sharelibAndGitInfo_defaults" ],
 
-    vendor_available:true,
-    system_ext_specific: true,
+    vendor: true,
+    installable: true,
 
     srcs: [
         "src/main/jni/JNIASPlayer.cpp",

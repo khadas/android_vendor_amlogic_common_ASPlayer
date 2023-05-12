@@ -10,8 +10,7 @@ package {
 cc_library_shared {
     name: "libjniasplayer-wrapper",
 
-    vendor_available:true,
-    system_ext_specific: true,
+    vendor: true,
 
     srcs: [
         "src/main/jni/ASPlayerJni.cpp",
@@ -22,14 +21,6 @@ cc_library_shared {
         "src/main/jni/common/utils/AutoEnv.cpp",
     ],
 
-// Method 1, use /system_ext/lib/libjniasplayer-jni.so(/vendor/lib/libjniasplayer-jni.so)
-/*
-    cflags: [
-        "-Wno-unused-parameter",
-        "-DUSE_SYSTEM_SO=1",
-    ],
-*/
-// Method 2, use app/lib/libjniasplayer-jni.so
     cflags: [
         "-Wno-unused-parameter",
         "-DUSE_SYSTEM_SO=0",
@@ -66,62 +57,28 @@ cc_library_shared {
     ],
 }
 
-//copy xml to permissions directory
-prebuilt_etc {
-    name: "droidlogic.jniasplayer.wrapper.xml",
-
-    vendor: true,
-    src: "droidlogic.jniasplayer.wrapper.xml",
-    sub_dir: "permissions",
-}
-
 java_library {
     name: "droidlogic.jniasplayer.wrapper",
 
     vendor: true,
     sdk_version: "system_current",
-    installable: true,
+    // installable: true,
 
-    dxflags: ["--core-library"],
+//    dxflags: ["--core-library"],
 //    dex_preopt: {
 //        enabled: false,
 //    },
 
-    required: [
-        "droidlogic.jniasplayer.wrapper.xml",
-    ],
-
-// Method 1: jniasplayer-wrapper -> normal java_library, jniasplayer -> framework
-// don't build droidlogic.jniasplayer.wrapper as framework, just as normal java_library
-// jniasplayer was built as framework, so use as libs(runtime dependencience)
-//    srcs: [
-//        "src/main/java/**/*.java",
-//        "src/main/jniasplayer_framework/**/*.java",
-//    ],
-/*
-    static_libs: [
-
-    ],
-
-    libs: [
-        "androidx.annotation_annotation",
-        "droidlogic.jniasplayer",
-    ]
-*/
-
-// Method 2: jniasplayer-wrapper -> static_libs, jniasplayer -> static_libs, no framework
-// build jniasplayer-wrapper and jniasplayer into app
     srcs: [
         "src/main/java/**/*.java",
-        "src/main/no_framework/**/*.java",
     ],
 
     static_libs: [
-        "androidx.annotation_annotation",
-        "droidlogic.jniasplayer",
+
     ],
 
     libs: [
+        "droidlogic.jniasplayer",
     ],
 
 }
