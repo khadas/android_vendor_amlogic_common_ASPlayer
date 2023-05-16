@@ -21,11 +21,13 @@ import android.media.tv.tuner.filter.Settings;
 import android.media.tv.tuner.filter.TsFilterConfiguration;
 import android.media.tv.tuner.frontend.OnTuneEventListener;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Process;
+import android.util.Log;
 import android.view.Surface;
 
 import com.amlogic.asplayer.api.AudioParams;
@@ -37,6 +39,7 @@ import com.amlogic.asplayer.api.TsPlaybackListener;
 import com.amlogic.asplayer.api.VideoParams;
 import com.amlogic.asplayer.demo.Constant;
 import com.amlogic.asplayer.demo.utils.HandlerExecutor;
+import com.amlogic.asplayer.demo.utils.TunerHelper;
 import com.amlogic.asplayer.demo.utils.TvLog;
 import com.amlogic.asplayer.jni.wrapper.JniASPlayerWrapper;
 
@@ -66,8 +69,10 @@ public class TvPlayer {
 
     private Filter mVideoFilter;
     private int mVideoPid = -1;
+    private String mVideoMimeType;
     private Filter mAudioFilter;
     private int mAudioPid = -1;
+    private String mAudioMimeType;
 
     public interface TuneListener {
         void execTune(Tuner tuner);
@@ -169,19 +174,20 @@ public class TvPlayer {
 
         if (mASPlayer != null) {
             mVideoPid = bundle.getInt(Constant.EXTRA_VIDEO_PID, -1);
+            mVideoMimeType = bundle.getString(Constant.EXTRA_VIDEO_MIMETYPE, "");
+
             startVideoFilter();
             if (mVideoFilter == null) {
                 return;
             }
 
-            String videoMimeType = bundle.getString(Constant.EXTRA_VIDEO_MIMETYPE, "");
             int width = 1920;
             int height = 1080;
-            if (videoMimeType.contains("hevc")) {
+            if (mVideoMimeType.contains("hevc")) {
                 width = 3840;
                 height = 2160;
             }
-            VideoParams.Builder videoParamsBuilder = new VideoParams.Builder(videoMimeType, width, height)
+            VideoParams.Builder videoParamsBuilder = new VideoParams.Builder(mVideoMimeType, width, height)
                     .setPid(mVideoPid)
                     .setTrackFilterId(mVideoFilter.getId())
                     .setAvSyncHwId(mTuner.getAvSyncHwId(mVideoFilter));
@@ -189,17 +195,18 @@ public class TvPlayer {
             TvLog.i("videofilterId: %d", mVideoFilter.getId());
             TvLog.i("videoAvSyncHwId: %d", mTuner.getAvSyncHwId(mVideoFilter));
 
-            mASPlayer.setVideoParams(videoParams);
+            setVideoParams(videoParams);
             mASPlayer.startVideoDecoding();
 
             mAudioPid = bundle.getInt(Constant.EXTRA_AUDIO_PID, -1);
+            mAudioMimeType = bundle.getString(Constant.EXTRA_AUDIO_MIMETYPE, "");
+
             startAudioFilter();
             if (mAudioFilter == null) {
                 return;
             }
 
-            String audioMimeType = bundle.getString(Constant.EXTRA_AUDIO_MIMETYPE, "");
-            AudioParams.Builder audioParamsBuilder = new AudioParams.Builder(audioMimeType, 48000, 2)
+            AudioParams.Builder audioParamsBuilder = new AudioParams.Builder(mAudioMimeType, 48000, 2)
                     .setPid(mAudioPid)
                     .setTrackFilterId(mAudioFilter.getId())
                     .setAvSyncHwId(mTuner.getAvSyncHwId(mAudioFilter));
@@ -207,10 +214,36 @@ public class TvPlayer {
             TvLog.i("audiofilterId: %d", mAudioFilter.getId());
             TvLog.i("audioAvSyncHwId: %d", mTuner.getAvSyncHwId(mAudioFilter));
 
-            mASPlayer.setAudioParams(audioParams);
+            setAudioParams(audioParams);
             mASPlayer.startAudioDecoding();
         } else {
             TvLog.e("Player-%d handleStart failed, asplayer is null", mId);
+        }
+    }
+
+    private void setVideoParams(VideoParams videoParams) {
+        if (mASPlayer == null) {
+            return;
+        }
+
+        try {
+            mASPlayer.setVideoParams(videoParams);
+        } catch (Exception e) {
+            TvLog.e("setVideoParams failed, error: %s, %s", e.getMessage(), Log.getStackTraceString(e));
+            e.printStackTrace();
+        }
+    }
+
+    private void setAudioParams(AudioParams audioParams) {
+        if (mASPlayer == null) {
+            return;
+        }
+
+        try {
+            mASPlayer.setAudioParams(audioParams);
+        } catch (Exception e) {
+            TvLog.e("setAudioParams failed, error: %s, %s", e.getMessage(), Log.getStackTraceString(e));
+            e.printStackTrace();
         }
     }
 
@@ -234,7 +267,7 @@ public class TvPlayer {
         }
     }
 
-    private Filter openVideoFilter(int pid) {
+    private Filter openVideoFilter(int pid, String mimeType) {
         long bufferSize = 1024 * 1024 * 4;
         Filter filter = mTuner.openFilter(Filter.TYPE_TS, Filter.SUBTYPE_VIDEO, bufferSize, mHandlerExecutor, new FilterCallback() {
             @Override
@@ -252,9 +285,13 @@ public class TvPlayer {
             return null;
         }
 
-        Settings settings = AvSettings.builder(Filter.TYPE_TS, false)
-                .setPassthrough(true)
-                .build();
+        AvSettings.Builder builder = AvSettings.builder(Filter.TYPE_TS, false)
+                .setPassthrough(true);
+        if (Build.VERSION.SDK_INT >= 33) {
+            // Android T
+            TunerHelper.setVideoStreamType(builder, mimeType);
+        }
+        Settings settings = builder.build();
         FilterConfiguration filterConfiguration = TsFilterConfiguration.builder()
                 .setTpid(pid)
                 .setSettings(settings)
@@ -263,7 +300,7 @@ public class TvPlayer {
         return filter;
     }
 
-    private Filter openAudioFilter(int pid) {
+    private Filter openAudioFilter(int pid, String mimeType) {
         long bufferSize = 1024 * 1024 * 2;
         Filter filter = mTuner.openFilter(Filter.TYPE_TS, Filter.SUBTYPE_AUDIO, bufferSize, mHandlerExecutor, new FilterCallback() {
             @Override
@@ -281,9 +318,13 @@ public class TvPlayer {
             return null;
         }
 
-        Settings settings = AvSettings.builder(Filter.TYPE_TS, true)
-                .setPassthrough(true)
-                .build();
+        AvSettings.Builder builder = AvSettings.builder(Filter.TYPE_TS, true)
+                .setPassthrough(true);
+        if (Build.VERSION.SDK_INT >= 33) {
+            // Android T
+            TunerHelper.setAudioStreamType(builder, mimeType);
+        }
+        Settings settings = builder.build();
         FilterConfiguration filterConfiguration = TsFilterConfiguration.builder()
                 .setTpid(pid)
                 .setSettings(settings)
@@ -298,7 +339,7 @@ public class TvPlayer {
         }
 
         if (mVideoPid > 0) {
-            mVideoFilter = openVideoFilter(mVideoPid);
+            mVideoFilter = openVideoFilter(mVideoPid, mVideoMimeType);
             if (mVideoFilter != null) {
                 mVideoFilter.start();
             }
@@ -311,7 +352,7 @@ public class TvPlayer {
         }
 
         if (mAudioPid > 0) {
-            mAudioFilter = openAudioFilter(mAudioPid);
+            mAudioFilter = openAudioFilter(mAudioPid, mAudioMimeType);
             if (mAudioFilter != null) {
                 mAudioFilter.start();
             }
