@@ -9,6 +9,7 @@
 package com.amlogic.asplayer.core;
 
 import android.content.Context;
+import android.media.AudioFormat;
 import android.media.MediaFormat;
 import android.media.tv.tuner.Tuner;
 import android.media.tv.tuner.dvr.DvrPlayback;
@@ -26,6 +27,7 @@ import com.amlogic.asplayer.api.InputBuffer;
 import com.amlogic.asplayer.api.InputFrameBuffer;
 import com.amlogic.asplayer.api.InputSourceType;
 import com.amlogic.asplayer.api.TsPlaybackListener;
+import com.amlogic.asplayer.api.VideoFormat;
 import com.amlogic.asplayer.api.VideoParams;
 import com.amlogic.asplayer.api.IASPlayer;
 
@@ -37,7 +39,8 @@ import static com.amlogic.asplayer.api.ASPlayer.INFO_UNKNOWN_ERROR;
 import static com.amlogic.asplayer.core.TsPlaybackConfig.PLAYBACK_BUFFER_SIZE;
 import static com.amlogic.asplayer.core.TsPlaybackConfig.TS_PACKET_SIZE;
 
-public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListener {
+public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListener,
+        AudioOutputPath.AudioFormatListener {
 
     private static final boolean DEBUG = true;
     private static final String TAG = Constant.LOG_TAG;
@@ -69,14 +72,16 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     private EventNotifier mEventNotifier;
 
     private static class VideoSizeInfo {
-        private final int mWidth;
-        private final int mHeight;
-        private final float mAspectRatio;
+        private int mWidth;
+        private int mHeight;
+        private int mAspectRatio;
+        private int mFrameRate;
 
-        private VideoSizeInfo(int width, int height, float aspectRatio) {
+        private VideoSizeInfo(int width, int height, int aspectRatio) {
             mWidth = width;
             mHeight = height;
             mAspectRatio = aspectRatio;
+            mFrameRate = 0;
         }
     }
 
@@ -133,7 +138,8 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     private void handlePrepare() {
-        mRendererScheduler.setVideoListener(this);
+        mRendererScheduler.setVideoFormatListener(this);
+        mRendererScheduler.setAudioFormatListener(this);
         mRendererScheduler.prepare(mId, mPlayerHandler);
     }
 
@@ -146,18 +152,15 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     @Override
-    public void onVideoSizeInfoChanged(int width, int height, float pixelAspectRatio) {
+    public void onVideoSizeInfoChanged(int width, int height, int pixelAspectRatio) {
         if (mVideoSizeInfo == null) {
             mVideoSizeInfo = new VideoSizeInfo(width, height, pixelAspectRatio);
-            MediaFormat format = MediaFormat.createVideoFormat("", width, height);
-            mEventNotifier.notifyVideoFormatChange(format);
-            return;
+            tryNotifyVideoFormatChanged();
         } else if (mVideoSizeInfo != null &&
                 (width != mVideoSizeInfo.mWidth || height != mVideoSizeInfo.mHeight ||
                         pixelAspectRatio != mVideoSizeInfo.mAspectRatio)) {
-            MediaFormat format = MediaFormat.createVideoFormat("", width, height);
-            mEventNotifier.notifyVideoFormatChange(format);
             mVideoSizeInfo = new VideoSizeInfo(width, height, pixelAspectRatio);
+            tryNotifyVideoFormatChanged();
         }
     }
 
@@ -167,9 +170,43 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     @Override
-    public void onFrameRateChanged(float frameRate) {
+    public void onFrameRateChanged(int frameRate) {
         MediaFormat format = MediaFormat.createVideoFormat("", 0, 0);
         format.setInteger(MediaFormat.KEY_FRAME_RATE, (int) frameRate);
+        if (mVideoSizeInfo != null && frameRate != mVideoSizeInfo.mFrameRate) {
+            mVideoSizeInfo.mFrameRate = (int)frameRate;
+            tryNotifyVideoFormatChanged();
+        }
+    }
+
+    private void tryNotifyVideoFormatChanged() {
+        if (mVideoSizeInfo != null && mVideoSizeInfo.mWidth > 0 && mVideoSizeInfo.mHeight > 0
+            && mVideoSizeInfo.mAspectRatio > 0 && mVideoSizeInfo.mFrameRate > 0) {
+            MediaFormat mediaFormat = new MediaFormat();
+            mediaFormat.setInteger(VideoFormat.KEY_WIDTH, mVideoSizeInfo.mWidth);
+            mediaFormat.setInteger(VideoFormat.KEY_HEIGHT, mVideoSizeInfo.mHeight);
+            mediaFormat.setInteger(VideoFormat.KEY_FRAME_RATE, mVideoSizeInfo.mFrameRate);
+            mediaFormat.setInteger(VideoFormat.KEY_ASPECT_RATIO, mVideoSizeInfo.mAspectRatio);
+
+            mEventNotifier.notifyVideoFormatChange(mediaFormat);
+        }
+    }
+
+    @Override
+    public void onAudioFormat(AudioFormat audioFormat) {
+        if (audioFormat == null) {
+            return;
+        }
+
+        MediaFormat mediaFormat = new MediaFormat();
+        mediaFormat.setInteger(
+                com.amlogic.asplayer.api.AudioFormat.KEY_SAMPLE_RATE, audioFormat.getSampleRate());
+        mediaFormat.setInteger(
+                com.amlogic.asplayer.api.AudioFormat.KEY_CHANNEL_COUNT, audioFormat.getChannelCount());
+        mediaFormat.setInteger(
+                com.amlogic.asplayer.api.AudioFormat.KEY_CHANNEL_MASK, audioFormat.getChannelMask());
+
+        mEventNotifier.notifyAudioFormatChange(mediaFormat);
     }
 
     @Override
@@ -230,7 +267,8 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     private void handleRelease() {
         handleStop();
         mRendererScheduler.setDataListener(null);
-        mRendererScheduler.setVideoListener(null);
+        mRendererScheduler.setVideoFormatListener(null);
+        mRendererScheduler.setAudioFormatListener(null);
         mRendererScheduler.release();
 
         releaseTsPlayback();
@@ -424,9 +462,13 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             int filterId = params.getTrackFilterId();
             int avSyncHwId = params.getAvSyncHwId();
             if (filterId < 0) {
-                throw new IllegalArgumentException(String.format("invalid filter id: %d", filterId));
+                String msg = String.format("invalid filter id: %d", filterId);
+                ASPlayerLog.e("%s-%d setVideoParams failed, error: %s", TAG, mId, msg);
+                throw new IllegalArgumentException(msg);
             } else if (avSyncHwId < 0) {
-                throw new IllegalArgumentException(String.format("invalid avSyncHwId id: %d", avSyncHwId));
+                String msg = String.format("invalid avSyncHwId id: %d", avSyncHwId);
+                ASPlayerLog.e("%s-%d setVideoParams failed, error: %s", TAG, mId, msg);
+                throw new IllegalArgumentException(msg);
             }
         }
 
@@ -652,9 +694,13 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             int filterId = params.getTrackFilterId();
             int avSyncHwId = params.getAvSyncHwId();
             if (filterId < 0) {
-                throw new IllegalArgumentException(String.format("invalid filter id: %d", filterId));
+                String msg = String.format("invalid filter id: %d", filterId);
+                ASPlayerLog.e("%s-%d setAudioParams failed, error: %s", TAG, mId, msg);
+                throw new IllegalArgumentException(msg);
             } else if (avSyncHwId < 0) {
-                throw new IllegalArgumentException(String.format("invalid avSyncHw id: %d", avSyncHwId));
+                String msg = String.format("invalid avSyncHw id: %d", avSyncHwId);
+                ASPlayerLog.e("%s-%d setAudioParams failed, error: %s", TAG, mId, msg);
+                throw new IllegalArgumentException(msg);
             }
         }
 

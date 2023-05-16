@@ -14,7 +14,7 @@
 #define LOG_PLAYER_OP_FAILED(ret) ALOGE("%s[%d] %s failed, ret: %d", __func__, __LINE__, __func__, ret)
 
 static void asplayer_callback(void *user_data, jni_asplayer_event *event) {
-    ALOGI("%s[%d] event type: %d", __func__, __LINE__, event ? event->type : -1);
+    ALOGI("%s[%d] event type: %d", __FUNCTION__, __LINE__, event ? event->type : -1);
     asplayer_callback_userdata_t *data = static_cast<asplayer_callback_userdata_t *>(user_data);
     JniASPlayerWrapper *player = data->player;
 
@@ -25,6 +25,11 @@ static void asplayer_callback(void *user_data, jni_asplayer_event *event) {
 
     switch (event->type) {
         case JNI_ASPLAYER_EVENT_TYPE_VIDEO_CHANGED:
+        case JNI_ASPLAYER_EVENT_TYPE_AUDIO_CHANGED:
+        case JNI_ASPLAYER_EVENT_TYPE_RENDER_FIRST_FRAME_VIDEO:
+        case JNI_ASPLAYER_EVENT_TYPE_RENDER_FIRST_FRAME_AUDIO:
+        case JNI_ASPLAYER_EVENT_TYPE_DECODE_FIRST_FRAME_VIDEO:
+        case JNI_ASPLAYER_EVENT_TYPE_DECODE_FIRST_FRAME_AUDIO:
             player->notifyPlaybackListeners(event);
             break;
         default:
@@ -39,6 +44,7 @@ JniASPlayerWrapper::JniASPlayerWrapper() : mHandle(0), mpCallbackUserData(nullpt
 
 JniASPlayerWrapper::~JniASPlayerWrapper() {
     if (mpCallbackUserData) {
+        mpCallbackUserData->player = nullptr;
         delete mpCallbackUserData;
         mpCallbackUserData = nullptr;
     }

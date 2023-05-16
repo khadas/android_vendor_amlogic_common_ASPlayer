@@ -23,8 +23,13 @@ public:
     bool convertInputBuffer(JNIEnv *env, jobject jInputBuffer, jni_asplayer_input_buffer *outInputBuffer);
 
     static bool createVideoFormatChangeEvent(JNIEnv *env, jni_asplayer_event *event, jobject *jEvent);
+    static bool createAudioFormatChangeEvent(JNIEnv *env, jni_asplayer_event *event, jobject *jEvent);
+    static bool createVideoFirstFrameEvent(JNIEnv *env, jni_asplayer_event *event, jobject *jEvent);
+    static bool createAudioFirstFrameEvent(JNIEnv *env, jni_asplayer_event *event, jobject *jEvent);
+    static bool createDecodeFirstVideoFrameEvent(JNIEnv *env, jni_asplayer_event *event, jobject *jEvent);
+    static bool createDecodeFirstAudioFrameEvent(JNIEnv *env, jni_asplayer_event *event, jobject *jEvent);
 
-    static bool notifyVideoFormatChangeEvent(JNIEnv *env, jobject jPlaybackListener, jobject videoFormatChangeEvent);
+    static bool notifyPlaybackEvent(JNIEnv *env, jobject jPlaybackListener, jobject playbackEvent);
 
 public:
     ASPlayerJni();

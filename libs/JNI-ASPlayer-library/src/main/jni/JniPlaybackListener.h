@@ -40,6 +40,16 @@ private:
 
     void handleVideoFormatChangeEvent(JNIEnv *env, jobject jEvent);
 
+    void handleAudioFormatChangeEvent(JNIEnv *env, jobject jEvent);
+
+    void handleVideoFirstFrameEvent(JNIEnv *env, jobject jEvent);
+
+    void handleAudioFirstFrameEvent(JNIEnv *env, jobject jEvent);
+
+    void handleDecodeFirstVideoFrameEvent(JNIEnv *env, jobject jEvent);
+
+    void handleDecodeFirstAudioFrameEvent(JNIEnv *env, jobject jEvent);
+
     void notifyCallbackEvent(jni_asplayer_event *event);
 
 private:

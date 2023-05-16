@@ -10,6 +10,7 @@ package com.amlogic.asplayer.demo.local;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.media.MediaFormat;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -24,11 +25,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.amlogic.asplayer.api.AudioFormat;
 import com.amlogic.asplayer.api.TsPlaybackListener;
+import com.amlogic.asplayer.api.VideoFormat;
 import com.amlogic.asplayer.demo.Constant;
 import com.amlogic.asplayer.demo.R;
 import com.amlogic.asplayer.demo.player.DvrPlayer;
 import com.amlogic.asplayer.demo.utils.ToastUtils;
+import com.amlogic.asplayer.demo.utils.TvLog;
 
 import java.io.File;
 
@@ -124,7 +128,35 @@ public class LocalTvPlayerActivity extends Activity implements TsPlaybackListene
 
     @Override
     public void onPlaybackEvent(final TsPlaybackListener.PlaybackEvent event) {
-        Log.d(TAG, "onPlaybackEvent " + event);
+        TvLog.i("onPlaybackEvent %s", event);
+        if (event instanceof VideoFormatChangeEvent) {
+            VideoFormatChangeEvent ev = (VideoFormatChangeEvent) event;
+            MediaFormat mediaFormat = ev.getVideoFormat();
+            int width = mediaFormat.getInteger(VideoFormat.KEY_WIDTH);
+            int height = mediaFormat.getInteger(VideoFormat.KEY_HEIGHT);
+            int aspectRatio = mediaFormat.getInteger(VideoFormat.KEY_ASPECT_RATIO, 0);
+            int frameRate = mediaFormat.getInteger(VideoFormat.KEY_FRAME_RATE, 0);
+            TvLog.i("onPlaybackEvent video format: %d x %d, frameRate: %d, aspectRatio: %d",
+                    width, height, frameRate, aspectRatio);
+        } else if (event instanceof AudioFormatChangeEvent) {
+            AudioFormatChangeEvent ev = (AudioFormatChangeEvent) event;
+            MediaFormat mediaFormat = ev.getAudioFormat();
+            int sampleRate = mediaFormat.getInteger(AudioFormat.KEY_SAMPLE_RATE);
+            int channelCount = mediaFormat.getInteger(AudioFormat.KEY_CHANNEL_COUNT);
+            int channelMask = mediaFormat.getInteger(AudioFormat.KEY_CHANNEL_MASK);
+            TvLog.i("onPlaybackEvent audio format sampleRate: %d, channels: %d, channelMask: %d",
+                    sampleRate, channelCount, channelMask);
+        } else if (event instanceof VideoFirstFrameEvent) {
+            VideoFirstFrameEvent ev = (VideoFirstFrameEvent) event;
+            TvLog.i("onPlaybackEvent VideoFirstFrameEvent, pts: %d", ev.getPositionMs());
+        } else if (event instanceof AudioFirstFrameEvent) {
+            AudioFirstFrameEvent ev = (AudioFirstFrameEvent) event;
+            TvLog.i("onPlaybackEvent AudioFirstFrameEvent, pts: %d", ev.getPositionMs());
+        } else if (event instanceof DecodeFirstVideoFrameEvent) {
+
+        } else if (event instanceof DecodeFirstAudioFrameEvent) {
+
+        }
     }
 
     private void startPlayVideo() {

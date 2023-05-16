@@ -29,6 +29,11 @@ public:
 
 private:
     void notifyVideoFormatChangeEvent(jni_asplayer_event *event);
+    void notifyAudioFormatChangeEvent(jni_asplayer_event *event);
+    void notifyVideoFirstFrameEvent(jni_asplayer_event *event);
+    void notifyAudioFirstFrameEvent(jni_asplayer_event *event);
+    void notifyDecodeFirstVideoFrameEvent(jni_asplayer_event *event);
+    void notifyDecodeFirstAudioFrameEvent(jni_asplayer_event *event);
 
 private:
     jobject mJavaListener;

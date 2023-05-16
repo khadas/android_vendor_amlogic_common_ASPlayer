@@ -31,7 +31,7 @@ public class InputBuffer {
     public int error;
 
     // additional details for video
-    public float pixelAspectRatio;
+    public int pixelAspectRatio;
     public int width;
     public int height;
 }

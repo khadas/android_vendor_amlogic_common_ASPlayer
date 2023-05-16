@@ -14,6 +14,8 @@ jclass JniMediaFormat::sMediaFormatCls = nullptr;
 jmethodID JniMediaFormat::sConstructorMID = nullptr;
 jmethodID JniMediaFormat::sGetIntegerMID = nullptr;
 jmethodID JniMediaFormat::sGetIntegerDefaultValueMID = nullptr;
+jmethodID JniMediaFormat::sGetFloatMID = nullptr;
+jmethodID JniMediaFormat::sGetFloatDefaultValueMID = nullptr;
 jmethodID JniMediaFormat::sGetKeysMID = nullptr;
 jmethodID JniMediaFormat::sGetValueTypeForKeyMID = nullptr;
 
@@ -37,6 +39,8 @@ bool JniMediaFormat::initJni(JNIEnv *env) {
     sConstructorMID = env->GetMethodID(sMediaFormatCls, "<init>", "()V");
     sGetIntegerMID = env->GetMethodID(sMediaFormatCls, "getInteger", "(Ljava/lang/String;)I");
     sGetIntegerDefaultValueMID = env->GetMethodID(sMediaFormatCls, "getInteger", "(Ljava/lang/String;I)I");
+    sGetFloatMID = env->GetMethodID(sMediaFormatCls, "getFloat", "(Ljava/lang/String;)F");
+    sGetFloatDefaultValueMID = env->GetMethodID(sMediaFormatCls, "getFloat", "(Ljava/lang/String;F)F");
     sGetKeysMID = env->GetMethodID(sMediaFormatCls, "getKeys", "()Ljava/util/Set;");
     sGetValueTypeForKeyMID = env->GetMethodID(sMediaFormatCls, "getValueTypeForKey",
                                               "(Ljava/lang/String;)I");
@@ -82,6 +86,35 @@ int32_t JniMediaFormat::getInteger(JNIEnv *env, jobject jMediaFormat, const char
 
     jobject keyStr = env->NewStringUTF(key);
     jint value = env->CallIntMethod(jMediaFormat, sGetIntegerDefaultValueMID, keyStr, defaultValue);
+    env->DeleteLocalRef(keyStr);
+
+    return value;
+}
+
+bool JniMediaFormat::getFloat(JNIEnv *env, jobject jMediaFormat, const char *key, float *outValue) {
+    if (env == nullptr) {
+        return false;
+    } else if (jMediaFormat == nullptr || key == nullptr || outValue == nullptr) {
+        return false;
+    }
+
+    jobject keyStr = env->NewStringUTF(key);
+    jfloat value = env->CallFloatMethod(jMediaFormat, sGetFloatMID, keyStr);
+    env->DeleteLocalRef(keyStr);
+
+    *outValue = value;
+    return true;
+}
+
+float JniMediaFormat::getFloat(JNIEnv *env, jobject jMediaFormat, const char *key, float defaultValue) {
+    if (env == nullptr) {
+        return defaultValue;
+    } else if (jMediaFormat == nullptr || key == nullptr) {
+        return defaultValue;
+    }
+
+    jobject keyStr = env->NewStringUTF(key);
+    jfloat value = env->CallFloatMethod(jMediaFormat, sGetFloatDefaultValueMID, keyStr, defaultValue);
     env->DeleteLocalRef(keyStr);
 
     return value;

@@ -771,6 +771,7 @@ int JniASPlayer::setVideoParams(jni_asplayer_video_params *params) {
     env->CallVoidMethod(mJavaPlayer, gASPlayerCtx.setVideoParamsMID, videoParam);
 
     jthrowable exception = env->ExceptionOccurred();
+    env->ExceptionClear();
 
     env->DeleteLocalRef(videoParam);
 
@@ -779,13 +780,18 @@ int JniASPlayer::setVideoParams(jni_asplayer_video_params *params) {
         if (env->IsInstanceOf(exception, gExceptionsCtx.nullPointerExceptionCls)
             || env->IsInstanceOf(exception, gExceptionsCtx.illegalArgumentExceptionCls)) {
             result = JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+            ALOGE("[%s/%d] failed, NullPointerException or IllegalArgumentException", __FUNCTION__, __LINE__);
         } else if (env->IsInstanceOf(exception, gExceptionsCtx.illegalStateExceptionCls)) {
             result = JNI_ASPLAYER_ERROR_INVALID_OPERATION;
+            ALOGE("[%s/%d] failed, PointerException or IllegalStateException", __FUNCTION__, __LINE__);
+        } else {
+            result = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
         }
-        result = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
-    ALOGV("setVideoParams result: %d", result);
+    if (result != JNI_ASPLAYER_OK) {
+        ALOGE("[%s/%d] failed, result: %d", __FUNCTION__, __LINE__, result);
+    }
 
     return result;
 }
@@ -807,6 +813,7 @@ int JniASPlayer::setAudioParams(jni_asplayer_audio_params *params) {
     env->CallVoidMethod(mJavaPlayer, gASPlayerCtx.setAudioParamsMID, audioParam);
 
     jthrowable exception = env->ExceptionOccurred();
+    env->ExceptionClear();
 
     env->DeleteLocalRef(audioParam);
 
@@ -815,10 +822,17 @@ int JniASPlayer::setAudioParams(jni_asplayer_audio_params *params) {
         if (env->IsInstanceOf(exception, gExceptionsCtx.nullPointerExceptionCls)
             || env->IsInstanceOf(exception, gExceptionsCtx.illegalArgumentExceptionCls)) {
             result = JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+            ALOGE("[%s/%d] failed, NullPointerException or IllegalArgumentException", __FUNCTION__, __LINE__);
         } else if (env->IsInstanceOf(exception, gExceptionsCtx.illegalStateExceptionCls)) {
             result = JNI_ASPLAYER_ERROR_INVALID_OPERATION;
+            ALOGE("[%s/%d] failed, PointerException or IllegalStateException", __FUNCTION__, __LINE__);
+        } else {
+            result = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
         }
-        result = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    if (result != JNI_ASPLAYER_OK) {
+        ALOGE("[%s/%d] failed, result: %d", __FUNCTION__, __LINE__, result);
     }
 
     LOG_FUNCTION_INT_END(result);

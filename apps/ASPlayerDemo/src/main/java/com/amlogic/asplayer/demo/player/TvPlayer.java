@@ -639,6 +639,7 @@ public class TvPlayer {
     }
 
     protected void onPlaybackEvent(TsPlaybackListener.PlaybackEvent event) {
+        TvLog.i("TvPlayer-%d onPlaybackEvent, event: %s", mId, event);
         if (event instanceof TsPlaybackListener.VideoFormatChangeEvent) {
             TsPlaybackListener.VideoFormatChangeEvent ev = (TsPlaybackListener.VideoFormatChangeEvent) event;
             MediaFormat mediaFormat = ev.getVideoFormat();
@@ -655,6 +656,10 @@ public class TvPlayer {
             TvLog.i("TvPlayer-%d AudioFirstFrameEvent", mId);
             TsPlaybackListener.AudioFirstFrameEvent ev = (TsPlaybackListener.AudioFirstFrameEvent) event;
             notifyFrame(ev.getPositionMs(), false);
+        } else if (event instanceof TsPlaybackListener.DecodeFirstVideoFrameEvent) {
+            TvLog.i("TvPlayer-%d DecodeFirstVideoFrameEvent", mId);
+        } else if (event instanceof TsPlaybackListener.DecodeFirstAudioFrameEvent) {
+            TvLog.i("TvPlayer-%d DecodeFirstAudioFrameEvent", mId);
         }
 
         if (mTsPlaybackListener != null) {

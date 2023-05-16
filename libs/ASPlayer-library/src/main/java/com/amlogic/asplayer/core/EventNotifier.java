@@ -5,39 +5,21 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 
+import com.amlogic.asplayer.api.EventType;
 import com.amlogic.asplayer.api.TsPlaybackListener;
+
+import static com.amlogic.asplayer.api.TsPlaybackListener.AudioFirstFrameEvent;
+import static com.amlogic.asplayer.api.TsPlaybackListener.AudioFormatChangeEvent;
+import static com.amlogic.asplayer.api.TsPlaybackListener.DecodeFirstAudioFrameEvent;
+import static com.amlogic.asplayer.api.TsPlaybackListener.DecodeFirstVideoFrameEvent;
+import static com.amlogic.asplayer.api.TsPlaybackListener.VideoFirstFrameEvent;
+import static com.amlogic.asplayer.api.TsPlaybackListener.VideoFormatChangeEvent;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 
 class EventNotifier {
-
-    protected enum EventId {
-        EVENT_VIDEO_FORMAT_CHANGED,
-        EVENT_AUDIO_FORMAT_CHANGED,
-        EVENT_DECODE_FIRST_VIDEO_FRAME,
-        EVENT_DECODE_FIRST_AUDIO_FRAME,
-    }
-
-    private static class EventDecodeFirstFrame {
-
-        final long mPositionMs;
-        final double mSpeed;
-
-        EventDecodeFirstFrame(long positionMs, double speed) {
-            mPositionMs = positionMs;
-            mSpeed = speed;
-        }
-
-        @Override
-        public String toString() {
-            return "EventDecodeFirstFrame{" +
-                    "mPositionMs=" + mPositionMs +
-                    ", mSpeed=" + mSpeed +
-                    '}';
-        }
-    }
 
     // Should be careful enabling this since may produce many traces!
     private static final boolean LOCAL_LOG_NOTIFICATIONS = true;
@@ -82,74 +64,102 @@ class EventNotifier {
     }
 
     void notifyVideoFormatChange(MediaFormat videoFormat) {
-        postEvent(EventId.EVENT_VIDEO_FORMAT_CHANGED, videoFormat);
+        postEvent(EventType.EVENT_TYPE_VIDEO_CHANGED, videoFormat);
     }
 
     void notifyAudioFormatChange(MediaFormat audioFormat) {
-        postEvent(EventId.EVENT_AUDIO_FORMAT_CHANGED, audioFormat);
+        postEvent(EventType.EVENT_TYPE_AUDIO_CHANGED, audioFormat);
     }
 
-    void notifyDecodeFirstVideoFrame(long positionMs, double speed) {
-        postEvent(EventId.EVENT_DECODE_FIRST_VIDEO_FRAME, new EventDecodeFirstFrame(positionMs, speed));
+    void notifyRenderFirstVideoFrame(long positionMs) {
+        postEvent(EventType.EVENT_TYPE_RENDER_FIRST_FRAME_VIDEO,
+                new VideoFirstFrameEvent(positionMs));
     }
 
-    void notifyDecodeFirstAudioFrame(long positionMs, double speed) {
-        postEvent(EventId.EVENT_DECODE_FIRST_AUDIO_FRAME, new EventDecodeFirstFrame(positionMs, speed));
+    void notifyRenderFirstAudioFrame(long positionMs) {
+        postEvent(EventType.EVENT_TYPE_RENDER_FIRST_FRAME_AUDIO,
+                new AudioFirstFrameEvent(positionMs));
     }
 
-    private void postEvent(EventId eventId, Object object) {
-        mEventHandler.obtainMessage(eventId.ordinal(), object).sendToTarget();
+    void notifyDecodeFirstVideoFrame(long positionMs) {
+        postEvent(EventType.EVENT_TYPE_DECODE_FIRST_FRAME_VIDEO,
+                new DecodeFirstVideoFrameEvent(positionMs));
+    }
+
+    void notifyDecodeFirstAudioFrame(long positionMs) {
+        postEvent(EventType.EVENT_TYPE_DECODE_FIRST_FRAME_AUDIO,
+                new DecodeFirstAudioFrameEvent(positionMs));
+    }
+
+    private void postEvent(int eventType, Object object) {
+        mEventHandler.obtainMessage(eventType, object).sendToTarget();
     }
 
     private void notifyEvent(Message msg) {
-        final EventId eventId = EventId.values()[msg.what];
+        final int eventType = msg.what;
 
-        switch (eventId) {
-            case EVENT_VIDEO_FORMAT_CHANGED: {
+        switch (eventType) {
+            case EventType.EVENT_TYPE_VIDEO_CHANGED: {
                 MediaFormat videoFormat = (MediaFormat) msg.obj;
                 if (LOCAL_LOG_NOTIFICATIONS) {
                     ASPlayerLog.d("EventNotifier-%d.notifyEvent: VideoFormatChangeEvent(%s)", mId, videoFormat);
                 }
                 for (TsPlaybackListener listener : mPlaybackListeners) {
-                    listener.onPlaybackEvent(new TsPlaybackListener.VideoFormatChangeEvent(videoFormat));
+                    listener.onPlaybackEvent(new VideoFormatChangeEvent(videoFormat));
                 }
             }
                 break;
-            case EVENT_AUDIO_FORMAT_CHANGED: {
+            case EventType.EVENT_TYPE_AUDIO_CHANGED: {
                 MediaFormat audioFormat= (MediaFormat) msg.obj;
                 if (LOCAL_LOG_NOTIFICATIONS) {
                     ASPlayerLog.d("EventNotifier-%d.notifyEvent: AudioFormatChangeEvent(%s)", mId, audioFormat);
                 }
                 for (TsPlaybackListener listener : mPlaybackListeners) {
-                    listener.onPlaybackEvent(new TsPlaybackListener.AudioFormatChangeEvent(audioFormat));
+                    listener.onPlaybackEvent(new AudioFormatChangeEvent(audioFormat));
                 }
             }
                 break;
-            case EVENT_DECODE_FIRST_VIDEO_FRAME: {
-                EventDecodeFirstFrame firstFrame = (EventDecodeFirstFrame) msg.obj;
+            case EventType.EVENT_TYPE_RENDER_FIRST_FRAME_VIDEO: {
+                VideoFirstFrameEvent event = (VideoFirstFrameEvent) msg.obj;
                 if (LOCAL_LOG_NOTIFICATIONS) {
-                    ASPlayerLog.d("EventNotifier-%d.notifyEvent: VideoFirstFrameEvent(%s)", mId, firstFrame);
+                    ASPlayerLog.d("EventNotifier-%d.notifyEvent: VideoFirstFrameEvent(%s)", mId, event);
                 }
-                for (TsPlaybackListener listener : mPlaybackListeners) {
-                    listener.onPlaybackEvent(new TsPlaybackListener.VideoFirstFrameEvent(
-                            firstFrame.mPositionMs, firstFrame.mSpeed));
-                }
+                notifyPlaybackEvent(event);
             }
                 break;
-            case EVENT_DECODE_FIRST_AUDIO_FRAME: {
-                EventDecodeFirstFrame firstFrame = (EventDecodeFirstFrame) msg.obj;
+            case EventType.EVENT_TYPE_RENDER_FIRST_FRAME_AUDIO: {
+                AudioFirstFrameEvent event = (AudioFirstFrameEvent) msg.obj;
                 if (LOCAL_LOG_NOTIFICATIONS) {
-                    ASPlayerLog.d("EventNotifier-%d.notifyEvent: AudioFirstFrameEvent(%s)", mId, firstFrame);
+                    ASPlayerLog.d("EventNotifier-%d.notifyEvent: AudioFirstFrameEvent(%s)", mId, event);
                 }
-                for (TsPlaybackListener listener : mPlaybackListeners) {
-                    listener.onPlaybackEvent(new TsPlaybackListener.AudioFirstFrameEvent(
-                            firstFrame.mPositionMs, firstFrame.mSpeed));
+                notifyPlaybackEvent(event);
+            }
+                break;
+            case EventType.EVENT_TYPE_DECODE_FIRST_FRAME_VIDEO: {
+                DecodeFirstVideoFrameEvent event = (DecodeFirstVideoFrameEvent) msg.obj;
+                if (LOCAL_LOG_NOTIFICATIONS) {
+                    ASPlayerLog.d("EventNotifier-%d.notifyEvent: DecodeFirstVideoFrameEvent(%s)", mId, event);
                 }
+                notifyPlaybackEvent(event);
+            }
+                break;
+            case EventType.EVENT_TYPE_DECODE_FIRST_FRAME_AUDIO: {
+                DecodeFirstAudioFrameEvent event = (DecodeFirstAudioFrameEvent) msg.obj;
+                if (LOCAL_LOG_NOTIFICATIONS) {
+                    ASPlayerLog.d("EventNotifier-%d.notifyEvent: DecodeFirstAudioFrameEvent(%s)", mId, event);
+                }
+                notifyPlaybackEvent(event);
             }
                 break;
             default:
-                ASPlayerLog.w("EventNotifier-%d, unexpected event:%s", mId, eventId);
+                ASPlayerLog.w("EventNotifier-%d, unexpected event:%s", mId, eventType);
                 break;
+        }
+    }
+
+    private void notifyPlaybackEvent(TsPlaybackListener.PlaybackEvent event) {
+        for (TsPlaybackListener listener : mPlaybackListeners) {
+            listener.onPlaybackEvent(event);
         }
     }
 }

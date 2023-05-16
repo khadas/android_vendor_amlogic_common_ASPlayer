@@ -73,21 +73,21 @@ public class VideoMediaFormatEvent {
     }
 
     static class FrameRateEvent extends VideoMediaFormatEvent {
-        float frameRate;
+        int frameRate;
         public FrameRateEvent(BufferParser parser) {
             super(EVENT_TYPE_FRAME_RATES);
             long eventValue = parser.readInt(32, "frame rate") & 0xFFFFFFFFL;
-            frameRate = eventValue / EVENT_VALUE_DECIMAL_SCALE_FACTOR;
+            frameRate = (int)eventValue;
             if (DEBUG) ASPlayerLog.i("frameRate: " + frameRate);
         }
     }
 
     static class AspectRatioEvent extends VideoMediaFormatEvent {
-        float aspectRatio;
+        int aspectRatio;
         public AspectRatioEvent(BufferParser parser) {
             super(EVENT_TYPE_ASPECT_RATIO);
             long eventValue = parser.readInt(32, "aspect ratio") & 0xFFFFFFFFL;
-            aspectRatio = eventValue / EVENT_VALUE_DECIMAL_SCALE_FACTOR;
+            aspectRatio = (int)eventValue;
             if (DEBUG) ASPlayerLog.i("aspectRatio: " + aspectRatio);
         }
     }

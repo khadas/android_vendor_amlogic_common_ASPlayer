@@ -7,8 +7,6 @@ import android.os.Bundle;
 import android.view.Surface;
 
 
-import com.amlogic.asplayer.api.WorkMode;
-
 import java.nio.ByteBuffer;
 
 import static android.media.MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayback;
@@ -82,7 +80,9 @@ class VideoOutputPathV3 extends VideoOutputPath {
                 }
                 mTimestampKeeper.removeTimestamp(presentationTimeUs);
             }
-            notifyFrameDisplayed(presentationTimeUs);
+//            ASPlayerLog.i("VideoOutputPathV3-%d onFrameRendered pts: %d, nanoTime: %d",
+//                    mId, presentationTimeUs, nanoTime);
+            notifyFrameDisplayed(nanoTime / 1000);
             mLastRenderedTimeUs = presentationTimeUs;
             mFirstFrameDisplayed = true;
         }

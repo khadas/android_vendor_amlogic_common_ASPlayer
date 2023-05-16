@@ -26,9 +26,9 @@ class VideoOutputPath extends MediaOutputPath {
     private static final String TAG = Constant.LOG_TAG;
 
     interface VideoFormatListener {
-        void onVideoSizeInfoChanged(int width, int height, float pixelAspectRatio);
+        void onVideoSizeInfoChanged(int width, int height, int pixelAspectRatio);
         void onAfdInfoChanged(byte activeFormat);
-        void onFrameRateChanged(float frameRate);
+        void onFrameRateChanged(int frameRate);
     }
 
     private class VideoMediaCodecCallback extends MediaCodec.Callback {
@@ -68,7 +68,9 @@ class VideoOutputPath extends MediaOutputPath {
             if (mTimestampKeeper.isEmpty())
                 return;
             mTimestampKeeper.removeTimestamp(presentationTimeUs);
-            notifyFrameDisplayed(presentationTimeUs);
+//            ASPlayerLog.i("VideoOutputPath-%d onFrameRendered pts: %d, nanoTime: %d",
+//                    mId, presentationTimeUs, nanoTime);
+            notifyFrameDisplayed(nanoTime / 1000);
         }
     }
 
@@ -129,7 +131,7 @@ class VideoOutputPath extends MediaOutputPath {
 
     protected VideoFormatListener mVideoFormatListener;
 
-    protected float mPixelAspectRatio;
+    protected int mPixelAspectRatio;
     protected String mMimeType;
     protected int mVideoWidth;
     protected int mVideoHeight;
@@ -357,7 +359,7 @@ class VideoOutputPath extends MediaOutputPath {
             pushInputBufferInitStartTime();
 
             boolean bufferPushed = false;
-            float pixelAspectRatio = 0;
+            int pixelAspectRatio = 0;
             int width = 0;
             int height = 0;
             while (!mInputBufferIndexes.isEmpty() &&
@@ -413,7 +415,7 @@ class VideoOutputPath extends MediaOutputPath {
         }
     }
 
-    protected void updateVideoSizeInfo(int width, int height, float pixelAspectRatio) {
+    protected void updateVideoSizeInfo(int width, int height, int pixelAspectRatio) {
         boolean needNotify = false;
         if (width > 0 && width != mVideoWidth) {
             mVideoWidth = width;
@@ -431,7 +433,7 @@ class VideoOutputPath extends MediaOutputPath {
             needNotify = false;
         }
         if (needNotify && mVideoFormatListener != null) {
-            ASPlayerLog.i("VideoOutputPath-%d video:%dx%d, aspect ratio:%f", mId, mVideoWidth, mVideoHeight, mPixelAspectRatio);
+            ASPlayerLog.i("VideoOutputPath-%d video:%dx%d, aspect ratio:%d", mId, mVideoWidth, mVideoHeight, mPixelAspectRatio);
             mVideoFormatListener.onVideoSizeInfoChanged(mVideoWidth, mVideoHeight, mPixelAspectRatio);
         }
     }
@@ -440,14 +442,14 @@ class VideoOutputPath extends MediaOutputPath {
         updateVideoSizeInfo(width, height, 0);
     }
 
-    protected void updateVideoAspectRatioInfo(float pixelAspectRatio) {
+    protected void updateVideoAspectRatioInfo(int pixelAspectRatio) {
         updateVideoSizeInfo(0, 0, pixelAspectRatio);
     }
 
-    protected void updateVideoFrameRateInfo(float frameRate) {
+    protected void updateVideoFrameRateInfo(int frameRate) {
         if (mVideoFormatListener != null && frameRate != mActiveFormat) {
             mFrameRate = frameRate;
-            ASPlayerLog.i("VideoOutputPath-%d frameRate: %f", mId, frameRate);
+            ASPlayerLog.i("VideoOutputPath-%d frameRate: %d", mId, frameRate);
             mVideoFormatListener.onFrameRateChanged(frameRate);
         }
     }
@@ -501,7 +503,7 @@ class VideoOutputPath extends MediaOutputPath {
 
         mVideoWidth = 0;
         mVideoHeight = 0;
-        mPixelAspectRatio = 0f;
+        mPixelAspectRatio = 0;
         mFrameRate = 0f;
         mActiveFormat = 0;
 

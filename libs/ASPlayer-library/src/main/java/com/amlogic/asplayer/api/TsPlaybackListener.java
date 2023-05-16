@@ -50,40 +50,50 @@ public interface TsPlaybackListener {
      * the media.
      */
     public static abstract class FirstFrameEvent extends PlaybackEvent {
-        private final long mPositionMs;
-        private final double mSpeed;
+        protected final long mPositionMs;
 
-        public FirstFrameEvent(long positionMs, double speed) {
+        public FirstFrameEvent(long positionMs) {
             mPositionMs = positionMs;
-            mSpeed = speed;
         }
 
         public long getPositionMs() {
             return mPositionMs;
         }
-
-        public double getSpeed() {
-            return mSpeed;
-        }
     }
 
     /**
      * The player has displayed a first video frame
-     * the media.
      */
     public static class VideoFirstFrameEvent extends FirstFrameEvent {
-        public VideoFirstFrameEvent(long positionMs, double speed) {
-            super(positionMs, speed);
+        public VideoFirstFrameEvent(long positionMs) {
+            super(positionMs);
         }
     }
 
     /**
      * The player has displayed a first audio frame
-     * the media.
      */
     public static class AudioFirstFrameEvent extends FirstFrameEvent {
-        public AudioFirstFrameEvent(long positionMs, double speed) {
-            super(positionMs, speed);
+        public AudioFirstFrameEvent(long positionMs) {
+            super(positionMs);
+        }
+    }
+
+    /**
+     * The player has decoded a first video frame
+     */
+    public static class DecodeFirstVideoFrameEvent extends FirstFrameEvent {
+        public DecodeFirstVideoFrameEvent(long positionMs) {
+            super(positionMs);
+        }
+    }
+
+    /**
+     * The player has decoded a first audio frame
+     */
+    public static class DecodeFirstAudioFrameEvent extends FirstFrameEvent {
+        public DecodeFirstAudioFrameEvent(long positionMs) {
+            super(positionMs);
         }
     }
 

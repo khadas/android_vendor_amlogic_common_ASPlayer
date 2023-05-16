@@ -144,8 +144,12 @@ class RendererScheduler implements Runnable {
         mVideoOutputPath.setDataListener(listener);
     }
 
-    void setVideoListener(VideoOutputPath.VideoFormatListener listener) {
+    void setVideoFormatListener(VideoOutputPath.VideoFormatListener listener) {
         mVideoOutputPath.setVideoFormatListener(listener);
+    }
+
+    void setAudioFormatListener(AudioOutputPath.AudioFormatListener listener) {
+        mAudioOutputPath.setAudioFormatListener(listener);
     }
 
     private void selectRendererTask() {
@@ -403,11 +407,11 @@ class RendererScheduler implements Runnable {
 
         if (outputPath == mVideoOutputPath && !mFirstVideoFrameDisplayed) {
             ASPlayerLog.i("RendererScheduler-%d first video frame", mId);
-            mEventNotifier.notifyDecodeFirstVideoFrame(positionUs, mSpeed);
+            mEventNotifier.notifyRenderFirstVideoFrame(timestampUs);
             mFirstVideoFrameDisplayed = true;
         } else if (outputPath == mAudioOutputPath && !mFirstAudioFrameShowed) {
             ASPlayerLog.i("RendererScheduler-%d first audio frame", mId);
-            mEventNotifier.notifyDecodeFirstAudioFrame(positionUs, mSpeed);
+            mEventNotifier.notifyRenderFirstAudioFrame(timestampUs);
             mFirstAudioFrameShowed = true;
         }
     }

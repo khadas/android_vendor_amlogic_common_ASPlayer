@@ -3,16 +3,16 @@ package com.amlogic.asplayer.core;
 import android.media.AudioFormat;
 import android.media.MediaDescrambler;
 import android.media.MediaFormat;
-import android.os.Build;
-
-import com.amlogic.asplayer.api.WorkMode;
 
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
-import static android.media.MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayback;
-
 class AudioOutputPath extends MediaOutputPath {
+
+    interface AudioFormatListener {
+        void onAudioFormat(AudioFormat audioFormat);
+    }
+
     //
     protected AudioCodecRenderer mAudioCodecRenderer;
 
@@ -38,10 +38,16 @@ class AudioOutputPath extends MediaOutputPath {
 
     protected boolean mHasAudio = false;
 
+    protected AudioFormatListener mAudioFormatListener;
+
     AudioOutputPath(int id) {
         super(id, String.format("a%d", id));
         mGain = 1.f;
         mInputBuffer = new InputBuffer();
+    }
+
+    void setAudioFormatListener(AudioFormatListener listener) {
+        mAudioFormatListener = listener;
     }
 
     void setAudioSessionId(int sessionId) {

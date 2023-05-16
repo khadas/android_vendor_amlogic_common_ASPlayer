@@ -49,6 +49,8 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
     private boolean mPaused = true;
 
+    private AudioFormat mAudioFormat;
+
     AudioCodecRendererV3(int id, MediaClock clock, Handler handler) {
         mId = id;
         mHandler = handler;
@@ -200,6 +202,8 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
                 mAudioTrack.setAudioDescriptionMixLeveldB(mMixLevel);
             }
 
+            mAudioFormat = audioFormat;
+
             startDecoderThread();
         } catch (Exception exception) {
             ASPlayerLog.w("AudioCodecRendererV3-%d Failed to configure AudioTrack: %s", mId, exception.getMessage());
@@ -350,6 +354,11 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
     @Override
     public void reset() {
+    }
+
+    @Override
+    public AudioFormat getAudioFormat() {
+        return mAudioFormat;
     }
 
     @Override

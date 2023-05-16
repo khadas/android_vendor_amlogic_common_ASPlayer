@@ -1,5 +1,6 @@
 package com.amlogic.asplayer.core;
 
+import android.media.AudioFormat;
 import android.media.MediaCodec;
 import android.media.MediaDescrambler;
 import android.media.MediaFormat;
@@ -218,4 +219,6 @@ interface AudioCodecRenderer {
     void pause();
 
     void resume();
+
+    AudioFormat getAudioFormat();
 }

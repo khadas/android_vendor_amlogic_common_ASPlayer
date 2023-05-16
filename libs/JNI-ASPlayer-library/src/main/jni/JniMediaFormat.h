@@ -23,6 +23,10 @@ public:
 
     static int32_t getInteger(JNIEnv *env, jobject jMediaFormat, const char *key, int32_t defaultValue);
 
+    static bool getFloat(JNIEnv *env, jobject jMediaFormat, const char *key, float *outValue);
+
+    static float getFloat(JNIEnv *env, jobject jMediaFormat, const char *key, float defaultValue);
+
 public:
     JniMediaFormat();
     virtual ~JniMediaFormat();
@@ -33,6 +37,8 @@ private:
     static jmethodID sConstructorMID;
     static jmethodID sGetIntegerMID;
     static jmethodID sGetIntegerDefaultValueMID;
+    static jmethodID sGetFloatMID;
+    static jmethodID sGetFloatDefaultValueMID;
     static jmethodID sGetKeysMID;
     static jmethodID sGetValueTypeForKeyMID;
 };

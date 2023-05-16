@@ -37,7 +37,7 @@ class AudioOutputPathV3 extends AudioOutputPath {
                         AudioFormat.ENCODING_DEFAULT, 0);
         mPlacementMetadata =
                 new Metadata.PlacementMetadata(Metadata.PlacementMetadata.PLACEMENT_NORMAL);
-		mPlacementMetadata.placement = Metadata.PlacementMetadata.PLACEMENT_NORMAL;
+        mPlacementMetadata.placement = Metadata.PlacementMetadata.PLACEMENT_NORMAL;
     }
 
     public void setAudioFilterId(int audioFilterId) {
@@ -124,11 +124,19 @@ class AudioOutputPathV3 extends AudioOutputPath {
         audioCodecRenderer.writeMetadata(mPlacementMetadata);
 
         audioCodecRenderer.configure(format, null);
+
         mNeedToConfigureSubTrack = mAudioSubTrackFilterId != INVALID_FILTER_ID;
 
         errorMessage = audioCodecRenderer.getErrorMessage();
         if (errorMessage == null) {
             setConfigured(true);
+        }
+
+        if (errorMessage == null) {
+            AudioFormat audioFormat = audioCodecRenderer.getAudioFormat();
+            if (mAudioFormatListener != null) {
+                mAudioFormatListener.onAudioFormat(audioFormat);
+            }
         }
 
         if (errorMessage != null) {
