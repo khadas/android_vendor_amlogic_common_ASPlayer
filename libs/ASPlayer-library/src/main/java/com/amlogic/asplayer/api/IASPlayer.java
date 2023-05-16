@@ -22,80 +22,33 @@ public interface IASPlayer {
         void onPts(Pts pts);
     }
 
-    public interface OnDtvSubtitleListener {
-        /**
-         * ASPLAYER_EVENT_TYPE_DTV_SUBTITLE
-         */
-        void onDtvSubtitle();
-    }
-
     public interface OnInfoListener {
 
         /**
          * @param what info type
-         *      ASPLAYER_EVENT_TYPE_DATA_LOSS
-         *      ASPLAYER_EVENT_TYPE_DATA_RESUME
-         *      ASPLAYER_EVENT_TYPE_SCRAMBLING
-         *      ASPLAYER_EVENT_TYPE_FIRST_FRAME
-         *      ASPLAYER_EVENT_TYPE_STREAM_MODE_EOF
-         *      ASPLAYER_EVENT_TYPE_DECODE_FIRST_FRAME_VIDEO
-         *      ASPLAYER_EVENT_TYPE_DECODE_FIRST_FRAME_AUDIO
-         *      ASPLAYER_EVENT_TYPE_AV_SYNC_DONE
-         *      ASPLAYER_EVENT_TYPE_INPUT_VIDEO_BUFFER_DONE
-         *      ASPLAYER_EVENT_TYPE_INPUT_AUDIO_BUFFER_DONE
-         *      ASPLAYER_EVENT_TYPE_DECODE_FRAME_ERROR_COUNT
+         *      EVENT_TYPE_DATA_LOSS
+         *      EVENT_TYPE_DATA_RESUME
+         *      EVENT_TYPE_FIRST_FRAME
+         *      EVENT_TYPE_STREAM_MODE_EOF
+         *      EVENT_TYPE_DECODE_FIRST_FRAME_VIDEO
+         *      EVENT_TYPE_DECODE_FIRST_FRAME_AUDIO
+         *      EVENT_TYPE_RENDER_FIRST_FRAME_VIDEO
+         *      EVENT_TYPE_RENDER_FIRST_FRAME_AUDIO
+         *      EVENT_TYPE_AV_SYNC_DONE
          */
         void onInfo(IASPlayer player, int what, int extra);
     }
 
-    public interface OnVideoChangedListener {
-
-        /**
-         * ASPLAYER_EVENT_TYPE_VIDEO_CHANGED callback
-         */
-        void onVideoChanged(IASPlayer player, VideoFormat videoFormat);
-    }
-
-    public interface OnAudioChangedListener {
-
-        /**
-         * ASPLAYER_EVENT_TYPE_AUDIO_CHANGED callback
-         */
-        void onAudioChanged(IASPlayer player, AudioFormat audioFormat);
-    }
-
-    public interface OnMpegUserDataListener {
-
-        /**
-         * ASPLAYER_EVENT_TYPE_USERDATA_AFD
-         * ASPLAYER_EVENT_TYPE_USERDATA_CC
-         */
-        void onMpegUserData(int type, UserData userData);
-    }
-
-    public static class AudioVolume {
-        public int masterVolume;
-        public int slaveVolume;
-    }
-
-    public interface OnErrorListener {
-        /**
-         *      ASPLAYER_EVENT_TYPE_VIDEO_OVERFLOW
-         *      ASPLAYER_EVENT_TYPE_VIDEO_UNDERFLOW
-         *      ASPLAYER_EVENT_TYPE_AUDIO_OVERFLOW
-         *      ASPLAYER_EVENT_TYPE_AUDIO_UNDERFLOW
-         *      ASPLAYER_EVENT_TYPE_VIDEO_INVALID_TIMESTAMP
-         *      ASPLAYER_EVENT_TYPE_VIDEO_INVALID_DATA
-         *      ASPLAYER_EVENT_TYPE_AUDIO_INVALID_TIMESTAMP
-         *      ASPLAYER_EVENT_TYPE_AUDIO_INVALID_DATA
-         *      ASPLAYER_EVENT_TYPE_DECODE_VIDEO_UNSUPPORT
-         *      ASPLAYER_EVENT_TYPE_PREEMPTED
-         */
-        void onError(int what, int extra);
-    }
-
+    /**
+     * Add playback listener
+     * @param listener
+     */
     void addPlaybackListener(TsPlaybackListener listener);
 
+    /**
+     * Remove playback listener
+     * @param listener
+     */
     void removePlaybackListener(TsPlaybackListener listener);
 
     /**
@@ -108,7 +61,9 @@ public interface IASPlayer {
      */
     public int getMajorVersion();
 
-    // Get ASPlayer interface minor version.
+    /**
+     * Get ASPlayer interface minor version.
+     */
     public int getMinorVersion();
 
     /**
@@ -203,11 +158,6 @@ public interface IASPlayer {
     public int setPcrPid(int pid);
 
     /**
-     * Get the dealy time for ASPlayer instance.
-     */
-    public long getDelayTime();
-
-    /**
      * Start Fast play for ASPlayer instance.
      *
      * @param scale Fast play speed.
@@ -229,49 +179,11 @@ public interface IASPlayer {
     public int setTrickMode(int trickMode);
 
     /**
-     * Get Buffer Stat for ASPlayer instance.
-     *
-     * @see StreamType
-     *
-     * @param streamType The stream type we want to check.
-     */
-    public BufferStat getBufferStat(int streamType);
-
-    /**
-     * Set the video display rect size for ASPlayer instance.
-     *
-     * @param x The display rect x.
-     * @param y The display rect y.
-     * @param width The display rect width.
-     * @param height The display rect height.
-     */
-    public int setVideoWindow(int x, int y, int width, int height);
-
-    /**
-     * Set the video crop rect size for ASPlayer instance.
-     *
-     * @param left The video crop rect left.
-     * @param top The video crop rect top.
-     * @param right The video crop rect right.
-     * @param bottom The video crop rect bottom.
-     */
-    public int setVideoCrop(int left, int top, int right, int bottom);
-
-    /**
      * Set surface to ASPlayer Instance.
      *
      * @param surface
      */
     public int setSurface(Surface surface);
-
-    /**
-     * Set video display match mode for ASPlayer instance.
-     *
-     * @see VideoMatchMode
-     *
-     * @param videoMatchMode video display match mode
-     */
-    public void setVideoMatchMode(int videoMatchMode);
 
     /**
      * Set video params need by demuxer and video decoder for ASPlayer instance.
@@ -291,11 +203,6 @@ public interface IASPlayer {
      * Get video basic info of ASPlayer instance.
      */
     public MediaFormat getVideoInfo();
-
-    /**
-     * Get video decoder real time info of ASPlayer instance.
-     */
-    public VideoDecoderStat getVideoStat();
 
     /**
      * Start video decoding for ASPlayer instance.
@@ -369,23 +276,9 @@ public interface IASPlayer {
     public void setAudioParams(AudioParams params) throws NullPointerException, IllegalArgumentException, IllegalStateException;
 
     /**
-     * Set audio output mode to ASPlayer instance.
-     *
-     * @see AudioOutputMode
-     *
-     * @param audioOutputMode audio output mode
-     */
-    public void setAudioOutMode(int audioOutputMode);
-
-    /**
      * Get audio basic info of ASPlayer instance.
      */
     public MediaFormat getAudioInfo();
-
-    /**
-     * Get audio decoder real time info of ASPlayer instance.
-     */
-    public AudioDecoderStat getAudioStat();
 
     /**
      * Start audio decoding for ASPlayer instance
@@ -413,37 +306,9 @@ public interface IASPlayer {
     public int setAudioDescriptionParams(AudioParams params);
 
     /**
-     * Set audio description mix level (master vol and ad vol)
-     *
-     * @param masterVolume Master volume value
-     * @param slaveVolume Slave volume value
-     */
-    public int setAudioDescriptionMixLevel(int masterVolume, int slaveVolume);
-
-    /**
-     * Get audio description mix level (master vol and ad vol)
-     */
-    public AudioVolume getAudioDescriptionMixLevel();
-
-    /**
-     * Enable audio description mix with master audio
-     */
-    public int enableAudioDescriptionMix();
-
-    /**
-     * Disable audio description mix with master audio
-     */
-    public int disableAudioDescriptionMix();
-
-    /**
      * Get audio description basic info of Player instance.
      */
     public MediaFormat getAudioDescriptionInfo();
-
-    /**
-     * Get audio description decoder real time info of ASPlayer instance.
-     */
-    public AudioDecoderStat getAudioDescriptionStat();
 
     /**
      * Set subtitle pid for ASPlayer instance.

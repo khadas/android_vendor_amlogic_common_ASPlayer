@@ -13,23 +13,11 @@ package com.amlogic.asplayer.api;
  */
 public class EventMask {
 
-    public static final int EVENT_TYPE_PTS_MASK = 1 << EventType.EVENT_TYPE_PTS;
+    public static final int EVENT_TYPE_USERDATA_AFD_MASK = 1 << 0;
 
-    public static final int EVENT_TYPE_DTV_SUBTITLE_MASK = 1 << EventType.EVENT_TYPE_DTV_SUBTITLE;
+    public static final int EVENT_TYPE_USERDATA_CC_MASK = 1 << 1;
 
-    public static final int EVENT_TYPE_USERDATA_AFD_MASK = 1 << EventType.EVENT_TYPE_USERDATA_AFD;
+    public static final int EVENT_TYPE_DATA_LOSS_MASK = 1 << 2;
 
-    public static final int EVENT_TYPE_USERDATA_CC_MASK = 1 << EventType.EVENT_TYPE_USERDATA_CC;
-
-    public static final int EVENT_TYPE_VIDEO_CHANGED_MASK = 1 << EventType.EVENT_TYPE_VIDEO_CHANGED;
-
-    public static final int EVENT_TYPE_AUDIO_CHANGED_MASK = 1 << EventType.EVENT_TYPE_AUDIO_CHANGED;
-
-    public static final int EVENT_TYPE_DATA_LOSS_MASK = 1 << EventType.EVENT_TYPE_DATA_LOSS;
-
-    public static final int EVENT_TYPE_DATA_RESUME_MASK = 1 << EventType.EVENT_TYPE_DATA_RESUME;
-
-    public static final int EVENT_TYPE_SCRAMBLING_MASK = 1 << EventType.EVENT_TYPE_SCRAMBLING;
-
-    public static final int EVENT_TYPE_FIRST_FRAME_MASK = 1 << EventType.EVENT_TYPE_FIRST_FRAME;
+    public static final int EVENT_TYPE_DATA_RESUME_MASK = 1 << 3;
 }

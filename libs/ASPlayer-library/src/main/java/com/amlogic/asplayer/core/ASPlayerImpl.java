@@ -27,10 +27,7 @@ import com.amlogic.asplayer.api.InputFrameBuffer;
 import com.amlogic.asplayer.api.InputSourceType;
 import com.amlogic.asplayer.api.TsPlaybackListener;
 import com.amlogic.asplayer.api.VideoParams;
-import com.amlogic.asplayer.api.AudioDecoderStat;
-import com.amlogic.asplayer.api.BufferStat;
 import com.amlogic.asplayer.api.IASPlayer;
-import com.amlogic.asplayer.api.VideoDecoderStat;
 
 import java.util.Locale;
 
@@ -359,12 +356,6 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     @Override
-    public long getDelayTime() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getDelayTime start", TAG, mId);
-        return 0;
-    }
-
-    @Override
     public int startFast(float scale) {
         if (DEBUG) ASPlayerLog.d("%s-%d startFast start", TAG, mId);
         if (mPlayerHandler != null) {
@@ -407,24 +398,6 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     @Override
-    public BufferStat getBufferStat(int streamType) {
-        if (DEBUG) ASPlayerLog.d("%s-%d getBufferStat start", TAG, mId);
-        return null;
-    }
-
-    @Override
-    public int setVideoWindow(int x, int y, int width, int height) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setVideoWindow start", TAG, mId);
-        return 0;
-    }
-
-    @Override
-    public int setVideoCrop(int left, int top, int right, int bottom) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setVideoCrop start", TAG, mId);
-        return 0;
-    }
-
-    @Override
     public int setSurface(Surface surface) {
         ASPlayerLog.i("%s-%d setSurface start, surface: %s", TAG, mId, surface);
         if (mPlayerHandler != null) {
@@ -437,12 +410,6 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             ASPlayerLog.w("%s-%d setSurface called, but playerHandler is null", TAG, mId);
             return 0;
         }
-    }
-
-    @Override
-    public void setVideoMatchMode(int videoMatchMode) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setVideoMatchMode start", TAG, mId);
-
     }
 
     @Override
@@ -512,12 +479,6 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     @Override
     public MediaFormat getVideoInfo() {
         if (DEBUG) ASPlayerLog.d("%s-%d getVideoInfo start", TAG, mId);
-        return null;
-    }
-
-    @Override
-    public VideoDecoderStat getVideoStat() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getVideoStat start", TAG, mId);
         return null;
     }
 
@@ -741,20 +702,8 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     @Override
-    public void setAudioOutMode(int audioOutputMode) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setAudioOutMode start", TAG, mId);
-
-    }
-
-    @Override
     public MediaFormat getAudioInfo() {
         if (DEBUG) ASPlayerLog.d("%s-%d getAudioInfo start", TAG, mId);
-        return null;
-    }
-
-    @Override
-    public AudioDecoderStat getAudioStat() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getAudioStat start", TAG, mId);
         return null;
     }
 
@@ -834,38 +783,8 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     @Override
-    public int setAudioDescriptionMixLevel(int masterVolume, int slaveVolume) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setAudioDescriptionMixLevel start", TAG, mId);
-        return 0;
-    }
-
-    @Override
-    public AudioVolume getAudioDescriptionMixLevel() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getAudioDescriptionMixLevel start", TAG, mId);
-        return null;
-    }
-
-    @Override
-    public int enableAudioDescriptionMix() {
-        if (DEBUG) ASPlayerLog.d("%s-%d enableAudioDescriptionMix start", TAG, mId);
-        return 0;
-    }
-
-    @Override
-    public int disableAudioDescriptionMix() {
-        if (DEBUG) ASPlayerLog.d("%s-%d disableAudioDescriptionMix start", TAG, mId);
-        return 0;
-    }
-
-    @Override
     public MediaFormat getAudioDescriptionInfo() {
         if (DEBUG) ASPlayerLog.d("%s-%d getAudioDescriptionInfo start", TAG, mId);
-        return null;
-    }
-
-    @Override
-    public AudioDecoderStat getAudioDescriptionStat() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getAudioDescriptionStat start", TAG, mId);
         return null;
     }
 

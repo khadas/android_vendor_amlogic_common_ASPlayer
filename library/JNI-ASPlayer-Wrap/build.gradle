@@ -57,12 +57,10 @@ android {
         debug {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            buildConfigField("Boolean", "USE_SYSTEM_ASPLAYER", USE_SYSTEM_ASPLAYER.toBoolean() ? "true" : "false")
         }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            buildConfigField("Boolean", "USE_SYSTEM_ASPLAYER", USE_SYSTEM_ASPLAYER.toBoolean() ? "true" : "false")
         }
     }
 

@@ -20,32 +20,17 @@ typedef uint8_t         bool_t;
 /*Call back event type*/
 typedef enum {
     JNI_ASPLAYER_EVENT_TYPE_PTS = 0,        // Pts in for some stream
-    JNI_ASPLAYER_EVENT_TYPE_DTV_SUBTITLE,   // External subtitle of dtv
     JNI_ASPLAYER_EVENT_TYPE_USERDATA_AFD,   // User data (afd)
     JNI_ASPLAYER_EVENT_TYPE_USERDATA_CC,    // User data (cc)
     JNI_ASPLAYER_EVENT_TYPE_VIDEO_CHANGED,  // Video format changed
     JNI_ASPLAYER_EVENT_TYPE_AUDIO_CHANGED,  // Audio format changed
     JNI_ASPLAYER_EVENT_TYPE_DATA_LOSS,      // Demod data loss
     JNI_ASPLAYER_EVENT_TYPE_DATA_RESUME,    // Demod data resume
-    JNI_ASPLAYER_EVENT_TYPE_SCRAMBLING,     // Scrambling status changed
-    JNI_ASPLAYER_EVENT_TYPE_FIRST_FRAME,     // First video frame showed
-    JNI_ASPLAYER_EVENT_TYPE_STREAM_MODE_EOF, //Endof stream mode
     JNI_ASPLAYER_EVENT_TYPE_DECODE_FIRST_FRAME_VIDEO, //The video decoder outputs the first frame
     JNI_ASPLAYER_EVENT_TYPE_DECODE_FIRST_FRAME_AUDIO, //The audio decoder outputs the first frame
-    JNI_ASPLAYER_EVENT_TYPE_AV_SYNC_DONE,     //Av sync done
-    JNI_ASPLAYER_EVENT_TYPE_INPUT_VIDEO_BUFFER_DONE,  // Input video buffer done
-    JNI_ASPLAYER_EVENT_TYPE_INPUT_AUDIO_BUFFER_DONE,  // Input audio buffer done
-    JNI_ASPLAYER_EVENT_TYPE_DECODE_FRAME_ERROR_COUNT,  // The video decoder frame error count
-    JNI_ASPLAYER_EVENT_TYPE_VIDEO_OVERFLOW, //Video amstream buffer overflow
-    JNI_ASPLAYER_EVENT_TYPE_VIDEO_UNDERFLOW, //Video amstream buffer underflow
-    JNI_ASPLAYER_EVENT_TYPE_AUDIO_OVERFLOW, //Audio amstream buffer overflow
-    JNI_ASPLAYER_EVENT_TYPE_AUDIO_UNDERFLOW, //Audio amstream buffer underflow
-    JNI_ASPLAYER_EVENT_TYPE_VIDEO_INVALID_TIMESTAMP, //Video invalid timestamp
-    JNI_ASPLAYER_EVENT_TYPE_VIDEO_INVALID_DATA, //Video invalid data
-    JNI_ASPLAYER_EVENT_TYPE_AUDIO_INVALID_TIMESTAMP, //Audio invalid timestamp
-    JNI_ASPLAYER_EVENT_TYPE_AUDIO_INVALID_DATA, //Audio invalid data
-    JNI_ASPLAYER_EVENT_TYPE_DECODE_VIDEO_UNSUPPORT, // Video is not supported
-    JNI_ASPLAYER_EVENT_TYPE_PREEMPTED  // Instance was preempted, apk need release this instance
+    JNI_ASPLAYER_EVENT_TYPE_RENDER_FIRST_FRAME_VIDEO, //The video decoder render the first frame
+    JNI_ASPLAYER_EVENT_TYPE_RENDER_FIRST_FRAME_AUDIO, //The audio decoder render the first frame
+    JNI_ASPLAYER_EVENT_TYPE_AV_SYNC_DONE     //Av sync done
 } jni_asplayer_event_type;
 
 
@@ -68,9 +53,9 @@ typedef enum {
 
 typedef enum
 {
-    AUDIO_PATCH_MANAGE_AUTO = -1,
-    AUDIO_PATCH_MANAGE_FORCE_DISABLE,
-    AUDIO_PATCH_MANAGE_FORCE_ENABLE,
+    JNI_ASPLAYER_AUDIO_PATCH_MANAGE_AUTO = -1,
+    JNI_ASPLAYER_AUDIO_PATCH_MANAGE_FORCE_DISABLE,
+    JNI_ASPLAYER_AUDIO_PATCH_MANAGE_FORCE_ENABLE,
 } jni_asplayer_audio_patch_manage_mode;
 
 typedef enum {
@@ -103,16 +88,10 @@ typedef struct {
 
 
 /*Callback event mask*/
-#define JNI_ASPLAYER_EVENT_TYPE_PTS_MASK            (1 << JNI_ASPLAYER_EVENT_TYPE_PTS)
-#define JNI_ASPLAYER_EVENT_TYPE_DTV_SUBTITLE_MASK   (1 << JNI_ASPLAYER_EVENT_TYPE_DTV_SUBTITLE)
-#define JNI_ASPLAYER_EVENT_TYPE_USERDATA_AFD_MASK   (1 << JNI_ASPLAYER_EVENT_TYPE_USERDATA_AFD)
-#define JNI_ASPLAYER_EVENT_TYPE_USERDATA_CC_MASK    (1 << JNI_ASPLAYER_EVENT_TYPE_USERDATA_CC)
-#define JNI_ASPLAYER_EVENT_TYPE_VIDEO_CHANGED_MASK  (1 << JNI_ASPLAYER_EVENT_TYPE_VIDEO_CHANGED)
-#define JNI_ASPLAYER_EVENT_TYPE_AUDIO_CHANGED_MASK  (1 << JNI_ASPLAYER_EVENT_TYPE_AUDIO_CHANGED)
-#define JNI_ASPLAYER_EVENT_TYPE_DATA_LOSS_MASK      (1 << JNI_ASPLAYER_EVENT_TYPE_DATA_LOSS)
-#define JNI_ASPLAYER_EVENT_TYPE_DATA_RESUME_MASK    (1 << JNI_ASPLAYER_EVENT_TYPE_DATA_RESUME)
-#define JNI_ASPLAYER_EVENT_TYPE_SCRAMBLING_MASK     (1 << JNI_ASPLAYER_EVENT_TYPE_SCRAMBLING)
-#define JNI_ASPLAYER_EVENT_TYPE_FIRST_FRAME_MASK    (1 << JNI_ASPLAYER_EVENT_TYPE_FIRST_FRAME)
+#define JNI_ASPLAYER_EVENT_TYPE_USERDATA_AFD_MASK   (1 << 0)
+#define JNI_ASPLAYER_EVENT_TYPE_USERDATA_CC_MASK    (1 << 1)
+#define JNI_ASPLAYER_EVENT_TYPE_DATA_LOSS_MASK      (1 << 2)
+#define JNI_ASPLAYER_EVENT_TYPE_DATA_RESUME_MASK    (1 << 3)
 
 /*Secure level which should be consistent with definition of dmx.h*/
 #define JNI_ASPLAYER_DMX_FILTER_SEC_LEVEL1   (1 << 10)
@@ -143,107 +122,65 @@ typedef enum {
 /** Playback mode */
 typedef enum
 {
-    PLAYBACK_MODE_PASSTHROUGH   = 0,    // Passthrough mode
-    PLAYBACK_MODE_ES_MODE       = 1,    // ES mode
+    JNI_ASPLAYER_PLAYBACK_MODE_PASSTHROUGH   = 0,    // Passthrough mode
+    JNI_ASPLAYER_PLAYBACK_MODE_ES_MODE       = 1,    // ES mode
 } jni_asplayer_playback_mode;
 
 /*Data input source type*/
 typedef enum
 {
-    TS_DEMOD = 0,                          // TS Data input from demod
-    TS_MEMORY = 1,                         // TS Data input from memory
-    ES_MEMORY = 2,                         // ES Data input from memory
+    JNI_ASPLAYER_TS_DEMOD = 0,                          // TS Data input from demod
+    JNI_ASPLAYER_TS_MEMORY = 1,                         // TS Data input from memory
+    JNI_ASPLAYER_ES_MEMORY = 2,                         // ES Data input from memory
 } jni_asplayer_input_source_type;
 
 /*Input buffer type*/
 typedef enum {
-    TS_INPUT_BUFFER_TYPE_NORMAL = 0,       // Input buffer is normal buffer
-    TS_INPUT_BUFFER_TYPE_SECURE = 1,       // Input buffer is secure buffer
-    TS_INPUT_BUFFER_TYPE_TVP = 2           // Input buffer is normal but tvp enabled
+    JNI_ASPLAYER_TS_INPUT_BUFFER_TYPE_NORMAL = 0,       // Input buffer is normal buffer
+    JNI_ASPLAYER_TS_INPUT_BUFFER_TYPE_SECURE = 1,       // Input buffer is secure buffer
+    JNI_ASPLAYER_TS_INPUT_BUFFER_TYPE_TVP = 2           // Input buffer is normal but tvp enabled
 } jni_asplayer_input_buffer_type;
 
 /*Ts stream type*/
 typedef enum {
-    TS_STREAM_VIDEO = 0,                   // Video
-    TS_STREAM_AUDIO = 1,                   // Audio
-    TS_STREAM_AD = 2,                      // Audio description
-    TS_STREAM_SUB = 3,                     // Subtitle
+    JNI_ASPLAYER_TS_STREAM_VIDEO = 0,                   // Video
+    JNI_ASPLAYER_TS_STREAM_AUDIO = 1,                   // Audio
+    JNI_ASPLAYER_TS_STREAM_AD = 2,                      // Audio description
+    JNI_ASPLAYER_TS_STREAM_SUB = 3,                     // Subtitle
 } jni_asplayer_stream_type;
-
-/*Ts media time type*/
-typedef enum {
-    TS_MEDIA_TIME_VIDEO = 0,                //Video
-    TS_MEDIA_TIME_AUDIO = 1,                //Audio
-    TS_MEDIA_TIME_PCR   = 2,                //PCR
-    TS_MEDIA_TIME_STC   = 3,                //System time clock
-    TS_MEDIA_TIME_MAX,
-} jni_asplayer_media_time_type;
-
-/*Ts time type*/
-typedef enum {
-    TS_UNIT_MS = 0,
-    TS_UNIT_US,
-    TS_UNIT_PTS,
-    TS_UNIT_MAX,
-} jni_asplayer_time_unit;
 
 /*Avsync mode*/
 typedef enum {
-    TS_SYNC_VMASTER = 0,                   // Video Master
-    TS_SYNC_AMASTER = 1,                   // Audio Master
-    TS_SYNC_PCRMASTER = 2,                 // PCR Master
-    TS_SYNC_NOSYNC = 3                     // Free run
+    JNI_ASPLAYER_TS_SYNC_VMASTER = 0,                   // Video Master
+    JNI_ASPLAYER_TS_SYNC_AMASTER = 1,                   // Audio Master
+    JNI_ASPLAYER_TS_SYNC_PCRMASTER = 2,                 // PCR Master
+    JNI_ASPLAYER_TS_SYNC_NOSYNC = 3                     // Free run
 } jni_asplayer_avsync_mode;
 
 /*Player working mode*/
 typedef enum {
-    AS_PLAYER_MODE_NORMAL = 0,             // Normal mode
-    AS_PLAYER_MODE_CACHING_ONLY = 1,       // Only caching data, do not decode. Used in FCC
-    AS_PLAYER_MODE_DECODE_ONLY = 2         // Decode data but do not output
+    JNI_ASPLAYER_MODE_NORMAL = 0,             // Normal mode
+    JNI_ASPLAYER_MODE_CACHING_ONLY = 1,       // Only caching data, do not decode. Used in FCC
+    JNI_ASPLAYER_MODE_DECODE_ONLY = 2         // Decode data but do not output
 } jni_asplayer_work_mode;
 
 /*Audio stereo output mode*/
 typedef enum {
-    AV_AUDIO_STEREO = 0,                   // Stereo mode
-    AV_AUDIO_LEFT = 1,                     // Output left channel
-    AV_AUDIO_RIGHT = 2,                    // Output right channel
-    AV_AUDIO_SWAP = 3,                     // Swap left and right channels
-    AV_AUDIO_LRMIX = 4                     // Mix left and right channels
+    JNI_ASPLAYER_AV_AUDIO_STEREO = 0,                   // Stereo mode
+    JNI_ASPLAYER_AV_AUDIO_LEFT = 1,                     // Output left channel
+    JNI_ASPLAYER_AV_AUDIO_RIGHT = 2,                    // Output right channel
+    JNI_ASPLAYER_AV_AUDIO_SWAP = 3,                     // Swap left and right channels
+    JNI_ASPLAYER_AV_AUDIO_LRMIX = 4                     // Mix left and right channels
 } jni_asplayer_audio_stereo_mode;
-
-/*Audio Output mode*/
-typedef enum {
-    AV_AUDIO_OUT_PCM = 0,                  // PCM out
-    AV_AUDIO_OUT_PASSTHROUGH = 1,          // Passthrough out
-    AV_AUDIO_OUT_AUTO = 2,                 // Auto
-} jni_asplayer_audio_out_mode;
 
 /*Video decoder trick mode*/
 typedef enum {
-    AV_VIDEO_TRICK_MODE_NONE = 0,          // Disable trick mode
-    AV_VIDEO_TRICK_MODE_PAUSE = 1,         // Pause the video decoder
-    AV_VIDEO_TRICK_MODE_PAUSE_NEXT = 2,    // Pause the video decoder when a new frame displayed
-    AV_VIDEO_TRICK_MODE_IONLY = 3          // Decode and out I frame only
+    JNI_ASPLAYER_AV_VIDEO_TRICK_MODE_NONE = 0,          // Disable trick mode
+    JNI_ASPLAYER_AV_VIDEO_TRICK_MODE_PAUSE = 1,         // Pause the video decoder
+    JNI_ASPLAYER_AV_VIDEO_TRICK_MODE_PAUSE_NEXT = 2,    // Pause the video decoder when a new frame displayed
+    JNI_ASPLAYER_AV_VIDEO_TRICK_MODE_IONLY = 3          // Decode and out I frame only
 } jni_asplayer_video_trick_mode;
 
-/*Video display match mode*/
-typedef enum {
-    AV_VIDEO_MATCH_MODE_NONE = 0,          // Keep original
-    AV_VIDEO_MATCH_MODE_FULLSCREEN = 1,    // Stretch the video to the full window
-    AV_VIDEO_MATCH_MODE_LETTER_BOX = 2,    // Letter box match mode
-    AV_VIDEO_MATCH_MODE_PAN_SCAN = 3,      // Pan scan match mode
-    AV_VIDEO_MATCH_MODE_COMBINED = 4,      // Combined pan scan and letter box
-    AV_VIDEO_MATCH_MODE_WIDTHFULL = 5,     // Stretch the video width to the full window
-    AV_VIDEO_MATCH_MODE_HEIGHTFULL = 6,      // Stretch the video height to the full window
-    AV_VIDEO_WIDEOPTION_4_3_LETTER_BOX = 7,
-    AV_VIDEO_WIDEOPTION_4_3_PAN_SCAN = 8,
-    AV_VIDEO_WIDEOPTION_4_3_COMBINED = 9,
-    AV_VIDEO_WIDEOPTION_16_9_IGNORE = 10,
-    AV_VIDEO_WIDEOPTION_16_9_LETTER_BOX = 11,
-    AV_VIDEO_WIDEOPTION_16_9_PAN_SCAN = 12,
-    AV_VIDEO_WIDEOPTION_16_9_COMBINED = 13,
-    AV_VIDEO_WIDEOPTION_CUSTOM = 14
-} jni_asplayer_video_match_mode;
 
 /*JniASPlayer handle*/
 typedef size_t jni_asplayer_handle;
@@ -297,13 +234,6 @@ typedef struct {
     jobject mediaFormat;                    // Audio MediaFormat
 } jni_asplayer_audio_params;
 
-/*JniASPlayer stream buffer status*/
-typedef struct {
-    int32_t size;                          // Buffer size
-    int32_t data_len;                      // The length of data in buffer
-    int32_t free_len;                      // The length of free in buffer
-} jni_asplayer_buffer_stat;
-
 /*Video basic information*/
 typedef struct {
     uint32_t width;                        // Video frame width
@@ -331,31 +261,6 @@ typedef struct {
     uint32_t decode_buffer;
 } jni_asplayer_video_qos;
 
-/*Video decoder real time information*/
-typedef struct {
-    jni_asplayer_video_qos qos;
-    uint32_t  decode_time_cost;/*us*/
-    uint32_t frame_width;
-    uint32_t frame_height;
-    uint32_t frame_rate;
-    uint32_t bit_depth_luma;//Original bit_rate;
-    uint32_t frame_dur;
-    uint32_t bit_depth_chroma;//Original frame_data;
-    uint32_t error_count;
-    uint32_t status;
-    uint32_t frame_count;
-    uint32_t error_frame_count;
-    uint32_t drop_frame_count;
-    uint64_t total_data;
-    uint32_t double_write_mode;//Original samp_cnt;
-    uint32_t offset;
-    uint32_t ratio_control;
-    uint32_t vf_type;
-    uint32_t signal_type;
-    uint32_t pts;
-    uint64_t pts_us64;
-} jni_asplayer_vdec_stat;
-
 /*Audio basic information*/
 typedef struct {
     uint32_t sample_rate;                  // Audio sample rate
@@ -363,13 +268,6 @@ typedef struct {
     uint32_t channel_mask;                 // Audio channel mask
     uint32_t bitrate;                      // Audio bitrate
 } jni_asplayer_audio_info;
-
-/*Audio decoder real time information*/
-typedef struct {
-    uint32_t frame_count;
-    uint32_t error_frame_count;
-    uint32_t drop_frame_count;
-} jni_asplayer_adec_stat;
 
 typedef struct {
     uint32_t frame_width;
@@ -584,16 +482,6 @@ jni_asplayer_result  JniASPlayer_getCurrentTime(jni_asplayer_handle Handle, int6
 jni_asplayer_result  JniASPlayer_getPts(jni_asplayer_handle Handle, jni_asplayer_stream_type StrType, uint64_t *pts);
 
 /**
- *@brief:        Get the time of specified JniASPlayer instance.
- *@param:        Handle           JniASPlayer handle.
- *@param:        mediaTimeType    stream type.
- *@param:        tunit            time unit.
- *@param:        *time            pts.
- *@return:       The JniASPlayer result.
- */
-jni_asplayer_result  JniASPlayer_getMediaTime(jni_asplayer_handle Handle, jni_asplayer_media_time_type mediaTimeType, jni_asplayer_time_unit tunit, uint64_t *time);
-
-/**
  *@brief:        Set the tsync mode for specified JniASPlayer instance.
  *@param:        Handle     JniASPlayer handle.
  *@param:        mode       The enum of avsync mode.
@@ -616,14 +504,6 @@ jni_asplayer_result  JniASPlayer_getSyncMode(jni_asplayer_handle Handle, jni_asp
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_setPcrPid(jni_asplayer_handle Handle, uint32_t pid);
-
-/**
- *@brief:        Get the delay time for specified JniASPlayer instance.
- *@param:        Handle     JniASPlayer handle.
- *@param:        *time      The JniASPlayer delay time.
- *@return:       The JniASPlayer result.
- */
-jni_asplayer_result  JniASPlayer_getDelayTime(jni_asplayer_handle Handle, int64_t *time);
 
 
 /*Player control interface*/
@@ -651,79 +531,12 @@ jni_asplayer_result  JniASPlayer_stopFast(jni_asplayer_handle Handle);
 jni_asplayer_result  JniASPlayer_setTrickMode(jni_asplayer_handle Handle, jni_asplayer_video_trick_mode trickmode);
 
 /**
- *@brief:        Get buffer status for specified JniASPlayer instance.
- *@param:        Handle       JniASPlayer handle.
- *@param:        StrType      The stream type we want to check.
- *@param:        *pBufStat    The struct of buffer status.
- *@return:       The JniASPlayer result.
- */
-jni_asplayer_result  JniASPlayer_getBufferStat(jni_asplayer_handle Handle, jni_asplayer_stream_type StrType,
-                                             jni_asplayer_buffer_stat *pBufStat);
-
-/*Video interface*/
-/**
- *@brief:        Set the video display rect size for specified
- *               JniASPlayer instance.
- *@param:        Handle     JniASPlayer handle.
- *@param:        x          The display rect x.
- *@param:        y          The display rect y.
- *@param:        width      The display rect width.
- *@param:        height     The display rect height.
- *@return:       The JniASPlayer result.
- */
-jni_asplayer_result  JniASPlayer_setVideoWindow(jni_asplayer_handle Handle,
-                                              int32_t x,int32_t y,
-                                              int32_t width,int32_t height);
-
-/*Video interface*/
-/**
-*@brief:        Set the video crop rect size for specified
-*               JniASPlayer instance.
-*@param:        Handle     JniASPlayer handle.
-*@param:        left       The video crop rect left.
-*@param:        top        The video crop rect top.
-*@param:        right      The video crop rect right.
-*@param:        bottom     The video crop rect bottom.
-*@return:       The JniASPlayer result.
-*/
-jni_asplayer_result  JniASPlayer_setVideoCrop(jni_asplayer_handle Handle,
-                                            int32_t left,
-                                            int32_t top,
-                                            int32_t right,
-                                            int32_t bottom);
-
-/**
  *@brief:        Set Surface ptr to specified JniASPlayer instance.
  *@param:        Handle       JniASPlayer handle.
  *@param:        *pSurface    Surface ptr
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_setSurface(jni_asplayer_handle Handle, void* pSurface);
-
-/**
- *@brief:        Show the video frame display for specified
- *               JniASPlayer instance.
- *@param:        Handle       JniASPlayer handle.
- *@return:       The JniASPlayer result.
- */
-jni_asplayer_result  JniASPlayer_showVideo(jni_asplayer_handle Handle);
-
-/**
- *@brief:        Hide the video frame display for specified
- *               JniASPlayer instance.
- *@param:        Handle       JniASPlayer handle.
- *@return:       The JniASPlayer result.
- */
-jni_asplayer_result  JniASPlayer_hideVideo(jni_asplayer_handle Handle);
-
-/**
- *@brief:        Set video display match mode for specified
-                 JniASPlayer instance.
- *@param:        Handle       JniASPlayer handle.
- *@param:        MathMod      The enum of video display match mode.
- *@return:       The JniASPlayer result.
- */
-jni_asplayer_result  JniASPlayer_setVideoMatchMode(jni_asplayer_handle Handle, jni_asplayer_video_match_mode MathMod);
 
 /**
  *@brief:        Set video params need by demuxer and video decoder
@@ -750,15 +563,6 @@ jni_asplayer_result  JniASPlayer_setVideoBlackOut(jni_asplayer_handle Handle, bo
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_getVideoInfo(jni_asplayer_handle Handle, jni_asplayer_video_info *pInfo);
-
-/**
- *@brief:        Get video decoder real time info
- *               of specified JniASPlayer instance.
- *@param:        Handle   JniASPlayer handle.
- *@param:        *pStat   The ptr of video decoder real time info struct
- *@return:       The JniASPlayer result.
- */
-jni_asplayer_result  JniASPlayer_getVideoStat(jni_asplayer_handle Handle, jni_asplayer_vdec_stat *pStat);
 
 /**
  *@brief:        Start video decoding for specified JniASPlayer instance .
@@ -868,29 +672,12 @@ jni_asplayer_result  JniASPlayer_getAudioMute(jni_asplayer_handle Handle, bool_t
 jni_asplayer_result  JniASPlayer_setAudioParams(jni_asplayer_handle Handle, jni_asplayer_audio_params *pParams);
 
 /**
- *@brief:        Set audio output mode to specified JniASPlayer instance.
- *@param:        Handle   JniASPlayer handle.
- *@param:        Mode     Enum of audio output mode.
- *@return:       The JniASPlayer result.
- */
-jni_asplayer_result  JniASPlayer_setAudioOutMode(jni_asplayer_handle Handle, jni_asplayer_audio_out_mode Mode);
-
-/**
  *@brief:        Get audio basic info of specified JniASPlayer instance.
  *@param:        Handle      JniASPlayer handle.
  *@param:        *pInfo      The ptr of audio basic info struct .
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_getAudioInfo(jni_asplayer_handle Handle,  jni_asplayer_audio_info *pInfo);
-
-/**
- *@brief:        Get audio decoder real time info
- *               of specified JniASPlayer instance.
- *@param:        Handle    JniASPlayer handle.
- *@param:        *pStat    The ptr of audio decoder real time info struct
- *@return:       The JniASPlayer result.
- */
-jni_asplayer_result  JniASPlayer_getAudioStat(jni_asplayer_handle Handle, jni_asplayer_adec_stat *pStat);
 
 /**
  *@brief:        Start audio decoding for specified JniASPlayer instance .
@@ -931,38 +718,6 @@ jni_asplayer_result  JniASPlayer_setADParams(jni_asplayer_handle Handle, jni_asp
 
 /*Audio description interface*/
 /**
- *@brief:        Set audio description mix level (master vol and ad vol)
- *@param:        Handle        JniASPlayer handle.
- *@param:        master_vol    Master volume value.
- *@param:        slave_vol     Slave volume value.
- *@return:       The JniASPlayer result.
- */
-jni_asplayer_result  JniASPlayer_setADMixLevel(jni_asplayer_handle Handle, int32_t master_vol, int32_t slave_vol);
-
-/**
- *@brief:        Get audio description mix level (master vol and ad vol)
- *@param:        Handle        JniASPlayer handle.
- *@param:        *master_vol   Master volume value.
- *@param:        *slave_vol    Slave volume value.
- *@return:       The JniASPlayer result.
- */
-jni_asplayer_result  JniASPlayer_getADMixLevel(jni_asplayer_handle Handle, int32_t *master_vol, int32_t *slave_vol);
-
-/**
- *@brief:        Enable audio description mix with master audio
- *@param:        Handle     JniASPlayer handle.
- *@return:       The JniASPlayer result.
- */
-jni_asplayer_result  JniASPlayer_enableADMix(jni_asplayer_handle Handle);
-
-/**
- *@brief:        Disable audio description mix with master audio
- *@param:        Handle     JniASPlayer handle.
- *@return:       The JniASPlayer result.
- */
-jni_asplayer_result  JniASPlayer_disableADMix(jni_asplayer_handle Handle);
-
-/**
  *@brief:        Get audio description basic info of specified
  *               JniASPlayer instance.
  *@param:        Handle    JniASPlayer handle.
@@ -970,15 +725,6 @@ jni_asplayer_result  JniASPlayer_disableADMix(jni_asplayer_handle Handle);
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_getADInfo(jni_asplayer_handle Handle, jni_asplayer_audio_info *pInfo);
-
-/**
- *@brief:        Get audio description decoder real time info
- *               of specified JniASPlayer instance.
- *@param:        Handle    JniASPlayer handle.
- *@param:        *pStat    The ptr of audio decoder real time info struct
- *@return:       The JniASPlayer result.
- */
-jni_asplayer_result  JniASPlayer_getADStat(jni_asplayer_handle Handle, jni_asplayer_adec_stat *pStat);
 
 /*Subtitle interface*/
 /**

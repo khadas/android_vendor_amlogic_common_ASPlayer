@@ -13,9 +13,7 @@ import android.media.tv.tuner.Tuner;
 import android.util.Log;
 import android.view.Surface;
 
-import com.amlogic.asplayer.api.AudioDecoderStat;
 import com.amlogic.asplayer.api.AudioParams;
-import com.amlogic.asplayer.api.BufferStat;
 import com.amlogic.asplayer.api.InitParams;
 import com.amlogic.asplayer.api.InputBuffer;
 import com.amlogic.asplayer.api.InputFrameBuffer;
@@ -23,7 +21,6 @@ import com.amlogic.asplayer.api.IASPlayer;
 import com.amlogic.asplayer.api.State;
 import com.amlogic.asplayer.api.TsPlaybackListener;
 import com.amlogic.asplayer.api.ASPlayer;
-import com.amlogic.asplayer.api.VideoDecoderStat;
 import com.amlogic.asplayer.api.VideoParams;
 
 
@@ -158,11 +155,6 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
-    public long getDelayTime() {
-        return 0;
-    }
-
-    @Override
     public int startFast(float scale) {
         return native_startFast(scale);
     }
@@ -178,28 +170,8 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
-    public BufferStat getBufferStat(int streamType) {
-        return null;
-    }
-
-    @Override
-    public int setVideoWindow(int x, int y, int width, int height) {
-        return 0;
-    }
-
-    @Override
-    public int setVideoCrop(int left, int top, int right, int bottom) {
-        return 0;
-    }
-
-    @Override
     public int setSurface(Surface surface) {
         return native_setSurface(surface);
-    }
-
-    @Override
-    public void setVideoMatchMode(int videoMatchMode) {
-
     }
 
     @Override
@@ -221,11 +193,6 @@ public class JniASPlayerWrapper implements IASPlayer {
 
     @Override
     public MediaFormat getVideoInfo() {
-        return null;
-    }
-
-    @Override
-    public VideoDecoderStat getVideoStat() {
         return null;
     }
 
@@ -297,17 +264,7 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
-    public void setAudioOutMode(int audioOutputMode) {
-
-    }
-
-    @Override
     public MediaFormat getAudioInfo() {
-        return null;
-    }
-
-    @Override
-    public AudioDecoderStat getAudioStat() {
         return null;
     }
 
@@ -337,32 +294,7 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
-    public int setAudioDescriptionMixLevel(int masterVolume, int slaveVolume) {
-        return 0;
-    }
-
-    @Override
-    public AudioVolume getAudioDescriptionMixLevel() {
-        return null;
-    }
-
-    @Override
-    public int enableAudioDescriptionMix() {
-        return 0;
-    }
-
-    @Override
-    public int disableAudioDescriptionMix() {
-        return 0;
-    }
-
-    @Override
     public MediaFormat getAudioDescriptionInfo() {
-        return null;
-    }
-
-    @Override
-    public AudioDecoderStat getAudioDescriptionStat() {
         return null;
     }
 

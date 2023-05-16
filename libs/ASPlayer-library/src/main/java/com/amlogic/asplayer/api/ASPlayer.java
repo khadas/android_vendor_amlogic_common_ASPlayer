@@ -265,15 +265,6 @@ public class ASPlayer implements IASPlayer {
     }
 
     /**
-     * Get the dealy time for ASPlayer instance.
-     */
-    @Override
-    public long getDelayTime() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getDelayTime start", TAG, mId);
-        throw new RuntimeException("Not Implementation");
-    }
-
-    /**
      * Start Fast play for ASPlayer instance.
      *
      * @param scale Fast play speed.
@@ -307,47 +298,6 @@ public class ASPlayer implements IASPlayer {
     }
 
     /**
-     * Get Buffer Stat for ASPlayer instance.
-     *
-     * @see StreamType
-     *
-     * @param streamType The stream type we want to check.
-     */
-    @Override
-    public BufferStat getBufferStat(int streamType) {
-        if (DEBUG) ASPlayerLog.d("%s-%d getBufferStat start", TAG, mId);
-        throw new RuntimeException("Not Implementation");
-    }
-
-    /**
-     * Set the video display rect size for ASPlayer instance.
-     *
-     * @param x The display rect x.
-     * @param y The display rect y.
-     * @param width The display rect width.
-     * @param height The display rect height.
-     */
-    @Override
-    public int setVideoWindow(int x, int y, int width, int height) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setVideoWindow start", TAG, mId);
-        throw new RuntimeException("Not Implementation");
-    }
-
-    /**
-     * Set the video crop rect size for ASPlayer instance.
-     *
-     * @param left The video crop rect left.
-     * @param top The video crop rect top.
-     * @param right The video crop rect right.
-     * @param bottom The video crop rect bottom.
-     */
-    @Override
-    public int setVideoCrop(int left, int top, int right, int bottom) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setVideoCrop start", TAG, mId);
-        throw new RuntimeException("Not Implementation");
-    }
-
-    /**
      * Set surface to ASPlayer Instance.
      *
      * @param surface
@@ -356,19 +306,6 @@ public class ASPlayer implements IASPlayer {
     public int setSurface(Surface surface) {
         ASPlayerLog.i("%s-%d setSurface start, surface: %s", TAG, mId, surface);
         return mPlayer.setSurface(surface);
-    }
-
-    /**
-     * Set video display match mode for ASPlayer instance.
-     *
-     * @see VideoMatchMode
-     *
-     * @param videoMatchMode video display match mode
-     */
-    @Override
-    public void setVideoMatchMode(int videoMatchMode) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setVideoMatchMode start", TAG, mId);
-        throw new RuntimeException("Not Implementation");
     }
 
     /**
@@ -399,15 +336,6 @@ public class ASPlayer implements IASPlayer {
     @Override
     public MediaFormat getVideoInfo() {
         if (DEBUG) ASPlayerLog.d("%s-%d getVideoInfo start", TAG, mId);
-        throw new RuntimeException("Not Implementation");
-    }
-
-    /**
-     * Get video decoder real time info of ASPlayer instance.
-     */
-    @Override
-    public VideoDecoderStat getVideoStat() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getVideoStat start", TAG, mId);
         throw new RuntimeException("Not Implementation");
     }
 
@@ -532,33 +460,11 @@ public class ASPlayer implements IASPlayer {
     }
 
     /**
-     * Set audio output mode to ASPlayer instance.
-     *
-     * @see AudioOutputMode
-     *
-     * @param audioOutputMode audio output mode
-     */
-    @Override
-    public void setAudioOutMode(int audioOutputMode) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setAudioOutMode start", TAG, mId);
-        throw new RuntimeException("Not Implementation");
-    }
-
-    /**
      * Get audio basic info of ASPlayer instance.
      */
     @Override
     public MediaFormat getAudioInfo() {
         if (DEBUG) ASPlayerLog.d("%s-%d getAudioInfo start", TAG, mId);
-        throw new RuntimeException("Not Implementation");
-    }
-
-    /**
-     * Get audio decoder real time info of ASPlayer instance.
-     */
-    @Override
-    public AudioDecoderStat getAudioStat() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getAudioStat start", TAG, mId);
         throw new RuntimeException("Not Implementation");
     }
 
@@ -608,59 +514,11 @@ public class ASPlayer implements IASPlayer {
     }
 
     /**
-     * Set audio description mix level (master vol and ad vol)
-     *
-     * @param masterVolume Master volume value
-     * @param slaveVolume Slave volume value
-     */
-    @Override
-    public int setAudioDescriptionMixLevel(int masterVolume, int slaveVolume) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setAudioDescriptionMixLevel start", TAG, mId);
-        throw new RuntimeException("Not Implementation");
-    }
-
-    /**
-     * Get audio description mix level (master vol and ad vol)
-     */
-    @Override
-    public AudioVolume getAudioDescriptionMixLevel() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getAudioDescriptionMixLevel start", TAG, mId);
-        throw new RuntimeException("Not Implementation");
-    }
-
-    /**
-     * Enable audio description mix with master audio
-     */
-    @Override
-    public int enableAudioDescriptionMix() {
-        if (DEBUG) ASPlayerLog.d("%s-%d enableAudioDescriptionMix start", TAG, mId);
-        throw new RuntimeException("Not Implementation");
-    }
-
-    /**
-     * Disable audio description mix with master audio
-     */
-    @Override
-    public int disableAudioDescriptionMix() {
-        if (DEBUG) ASPlayerLog.d("%s-%d disableAudioDescriptionMix start", TAG, mId);
-        throw new RuntimeException("Not Implementation");
-    }
-
-    /**
      * Get audio description basic info of Player instance.
      */
     @Override
     public MediaFormat getAudioDescriptionInfo() {
         if (DEBUG) ASPlayerLog.d("%s-%d getAudioDescriptionInfo start", TAG, mId);
-        throw new RuntimeException("Not Implementation");
-    }
-
-    /**
-     * Get audio description decoder real time info of ASPlayer instance.
-     */
-    @Override
-    public AudioDecoderStat getAudioDescriptionStat() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getAudioDescriptionStat start", TAG, mId);
         throw new RuntimeException("Not Implementation");
     }
 
