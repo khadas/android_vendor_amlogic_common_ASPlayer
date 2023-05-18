@@ -32,7 +32,7 @@ android {
 
     sourceSets {
         main {
-            java.srcDirs = ['src/main/java', 'src/main/no_framework']
+            java.srcDirs = ['src/main/java']
             jni {
                 srcDirs 'src\\main\\jni'
             }

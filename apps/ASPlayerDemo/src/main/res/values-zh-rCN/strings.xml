@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ASPlayerDemo</string>
+
+    <string name="ts_file_path">Ts 文件路径：</string>
+    <string name="no_ts_path_tips">请输入Ts文件路径</string>
+
+    <string name="tuner_hal_settings">Tuner Hal设置</string>
+    <string name="tuner_hal_version_label">Tuner Hal版本：</string>
+    <string name="tuner_hal_1_0">Tuner Hal 1.0</string>
+    <string name="tuner_hal_1_1">Tuner Hal 1.1</string>
+
+    <string name="video_parameters_label">视频参数</string>
+    <string name="video_pid_label">视频PID:</string>
+    <string name="video_mime_type_label">视频MimeType:</string>
+    <string name="video_stream_type_label">视频Stream Type:</string>
+
+    <string name="audio_parameters_label">音频参数</string>
+    <string name="audio_pid_label">音频PID:</string>
+    <string name="audio_mime_type_label">音频MimeType:</string>
+    <string name="audio_stream_type_label">音频Stream Type:</string>
+
+    <string name="tips_check_input">请检查输入参数是否有误！</string>
+
+    <string name="dvbt_live_setting_label">DVB-T直播设置</string>
+    <string name="frequency_label">频率 (单位：MHz)</string>
+    <string name="bandwidth_label">带宽: 8M</string>
+    <string name="tips_no_frequency">请输入频率</string>
+
+    <string name="fullscreen_play_video">播放</string>
+</resources>

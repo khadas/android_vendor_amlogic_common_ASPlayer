@@ -1,3 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ASPlayerDemo</string>
+
+    <string name="ts_file_path">Ts file Path:</string>
+    <string name="no_ts_path_tips">Please input Ts file path</string>
+
+    <string name="tuner_hal_settings">Tuner Hal Settings</string>
+    <string name="tuner_hal_version_label">Tuner Hal Version:</string>
+    <string name="tuner_hal_1_0">Tuner Hal 1.0</string>
+    <string name="tuner_hal_1_1">Tuner Hal 1.1</string>
+
+    <string name="video_parameters_label">Video Parameters</string>
+    <string name="video_pid_label">Video Program PID:</string>
+    <string name="video_mime_type_label">Video MimeType:</string>
+    <string name="video_stream_type_label">Video Stream Type:</string>
+
+    <string name="audio_parameters_label">Audio Parameters</string>
+    <string name="audio_pid_label">Audio Program PID:</string>
+    <string name="audio_mime_type_label">Audio MimeType:</string>
+    <string name="audio_stream_type_label">Audio Stream Type:</string>
+
+    <string name="tips_check_input">Please check input parameters</string>
+
+    <string name="dvbt_live_setting_label">DVB-T Live Setting</string>
+    <string name="frequency_label">Frequency (MHz)</string>
+    <string name="bandwidth_label">Bandwidth: 8M</string>
+    <string name="tips_no_frequency">Please input frequency</string>
+
+    <string name="fullscreen_play_video">Play</string>
 </resources>

@@ -67,12 +67,14 @@ public class TvPlayer {
     protected IASPlayer mASPlayer;
     private TsPlaybackListener mTsPlaybackListener;
 
+    private int mTunerHalVersion = Constant.TUNER_HAL_VERSION_1_0;
+
     private Filter mVideoFilter;
     private int mVideoPid = -1;
-    private String mVideoMimeType;
+    private String mVideoStreamType;
     private Filter mAudioFilter;
     private int mAudioPid = -1;
-    private String mAudioMimeType;
+    private String mAudioStreamType;
 
     public interface TuneListener {
         void execTune(Tuner tuner);
@@ -172,9 +174,14 @@ public class TvPlayer {
     private void handleStart(Uri uri, Bundle bundle) {
         prepareTunerForStart(uri);
 
+        mTunerHalVersion = bundle.getInt(Constant.EXTRA_TUNER_HAL_VERSION, Constant.TUNER_HAL_VERSION_1_0);
+
         if (mASPlayer != null) {
             mVideoPid = bundle.getInt(Constant.EXTRA_VIDEO_PID, -1);
-            mVideoMimeType = bundle.getString(Constant.EXTRA_VIDEO_MIMETYPE, "");
+            String videoMimeType = bundle.getString(Constant.EXTRA_VIDEO_MIME_TYPE, "");
+            if (mTunerHalVersion == Constant.TUNER_HAL_VERSION_1_1) {
+                mVideoStreamType = bundle.getString(Constant.EXTRA_VIDEO_STREAM_TYPE, "");
+            }
 
             startVideoFilter();
             if (mVideoFilter == null) {
@@ -183,11 +190,11 @@ public class TvPlayer {
 
             int width = 1920;
             int height = 1080;
-            if (mVideoMimeType.contains("hevc")) {
+            if (videoMimeType.contains("hevc")) {
                 width = 3840;
                 height = 2160;
             }
-            VideoParams.Builder videoParamsBuilder = new VideoParams.Builder(mVideoMimeType, width, height)
+            VideoParams.Builder videoParamsBuilder = new VideoParams.Builder(videoMimeType, width, height)
                     .setPid(mVideoPid)
                     .setTrackFilterId(mVideoFilter.getId())
                     .setAvSyncHwId(mTuner.getAvSyncHwId(mVideoFilter));
@@ -199,14 +206,17 @@ public class TvPlayer {
             mASPlayer.startVideoDecoding();
 
             mAudioPid = bundle.getInt(Constant.EXTRA_AUDIO_PID, -1);
-            mAudioMimeType = bundle.getString(Constant.EXTRA_AUDIO_MIMETYPE, "");
+            String audioMimeType = bundle.getString(Constant.EXTRA_AUDIO_MIME_TYPE, "");
+            if (mTunerHalVersion == Constant.TUNER_HAL_VERSION_1_1) {
+                mAudioStreamType = bundle.getString(Constant.EXTRA_AUDIO_STREAM_TYPE, "");
+            }
 
             startAudioFilter();
             if (mAudioFilter == null) {
                 return;
             }
 
-            AudioParams.Builder audioParamsBuilder = new AudioParams.Builder(mAudioMimeType, 48000, 2)
+            AudioParams.Builder audioParamsBuilder = new AudioParams.Builder(audioMimeType, 48000, 2)
                     .setPid(mAudioPid)
                     .setTrackFilterId(mAudioFilter.getId())
                     .setAvSyncHwId(mTuner.getAvSyncHwId(mAudioFilter));
@@ -267,7 +277,7 @@ public class TvPlayer {
         }
     }
 
-    private Filter openVideoFilter(int pid, String mimeType) {
+    private Filter openVideoFilter(int pid, String videoStreamType) {
         long bufferSize = 1024 * 1024 * 4;
         Filter filter = mTuner.openFilter(Filter.TYPE_TS, Filter.SUBTYPE_VIDEO, bufferSize, mHandlerExecutor, new FilterCallback() {
             @Override
@@ -287,9 +297,9 @@ public class TvPlayer {
 
         AvSettings.Builder builder = AvSettings.builder(Filter.TYPE_TS, false)
                 .setPassthrough(true);
-        if (Build.VERSION.SDK_INT >= 33) {
+        if (Build.VERSION.SDK_INT >= 33 && mTunerHalVersion == Constant.TUNER_HAL_VERSION_1_1) {
             // Android T
-            TunerHelper.setVideoStreamType(builder, mimeType);
+            TunerHelper.setVideoStreamType(builder, videoStreamType);
         }
         Settings settings = builder.build();
         FilterConfiguration filterConfiguration = TsFilterConfiguration.builder()
@@ -300,7 +310,7 @@ public class TvPlayer {
         return filter;
     }
 
-    private Filter openAudioFilter(int pid, String mimeType) {
+    private Filter openAudioFilter(int pid, String audioStreamType) {
         long bufferSize = 1024 * 1024 * 2;
         Filter filter = mTuner.openFilter(Filter.TYPE_TS, Filter.SUBTYPE_AUDIO, bufferSize, mHandlerExecutor, new FilterCallback() {
             @Override
@@ -320,9 +330,9 @@ public class TvPlayer {
 
         AvSettings.Builder builder = AvSettings.builder(Filter.TYPE_TS, true)
                 .setPassthrough(true);
-        if (Build.VERSION.SDK_INT >= 33) {
+        if (Build.VERSION.SDK_INT >= 33 && mTunerHalVersion == Constant.TUNER_HAL_VERSION_1_1) {
             // Android T
-            TunerHelper.setAudioStreamType(builder, mimeType);
+            TunerHelper.setAudioStreamType(builder, audioStreamType);
         }
         Settings settings = builder.build();
         FilterConfiguration filterConfiguration = TsFilterConfiguration.builder()
@@ -339,7 +349,7 @@ public class TvPlayer {
         }
 
         if (mVideoPid > 0) {
-            mVideoFilter = openVideoFilter(mVideoPid, mVideoMimeType);
+            mVideoFilter = openVideoFilter(mVideoPid, mVideoStreamType);
             if (mVideoFilter != null) {
                 mVideoFilter.start();
             }
@@ -352,7 +362,7 @@ public class TvPlayer {
         }
 
         if (mAudioPid > 0) {
-            mAudioFilter = openAudioFilter(mAudioPid, mAudioMimeType);
+            mAudioFilter = openAudioFilter(mAudioPid, mAudioStreamType);
             if (mAudioFilter != null) {
                 mAudioFilter.start();
             }

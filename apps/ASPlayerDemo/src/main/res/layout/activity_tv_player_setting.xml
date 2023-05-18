@@ -28,7 +28,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Ts文件路径"
+                android:text="@string/ts_file_path"
                 android:textSize="12dp" />
 
             <EditText
@@ -39,16 +39,18 @@
                 android:textSize="12dp" />
         </LinearLayout>
 
-        <include android:layout_width="match_parent"
+        <com.amlogic.asplayer.demo.widget.ProgramInputSettingView
+            android:id="@+id/program_setting_view"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            layout="@layout/layout_asplayer_setting" />
+            android:layout_marginTop="16dp" />
 
         <Button
             android:id="@+id/btn_fullscreen_play"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="8dp"
-            android:text="全屏播放"
+            android:text="@string/fullscreen_play_video"
             android:textSize="12dp" />
 
     </LinearLayout>

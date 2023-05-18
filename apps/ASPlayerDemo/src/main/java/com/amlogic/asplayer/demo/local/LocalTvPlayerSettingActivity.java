@@ -21,6 +21,9 @@ import androidx.annotation.Nullable;
 
 import com.amlogic.asplayer.demo.Constant;
 import com.amlogic.asplayer.demo.R;
+import com.amlogic.asplayer.demo.utils.TvPlayerBundleHelper;
+import com.amlogic.asplayer.demo.utils.ViewUtils;
+import com.amlogic.asplayer.demo.widget.ProgramInputSettingView;
 
 
 public class LocalTvPlayerSettingActivity extends Activity {
@@ -28,11 +31,7 @@ public class LocalTvPlayerSettingActivity extends Activity {
     private static final String TAG = Constant.LOG_TAG;
 
     private EditText mEditTsPath;
-    private EditText mEditVideoPid;
-    private EditText mEditVideoMimeType;
-    private EditText mEditAudioPid;
-    private EditText mEditAudioMimeType;
-
+    private ProgramInputSettingView mProgramInputView;
     private Button mBtnStartPlay;
 
     @Override
@@ -48,15 +47,7 @@ public class LocalTvPlayerSettingActivity extends Activity {
         mEditTsPath = findViewById(R.id.edit_ts_path);
         mEditTsPath.setHint(Constant.DEFAULT_TS_PATH);
 
-        mEditVideoPid = findViewById(R.id.edit_video_pid);
-        mEditVideoPid.setHint(String.valueOf(Constant.DEFAULT_VIDEO_PID));
-        mEditVideoMimeType = findViewById(R.id.edit_video_mimetype);
-        mEditVideoMimeType.setHint(Constant.DEFAULT_VIDEO_MIMETYPE);
-
-        mEditAudioPid = findViewById(R.id.edit_audio_pid);
-        mEditAudioPid.setHint(String.valueOf(Constant.DEFAULT_AUDIO_PID));
-        mEditAudioMimeType = findViewById(R.id.edit_audio_mimetype);
-        mEditAudioMimeType.setHint(Constant.DEFAULT_AUDIO_MIMETYPE);
+        mProgramInputView = findViewById(R.id.program_setting_view);
 
         mBtnStartPlay = findViewById(R.id.btn_fullscreen_play);
         mBtnStartPlay.setOnClickListener(new View.OnClickListener() {
@@ -70,57 +61,28 @@ public class LocalTvPlayerSettingActivity extends Activity {
     }
 
     private String getLocalTsPath() {
-        return getInputText(mEditTsPath);
-    }
-
-    private String getInputText(EditText editText) {
-        String str = editText.getText().toString().trim();
-        if (TextUtils.isEmpty(str)) {
-            str = editText.getHint().toString().trim();
-        }
-        return str;
-    }
-
-    private int getInputNumber(EditText editText, int defaultValue) {
-        int number = defaultValue;
-        try {
-            String str = editText.getText().toString().trim();
-            if (TextUtils.isEmpty(str)) {
-                str = editText.getHint().toString().trim();
-            }
-            number = Integer.parseInt(str);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return number;
+        return ViewUtils.getInputText(mEditTsPath);
     }
 
     private void gotoVideoPlayActivity() {
         String tsPath = getLocalTsPath();
 
         if (TextUtils.isEmpty(tsPath)) {
-            Toast.makeText(this, "请输入Ts文件路径", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.no_ts_path_tips, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ProgramInputSettingView.ProgramInfo programInfo = mProgramInputView.getProgramInfo();
+        if (programInfo == null) {
+            Toast.makeText(this, R.string.tips_check_input, Toast.LENGTH_SHORT).show();
             return;
         }
 
         Intent intent = new Intent(LocalTvPlayerSettingActivity.this, LocalTvPlayerActivity.class);
         intent.putExtra(Constant.EXTRA_TS_PATH, tsPath);
 
-        Bundle bundle = new Bundle();
-
-        int videoPid = getInputNumber(mEditVideoPid, 0);
-        bundle.putInt(Constant.EXTRA_VIDEO_PID, videoPid);
-
-        String videoMimeType = getInputText(mEditVideoMimeType);
-        bundle.putString(Constant.EXTRA_VIDEO_MIMETYPE, videoMimeType);
-
-        int audioPid = getInputNumber(mEditAudioPid, 0);
-        bundle.putInt(Constant.EXTRA_AUDIO_PID, audioPid);
-
-        String audioMimeType = getInputText(mEditAudioMimeType);
-        bundle.putString(Constant.EXTRA_AUDIO_MIMETYPE, audioMimeType);
-
-        intent.putExtra(Constant.EXTRA_PROGRAM_BUNDLE, bundle);
+        Bundle programBundle = TvPlayerBundleHelper.getTvPlayerStartBundle(programInfo);
+        intent.putExtra(Constant.EXTRA_PROGRAM_BUNDLE, programBundle);
 
         startActivity(intent);
     }

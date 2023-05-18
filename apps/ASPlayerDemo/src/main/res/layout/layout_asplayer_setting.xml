@@ -6,14 +6,68 @@
     android:orientation="vertical">
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="视频参数" />
+            android:text="@string/tuner_hal_settings" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1"
+            android:layout_marginLeft="16dp"
+            android:layout_gravity="center_vertical"
+            android:background="@color/divider_color" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/tuner_hal_version_label" />
+
+        <RadioGroup
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:orientation="horizontal">
+
+            <RadioButton
+                android:id="@+id/rdo_tuner_hal_1_0"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="8dp"
+                android:text="@string/tuner_hal_1_0" />
+
+            <RadioButton
+                android:id="@+id/rdo_tuner_hal_1_1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="8dp"
+                android:text="@string/tuner_hal_1_1" />
+        </RadioGroup>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/video_parameters_label" />
 
         <View
             android:layout_width="0dp"
@@ -27,12 +81,13 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="视频 PID：" />
+            android:text="@string/video_pid_label" />
 
         <EditText
             android:id="@+id/edit_video_pid"
@@ -42,28 +97,58 @@
             android:hint=""
             android:inputType="number" />
 
-        <TextView
+        <LinearLayout
+            android:id="@+id/layout_video_mime_type"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="视频 MimeType：" />
+            android:layout_marginLeft="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <EditText
-            android:id="@+id/edit_video_mimetype"
-            android:layout_width="200dp"
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/video_mime_type_label" />
+
+            <EditText
+                android:id="@+id/edit_video_mime_type"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:hint="" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_video_stream_type"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text=""
-            android:hint="" />
+            android:layout_marginLeft="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/video_stream_type_label" />
+
+            <Spinner
+                android:id="@+id/spinner_video_stream_type"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:entries="@array/video_stream_type_array"/>
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="音频参数" />
+            android:text="@string/audio_parameters_label" />
 
         <View
             android:layout_width="0dp"
@@ -77,12 +162,13 @@
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:gravity="center_vertical"
         android:orientation="horizontal">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="音频 PID：" />
+            android:text="@string/audio_pid_label" />
 
         <EditText
             android:id="@+id/edit_audio_pid"
@@ -92,17 +178,46 @@
             android:hint=""
             android:inputType="number" />
 
-        <TextView
+        <LinearLayout
+            android:id="@+id/layout_audio_mime_type"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="音频 MimeType：" />
+            android:layout_marginLeft="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-        <EditText
-            android:id="@+id/edit_audio_mimetype"
-            android:layout_width="200dp"
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/audio_mime_type_label" />
+
+            <EditText
+                android:id="@+id/edit_audio_mime_type"
+                android:layout_width="200dp"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:hint=""
+                android:inputType="text" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_audio_stream_type"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text=""
-            android:hint=""
-            android:inputType="text" />
+            android:layout_marginLeft="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/audio_stream_type_label" />
+
+            <Spinner
+                android:id="@+id/spinner_audio_stream_type"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:entries="@array/audio_stream_type_array" />
+        </LinearLayout>
     </LinearLayout>
 </LinearLayout>

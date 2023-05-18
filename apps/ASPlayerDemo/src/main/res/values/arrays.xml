@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="video_stream_type_array">
+        <item>VIDEO_STREAM_TYPE_UNDEFINED</item>
+        <item>VIDEO_STREAM_TYPE_RESERVED</item>
+        <item>VIDEO_STREAM_TYPE_MPEG1</item>
+        <item>VIDEO_STREAM_TYPE_MPEG2</item>
+        <item>VIDEO_STREAM_TYPE_MPEG4P2</item>
+        <item>VIDEO_STREAM_TYPE_AVC</item>
+        <item>VIDEO_STREAM_TYPE_HEVC</item>
+        <item>VIDEO_STREAM_TYPE_VC1</item>
+        <item>VIDEO_STREAM_TYPE_VP8</item>
+        <item>VIDEO_STREAM_TYPE_VP9</item>
+        <item>VIDEO_STREAM_TYPE_AV1</item>
+        <item>VIDEO_STREAM_TYPE_AVS</item>
+        <item>VIDEO_STREAM_TYPE_AVS2</item>
+    </string-array>
+
+    <string-array name="audio_stream_type_array">
+        <item>AUDIO_STREAM_TYPE_UNDEFINED</item>
+        <item>AUDIO_STREAM_TYPE_PCM</item>
+        <item>AUDIO_STREAM_TYPE_MP3</item>
+        <item>AUDIO_STREAM_TYPE_MPEG1</item>
+        <item>AUDIO_STREAM_TYPE_MPEG2</item>
+        <item>AUDIO_STREAM_TYPE_MPEGH</item>
+        <item>AUDIO_STREAM_TYPE_AAC</item>
+        <item>AUDIO_STREAM_TYPE_AC3</item>
+        <item>AUDIO_STREAM_TYPE_EAC3</item>
+        <item>AUDIO_STREAM_TYPE_AC4</item>
+        <item>AUDIO_STREAM_TYPE_DTS</item>
+        <item>AUDIO_STREAM_TYPE_DTS_HD</item>
+        <item>AUDIO_STREAM_TYPE_WMA</item>
+        <item>AUDIO_STREAM_TYPE_OPUS</item>
+        <item>AUDIO_STREAM_TYPE_VORBIS</item>
+        <item>AUDIO_STREAM_TYPE_DRA</item>
+        <item>AUDIO_STREAM_TYPE_AAC_ADTS</item>
+        <item>AUDIO_STREAM_TYPE_AAC_LATM</item>
+        <item>AUDIO_STREAM_TYPE_AAC_HE_ADTS</item>
+        <item>AUDIO_STREAM_TYPE_AAC_HE_LATM</item>
+    </string-array>
+</resources>
