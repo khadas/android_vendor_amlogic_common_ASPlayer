@@ -438,16 +438,19 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     @Override
     public int setSurface(Surface surface) {
         ASPlayerLog.i("%s-%d setSurface start, surface: %s", TAG, mId, surface);
-        if (mPlayerHandler != null) {
-            mPlayerHandler.post(() -> {
+        if (mPlayerHandler != null && mPlayerThread != null && mPlayerThread.isAlive()) {
+            ConditionVariable lock = new ConditionVariable();
+
+            mPlayerHandler.postAtFrontOfQueue(() -> {
                 mVideoOutputPath.setSurface(surface);
+                lock.open();
             });
-            return 0;
+            lock.block();
         } else {
             mVideoOutputPath.setSurface(surface);
             ASPlayerLog.w("%s-%d setSurface called, but playerHandler is null", TAG, mId);
-            return 0;
         }
+        return 0;
     }
 
     @Override

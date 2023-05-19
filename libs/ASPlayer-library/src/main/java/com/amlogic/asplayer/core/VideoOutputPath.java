@@ -482,13 +482,9 @@ class VideoOutputPath extends MediaOutputPath {
     @Override
     public void reset() {
         if (mMediaCodec != null) {
-            try {
-                mMediaCodec.flush();
-                mMediaCodec.stop();
-            } catch (Exception e) {
-                ASPlayerLog.e("VideoOutputPath-%d reset flush/stop mediacodec error: %s", mId, (e != null ? e.getMessage() : ""));
-                e.printStackTrace();
-            }
+            stopMediaCodec(mMediaCodec);
+            releaseMediaCodec(mMediaCodec);
+            mMediaCodec = null;
         }
         ASPlayerLog.i("VideoOutputPath-%d reset stop mediacodec: %s", mId, mMediaCodec);
         mFirstFrameDisplayed = false;
@@ -512,6 +508,32 @@ class VideoOutputPath extends MediaOutputPath {
         mMimeType = null;
 
         super.reset();
+    }
+
+    private void stopMediaCodec(MediaCodec mediaCodec) {
+        if (mediaCodec == null) {
+            return;
+        }
+
+        try {
+            mediaCodec.stop();
+        } catch (Exception e) {
+            ASPlayerLog.e("VideoOutputPath-%d stop mediacodec error: %s", mId, e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void releaseMediaCodec(MediaCodec mediaCodec) {
+        if (mediaCodec == null) {
+            return;
+        }
+
+        try {
+            mediaCodec.release();
+        } catch (Exception e) {
+            ASPlayerLog.e("VideoOutputPath-%d release mediacodec error: %s", mId, e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @Override
