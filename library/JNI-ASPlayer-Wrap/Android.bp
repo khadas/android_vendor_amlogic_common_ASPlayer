@@ -53,7 +53,6 @@ cc_library_shared {
 
     local_include_dirs: [
         "src/main/jni/common",
-        "src/main/jni/include",
     ],
 }
 

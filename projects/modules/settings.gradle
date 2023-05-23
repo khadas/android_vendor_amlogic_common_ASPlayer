@@ -26,8 +26,8 @@ if (isWindows()) {
     gradle.ext.keystoreDir = String.format("%s/modules/keystore", gradle.ext.projectDir)
 } else {
     gradle.ext.aospDir = getAospDir()
-    gradle.ext.rootDir = String.format("%s/vendor/amlogic/common/apps/%s", gradle.ext.aospDir, gradle.ext.targetProduct)
-    gradle.ext.projectDir = String.format("%s/vendor/amlogic/common/apps/%s/projects", gradle.ext.aospDir, gradle.ext.targetProduct)
+    gradle.ext.rootDir = String.format("%s/vendor/amlogic/common/%s", gradle.ext.aospDir, gradle.ext.targetProduct)
+    gradle.ext.projectDir = String.format("%s/vendor/amlogic/common/%s/projects", gradle.ext.aospDir, gradle.ext.targetProduct)
     gradle.ext.keystoreDir = String.format("%s/modules/keystore", gradle.ext.projectDir)
 }
 println("root dir: " + gradle.ext.rootDir)
@@ -43,6 +43,7 @@ gradle.ext.ASPlayerLibraryDir = project(":ASPlayer-library").projectDir.getAbsol
 
 include ':JNI-ASPlayer-library'
 project(":JNI-ASPlayer-library").projectDir = file("${rootProjectDir}/libs/JNI-ASPlayer-library")
+gradle.ext.JniASPlayerLibraryDir = project(":JNI-ASPlayer-library").projectDir.getAbsolutePath()
 
 include ':JNI-ASPlayer-Wrap'
 project(":JNI-ASPlayer-Wrap").projectDir = file("${rootProjectDir}/library/JNI-ASPlayer-Wrap")

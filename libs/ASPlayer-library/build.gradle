@@ -44,7 +44,7 @@ task clearJar(type: Delete) {
 }
 
 // make asplayer.jar
-task makeJar(type: Copy) {
+task releaseJar(type: Copy) {
     from "build/intermediates/aar_main_jar/release/"
     into 'build/sdk/'
 
@@ -52,4 +52,4 @@ task makeJar(type: Copy) {
     rename ('classes.jar', ASPlayerJarName + ".jar")
 }
 
-makeJar.dependsOn(clearJar, build)
+releaseJar.dependsOn(clearJar, build)

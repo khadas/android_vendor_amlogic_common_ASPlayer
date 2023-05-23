@@ -2,9 +2,19 @@ plugins {
     id 'com.android.library'
 }
 
+ext {
+    // sdk output path
+    releaseSdkDir = "build/sdk"
+    releaseIncludeDir = "build/sdk/include"
+    releaseSoDir = "build/sdk/libs"
+    releaseJarDir = "build/sdk"
+    soSymbolsOutputDir = "build/symbols"
+}
+
 android {
     compileSdkVersion rootProject.ext.android.compileSdkVersion
     buildToolsVersion rootProject.ext.android.buildToolsVersion
+    ndkVersion rootProject.ext.android.ndkVersion
 
     defaultConfig {
         minSdkVersion rootProject.ext.android.minSdkVersion
@@ -28,8 +38,8 @@ android {
 
     buildTypes {
         debug {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            debuggable true
+            jniDebuggable true
         }
         release {
             minifyEnabled false
@@ -60,13 +70,13 @@ dependencies {
 }
 
 task clearSo(type: Delete) {
-    delete 'build/libs/libs/'
+    delete releaseSoDir
 }
 
 // release Jni_ASPlayer so
 task releaseSo(type: Copy) {
     from "build/intermediates/cmake/release/obj/"
-    into 'build/sdk/libs/'
+    into releaseSoDir
 
     include '**/*.so'
 }
@@ -75,7 +85,7 @@ releaseSo.dependsOn(clearSo, build)
 
 task releaseInclude(type: Copy) {
     from "src/main/jni/include/"
-    into "build/sdk/include/"
+    into releaseIncludeDir
 
     include "JNIASPlayer.h"
 }
@@ -84,27 +94,17 @@ task releaseJniASPlayer(type: Jar) {
     // merge ASPlayer.jar and JniASPlayer.jar
     archivesBaseName = JniASPlayerJarName
     from(project.zipTree('build/intermediates/aar_main_jar/release/classes.jar'))
-    from(project.zipTree(gradle.ext.ASPlayerLibraryDir + "/build/sdk/" + ASPlayerJarName + ".jar"))
-    getDestinationDirectory().set(getProject().file('build/sdk/'))
+    from(project.zipTree("${gradle.ext.ASPlayerLibraryDir}/build/sdk/${ASPlayerJarName}.jar"))
+    getDestinationDirectory().set(getProject().file(releaseJarDir))
 }
 
 // release Jni_ASPlayer (so / include / jar)
 releaseJniASPlayer.dependsOn(build, releaseSo, releaseInclude)
 
-void copyJniAsPlayerToJniASPlayerWrapper(soType) {
-    // copy so to Jni_ASPlayer_Wrapper
-    String soDir = project.projectDir.getAbsolutePath() + "/build/intermediates/cmake/" + soType + "/obj/"
-    String destDir = gradle.ext.JniASPlayerWrapperDir + "/src/main/jniLibs/" + soType + "/"
-    println(String.format("copy so from: %s => %s", soDir, destDir))
+void copyJniAsPlayerHeaderToSdkDir() {
+    // copy jni_asplayer include to output sdk dir
 
-    copy {
-        from soDir
-        into destDir
-        include('**/*.so')
-    }
-
-    // copy jni_asplayer include to JniASPlayerWrapper
-    String destIncludeDir = gradle.ext.JniASPlayerWrapperDir + "/src/main/jni/include/"
+    String destIncludeDir = releaseIncludeDir
     String srcIncludeDir = project.projectDir.getAbsolutePath() + "/src/main/jni/include/"
     copy {
         from srcIncludeDir
@@ -114,16 +114,60 @@ void copyJniAsPlayerToJniASPlayerWrapper(soType) {
     println(String.format("copy JNIASPlayer.h from: %s => %s", srcIncludeDir, destIncludeDir))
 }
 
+void copySo(srcDir, destDir) {
+    println(String.format("copy from: %s => %s", srcDir, destDir))
+
+    copy {
+        from srcDir
+        into destDir
+        include('**/*.so')
+    }
+}
+
+void copyJniAsPlayerSoToDir(soType, destDir) {
+    // copy so to symbols dir
+    String srcDir = project.projectDir.getAbsolutePath() + "/build/intermediates/cmake/" + soType + "/obj/"
+    println(String.format("copy so from: %s => %s", srcDir, destDir))
+
+    copy {
+        from srcDir
+        into destDir
+        include('**/*.so')
+    }
+}
+
+void copyTaskOutputSoToDir(task, destPath) {
+    try {
+        Set<File> files = task.soFolder.getAsFileTree().getFiles()
+        for (File file : files) {
+            File abiFile = file.getParentFile()
+            String parentDir = abiFile.getParentFile().getAbsolutePath()
+            copySo(parentDir, destPath)
+        }
+    } catch (e) {
+        e.printStackTrace()
+    }
+}
+
 tasks.whenTaskAdded { task ->
     if (task.name.equalsIgnoreCase("externalNativeBuildRelease")) {
         task.doLast {
-            println("task: " + task.name + ", need copy JNI-ASPlayer release so to JNI-ASPlayer-Wrap")
-            copyJniAsPlayerToJniASPlayerWrapper("release")
+            copyJniAsPlayerHeaderToSdkDir()
+            println("task: " + task.name + ", need copy JNI-ASPlayer release so to sdk output dir")
+            copyJniAsPlayerSoToDir("release", "${soSymbolsOutputDir}/release/")
+            copyJniAsPlayerSoToDir("release", "${releaseSoDir}/")
         }
     } else if (task.name.equalsIgnoreCase("externalNativeBuildDebug")) {
         task.doLast {
-            println("task: " + task.name + ", need copy JNI-ASPlayer debug so to JNI-ASPlayer-Wrap")
-            copyJniAsPlayerToJniASPlayerWrapper("debug")
+            copyJniAsPlayerHeaderToSdkDir()
+            println("task: " + task.name + ", need copy JNI-ASPlayer debug so to sdk output dir")
+            copyJniAsPlayerSoToDir("debug", "${soSymbolsOutputDir}/debug/")
+        }
+    } else if (task.name.startsWith("buildCMakeRelWithDebInfo[")) {
+        task.doLast {
+            copyJniAsPlayerHeaderToSdkDir()
+            println("task: " + task.name + ", need copy JNI-ASPlayer RelWithDebInfo so to sdk output dir")
+            copyTaskOutputSoToDir(task, "${soSymbolsOutputDir}/relwithdebinfo/")
         }
     }
 }

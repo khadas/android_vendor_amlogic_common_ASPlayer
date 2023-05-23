@@ -4,10 +4,16 @@
 ## Sets the minimum version of CMake required to build the native library.
 #
 cmake_minimum_required(VERSION 3.4.1)
+
+project(jniasplayer-wrapper)
 #
 set(JNI_DIR ${CMAKE_SOURCE_DIR}/src/main/jni)
 
 message(USE_SYSTEM_SO=${USE_SYSTEM_SO})
+
+# JNI-ASPlayer Directories
+message(JNI_ASPLAYER_INCLUDE_DIR=${JNI_ASPLAYER_INCLUDE_DIR})
+message(JNI_ASPLAYER_SO_DIR=${JNI_ASPLAYER_SO_DIR})
 
 string(TOLOWER ${CMAKE_BUILD_TYPE} buildTypeLower)
 
@@ -16,7 +22,9 @@ if (NOT USE_SYSTEM_SO)
         set_target_properties(libjniasplayer
                 PROPERTIES
                 IMPORTED_LOCATION
-                ${CMAKE_SOURCE_DIR}/src/main/jniLibs/${buildTypeLower}/${ANDROID_ABI}/libjniasplayer-jni.so)
+                ${JNI_ASPLAYER_SO_DIR}/${buildTypeLower}/${ANDROID_ABI}/libjniasplayer-jni.so)
+        include_directories(${JNI_ASPLAYER_INCLUDE_DIR})
+
         message(STATUS ANDROID_ABI=${ANDROID_ABI})
         message(STATUS "Add libjniasplayer.so")
 else()
@@ -33,12 +41,6 @@ add_library( # Sets the name of the library.
         ${JNI_DIR}/PlaybackListenerWrapper.cpp
         ${JNI_DIR}/ASPlayerJni.cpp
         ${JNI_DIR}/native-lib.cpp)
-
-target_include_directories(
-        jniasplayer-wrapper
-        PUBLIC
-        ${JNI_DIR}/include
-)
 
 find_library( # Sets the name of the path variable.
         log-lib

@@ -61,8 +61,7 @@ java_library {
 cc_library_headers {
     name: "libjniasplayer-headers",
 
-    vendor_available:true,
-    system_ext_specific: true,
+    vendor: true,
 
     export_include_dirs: [
         "src/main/jni/include",

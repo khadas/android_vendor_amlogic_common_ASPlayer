@@ -31,6 +31,8 @@ android {
 
             v1SigningEnabled true
             v2SigningEnabled true
+            enableV3Signing = true
+            enableV4Signing = true
         }
     }
 
@@ -45,6 +47,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.platform
         }
+    }
+
+    lintOptions {
+        disable 'ProtectedPermissions'
     }
 
     compileOptions {
