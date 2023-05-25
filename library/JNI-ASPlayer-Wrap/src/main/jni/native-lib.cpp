@@ -98,7 +98,7 @@ static void create_asplayer(JNIEnv *env, jobject thiz, jobject initParams, jobje
 
     jni_asplayer_init_params params;
     if (!gASPlayerJni.convertInitParams(env, initParams, &params)) {
-        ALOGE("%s[%d] failed to create ts player, get init parameter error", __func__, __LINE__);
+        ALOGE("%s[%d] failed to create ASPlayer, get init parameter error", __func__, __LINE__);
         return;
     } else {
         ALOGD("%s[%d] convert InitParams success", __func__, __LINE__);
@@ -109,11 +109,11 @@ static void create_asplayer(JNIEnv *env, jobject thiz, jobject initParams, jobje
     jni_asplayer_result ret = asPlayer->create(params, (void*)jTuner, &handle);
     ALOGD("%s[%d] JniASPlayer_create end", __func__, __LINE__);
     if (ret != JNI_ASPLAYER_OK) {
-        ALOGE("failed to create ts player, ret: %d", ret);
+        ALOGE("failed to create ASPlayer, ret: %d", ret);
         return;
     }
 
-    ALOGV("%s[%d] ts player created, ret: %d", __func__, __LINE__, ret);
+    ALOGV("%s[%d] ASPlayer created, ret: %d", __func__, __LINE__, ret);
     asPlayer->setHandle(handle);
     LOG_FUNCTION_ENTER();
 }
@@ -142,7 +142,7 @@ asplayer_get_java_as_player(JNIEnv* env, jobject thiz, jobject *result) {
     jni_asplayer_result ret = player->getJavaASPlayer(result);
     LOG_FUNCTION_INT_END(ret);
     if (ret != JNI_ASPLAYER_OK) {
-        ALOGE("%s[%d] failed to get java ts player, ret: %d", __func__, __LINE__, ret);
+        ALOGE("%s[%d] failed to get java ASPlayer, ret: %d", __func__, __LINE__, ret);
         return false;
     }
     return true;

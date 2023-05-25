@@ -597,20 +597,20 @@ bool JniASPlayer::create(jni_asplayer_init_params params, void *tuner) {
     mPlaybackListener = new JniPlaybackListener(mEventCallback, mEventUserData);
     if (!mPlaybackListener->createPlaybackListener(env)) {
         ALOGE("%s[%d] prepare failed, failed to create playback listener", __func__, __LINE__);
-        return -1;
+        return false;
     }
 
     jobject playbackListener = mPlaybackListener->getJavaPlaybackListener();
     if (playbackListener == nullptr) {
         ALOGE("%s[%d] prepare failed, failed to get playback listener", __func__, __LINE__);
-        return -1;
+        return false;
     }
 
     // register playback listener
     int result = addPlaybackListener(playbackListener);
     if (result != 0) {
         ALOGE("%s[%d] prepare failed, failed to add playback listener", __func__, __LINE__);
-        return -1;
+        return false;
     }
 
     return true;

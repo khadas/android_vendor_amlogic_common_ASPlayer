@@ -39,16 +39,16 @@ jni_asplayer_result JniASPlayer_registerJNI(JNIEnv *env) {
 }
 
 jni_asplayer_result  JniASPlayer_create(jni_asplayer_init_params params, void *tuner, jni_asplayer_handle *pHandle) {
-    ALOGD("%s[%d] start", __func__, __LINE__);
+    LOG_FUNCTION_ENTER();
     JniASPlayer *player = new JniASPlayer();
     if (!player->create(params, tuner)) {
-        ALOGW("create java ts player failed");
+        ALOGW("create java ASPlayer failed");
         delete player;
         return JNI_ASPLAYER_ERROR_INVALID_OPERATION;
     }
 
     *pHandle = (jni_asplayer_handle)player;
-    ALOGV("%s create ts player: %p", __func__, player);
+    ALOGD("%s create ASPlayer: %p", __func__, player);
     return JNI_ASPLAYER_OK;
 }
 
@@ -59,6 +59,7 @@ jni_asplayer_result  JniASPlayer_create(jni_asplayer_init_params params, void *t
  * @return:       The JniASPlayer result.
 */
 jni_asplayer_result  JniASPlayer_getJavaASPlayer(jni_asplayer_handle handle, jobject *pASPlayer) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
@@ -66,22 +67,24 @@ jni_asplayer_result  JniASPlayer_getJavaASPlayer(jni_asplayer_handle handle, job
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     jobject *pJavaPlayer = nullptr;
     if (!player->getJavaASPlayer(&pJavaPlayer)) {
-        ALOGE("%s[%d] failed to get Java Ts Player instance", __func__, __LINE__);
+        ALOGE("%s[%d] failed to get Java ASPlayer instance", __func__, __LINE__);
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
     *pASPlayer = *pJavaPlayer;
+    LOG_FUNCTION_END();
     return JNI_ASPLAYER_OK;
 }
 
 jni_asplayer_result  JniASPlayer_prepare(jni_asplayer_handle handle) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     int ret = player->prepare();
-    ALOGV("%s return: %d", __func__, ret);
+    LOG_FUNCTION_INT_END(ret);
     return static_cast<jni_asplayer_result>(ret);
 }
 
@@ -91,13 +94,14 @@ jni_asplayer_result  JniASPlayer_prepare(jni_asplayer_handle handle) {
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_startVideoDecoding(jni_asplayer_handle handle) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     int ret = player->startVideoDecoding();
-    ALOGV("%s return: %d", __func__, ret);
+    LOG_FUNCTION_INT_END(ret);
     return static_cast<jni_asplayer_result>(ret);
 }
 
@@ -107,13 +111,14 @@ jni_asplayer_result  JniASPlayer_startVideoDecoding(jni_asplayer_handle handle) 
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_stopVideoDecoding(jni_asplayer_handle handle) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     int ret = player->stopVideoDecoding();
-    ALOGV("%s return: %d", __func__, ret);
+    LOG_FUNCTION_INT_END(ret);
     return static_cast<jni_asplayer_result>(ret);
 }
 
@@ -123,13 +128,14 @@ jni_asplayer_result  JniASPlayer_stopVideoDecoding(jni_asplayer_handle handle) {
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_pauseVideoDecoding(jni_asplayer_handle handle) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     int ret = player->pauseVideoDecoding();
-    ALOGV("%s return: %d", __func__, ret);
+    LOG_FUNCTION_INT_END(ret);
     return static_cast<jni_asplayer_result>(ret);
 }
 
@@ -139,13 +145,14 @@ jni_asplayer_result  JniASPlayer_pauseVideoDecoding(jni_asplayer_handle handle) 
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_resumeVideoDecoding(jni_asplayer_handle handle) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     int ret = player->resumeVideoDecoding();
-    ALOGV("%s return: %d", __func__, ret);
+    LOG_FUNCTION_INT_END(ret);
     return static_cast<jni_asplayer_result>(ret);
 }
 
@@ -155,13 +162,14 @@ jni_asplayer_result  JniASPlayer_resumeVideoDecoding(jni_asplayer_handle handle)
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_startAudioDecoding(jni_asplayer_handle handle) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     int ret = player->startAudioDecoding();
-    ALOGV("%s return: %d", __func__, ret);
+    LOG_FUNCTION_INT_END(ret);
     return static_cast<jni_asplayer_result>(ret);
 }
 
@@ -171,13 +179,14 @@ jni_asplayer_result  JniASPlayer_startAudioDecoding(jni_asplayer_handle handle) 
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_pauseAudioDecoding(jni_asplayer_handle handle) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     int ret = player->pauseAudioDecoding();
-    ALOGV("%s return: %d", __func__, ret);
+    LOG_FUNCTION_INT_END(ret);
     return static_cast<jni_asplayer_result>(ret);
 }
 
@@ -187,13 +196,14 @@ jni_asplayer_result  JniASPlayer_pauseAudioDecoding(jni_asplayer_handle handle) 
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_resumeAudioDecoding(jni_asplayer_handle handle) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     int ret = player->resumeAudioDecoding();
-    ALOGV("%s return: %d", __func__, ret);
+    LOG_FUNCTION_INT_END(ret);
     return static_cast<jni_asplayer_result>(ret);
 }
 
@@ -203,13 +213,14 @@ jni_asplayer_result  JniASPlayer_resumeAudioDecoding(jni_asplayer_handle handle)
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_stopAudioDecoding(jni_asplayer_handle handle) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     int ret = player->stopAudioDecoding();
-    ALOGV("%s return: %d", __func__, ret);
+    LOG_FUNCTION_INT_END(ret);
     return static_cast<jni_asplayer_result>(ret);
 }
 
@@ -221,13 +232,14 @@ jni_asplayer_result  JniASPlayer_stopAudioDecoding(jni_asplayer_handle handle) {
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_setVideoParams(jni_asplayer_handle handle, jni_asplayer_video_params *pParams) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     int ret = player->setVideoParams(pParams);
-    ALOGV("%s return: %d", __func__, ret);
+    LOG_FUNCTION_INT_END(ret);
     return static_cast<jni_asplayer_result>(ret);
 }
 
@@ -239,13 +251,14 @@ jni_asplayer_result  JniASPlayer_setVideoParams(jni_asplayer_handle handle, jni_
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_setAudioParams(jni_asplayer_handle handle, jni_asplayer_audio_params *pParams) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     int ret = player->setAudioParams(pParams);
-    ALOGV("%s[%d] return: %d", __func__, __LINE__, ret);
+    LOG_FUNCTION_INT_END(ret);
     return static_cast<jni_asplayer_result>(ret);
 }
 
@@ -255,12 +268,14 @@ jni_asplayer_result  JniASPlayer_setAudioParams(jni_asplayer_handle handle, jni_
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_flush(jni_asplayer_handle handle) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     player->flush();
+    LOG_FUNCTION_END();
     return JNI_ASPLAYER_OK;
 }
 
@@ -270,12 +285,14 @@ jni_asplayer_result  JniASPlayer_flush(jni_asplayer_handle handle) {
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_flushDvr(jni_asplayer_handle handle) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     player->flushDvr();
+    LOG_FUNCTION_END();
     return JNI_ASPLAYER_OK;
 }
 
@@ -295,7 +312,7 @@ jni_asplayer_result  JniASPlayer_writeData(jni_asplayer_handle handle, jni_aspla
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     int ret = player->writeData(buf, timeout_ms);
-    ALOGV("%s return: %d", __func__, ret);
+    LOG_FUNCTION_INT_END(ret);
     return static_cast<jni_asplayer_result>(ret);
 }
 
@@ -306,13 +323,14 @@ jni_asplayer_result  JniASPlayer_writeData(jni_asplayer_handle handle, jni_aspla
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_setSurface(jni_asplayer_handle handle, void* pSurface) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     int ret = player->setSurface(pSurface);
-    ALOGV("%s return: %d", __func__, ret);
+    LOG_FUNCTION_INT_END(ret);
     return static_cast<jni_asplayer_result>(ret);
 }
 
@@ -324,6 +342,7 @@ jni_asplayer_result  JniASPlayer_setSurface(jni_asplayer_handle handle, void* pS
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_setAudioMute(jni_asplayer_handle handle, bool_t analog_mute, bool_t digital_mute) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
@@ -332,7 +351,7 @@ jni_asplayer_result  JniASPlayer_setAudioMute(jni_asplayer_handle handle, bool_t
     bool aMute = analog_mute ? true : false;
     bool dMute = digital_mute ? true : false;
     int ret = player->setAudioMute(aMute, dMute);
-    ALOGV("%s return: %d", __func__, ret);
+    LOG_FUNCTION_INT_END(ret);
     return static_cast<jni_asplayer_result>(ret);
 }
 
@@ -343,12 +362,14 @@ jni_asplayer_result  JniASPlayer_setAudioMute(jni_asplayer_handle handle, bool_t
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_setAudioVolume(jni_asplayer_handle handle, int32_t volume) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     player->setAudioVolume(volume);
+    LOG_FUNCTION_END();
     return JNI_ASPLAYER_OK;
 }
 
@@ -375,13 +396,14 @@ jni_asplayer_result  JniASPlayer_getAudioVolume(jni_asplayer_handle handle, int3
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_startFast(jni_asplayer_handle handle, float scale) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     int ret = player->startFast(scale);
-    ALOGV("%s return: %d", __func__, ret);
+    LOG_FUNCTION_INT_END(ret);
     return static_cast<jni_asplayer_result>(ret);
 }
 
@@ -391,13 +413,14 @@ jni_asplayer_result  JniASPlayer_startFast(jni_asplayer_handle handle, float sca
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_stopFast(jni_asplayer_handle handle) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     int ret = player->stopFast();
-    ALOGV("%s return: %d", __func__, ret);
+    LOG_FUNCTION_INT_END(ret);
     return static_cast<jni_asplayer_result>(ret);
 }
 
@@ -407,6 +430,7 @@ jni_asplayer_result  JniASPlayer_stopFast(jni_asplayer_handle handle) {
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_release(jni_asplayer_handle handle) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
@@ -416,6 +440,7 @@ jni_asplayer_result  JniASPlayer_release(jni_asplayer_handle handle) {
 
     delete player;
 
+    LOG_FUNCTION_END();
     return JNI_ASPLAYER_OK;
 }
 
@@ -427,6 +452,7 @@ jni_asplayer_result  JniASPlayer_release(jni_asplayer_handle handle) {
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_registerCb(jni_asplayer_handle handle, event_callback pfunc, void *param) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
@@ -434,6 +460,7 @@ jni_asplayer_result  JniASPlayer_registerCb(jni_asplayer_handle handle, event_ca
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     player->setEventCallback(pfunc, param);
 
+    LOG_FUNCTION_END();
     return JNI_ASPLAYER_OK;
 }
 

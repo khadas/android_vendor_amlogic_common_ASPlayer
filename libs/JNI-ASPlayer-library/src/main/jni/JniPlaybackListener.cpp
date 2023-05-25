@@ -81,6 +81,7 @@ JniPlaybackListener::~JniPlaybackListener() {
 }
 
 static jint native_notifyPlaybackEvent(JNIEnv *env, jobject jListener, jobject jEvent) {
+    LOG_FUNCTION_ENTER();
     JniPlaybackListener *listener = JniPlaybackListener::getNativeListener(env, jListener);
     if (listener == nullptr) {
         ALOGE("%s[%d] notifyPlaybackEvent failed, listener is null", __func__, __LINE__);
@@ -155,6 +156,8 @@ bool JniPlaybackListener::createPlaybackListener(JNIEnv *env) {
     setNativeHandle(env, playbackListener, this);
 
     mJavaListener = env->NewGlobalRef(playbackListener);
+    env->DeleteLocalRef(playbackListener);
+
     return true;
 }
 
@@ -188,34 +191,37 @@ JniPlaybackListener* JniPlaybackListener::getNativeListener(JNIEnv *env, jobject
 
 void JniPlaybackListener::notifyPlaybackEvent(JNIEnv *env, jobject jEvent) {
     if (env == nullptr || jEvent == nullptr) {
+        ALOGI("[%s/%d] env is null or event is null", __FUNCTION__, __LINE__);
         return;
     }
 
     if (env->IsInstanceOf(jEvent, gVideoFormatChangeEventCls)) {
         // VideoFormatChangeEvent
-        ALOGI("%s[%d] VideoFormatChangeEvent", __FUNCTION__, __LINE__);
+        ALOGI("[%s/%d] VideoFormatChangeEvent", __FUNCTION__, __LINE__);
         handleVideoFormatChangeEvent(env, jEvent);
         return;
     } else if (env->IsInstanceOf(jEvent, gAudioFormatChangeEventCls)) {
         // AudioFormatChangeEvent
-        ALOGI("%s[%d] AudioFormatChangeEvent", __FUNCTION__, __LINE__);
+        ALOGI("[%s/%d] AudioFormatChangeEvent", __FUNCTION__, __LINE__);
         handleAudioFormatChangeEvent(env, jEvent);
     } else if (env->IsInstanceOf(jEvent, gVideoFirstFrameEventCls)) {
         // VideoFirstFrameEvent
-        ALOGI("%s[%d] VideoFirstFrameEvent", __FUNCTION__, __LINE__);
+        ALOGI("[%s/%d] VideoFirstFrameEvent", __FUNCTION__, __LINE__);
         handleVideoFirstFrameEvent(env, jEvent);
     } else if (env->IsInstanceOf(jEvent, gAudioFirstFrameEventCls)) {
         // AudioFirstFrameEvent
-        ALOGI("%s[%d] AudioFirstFrameEvent", __FUNCTION__, __LINE__);
+        ALOGI("[%s/%d] AudioFirstFrameEvent", __FUNCTION__, __LINE__);
         handleAudioFirstFrameEvent(env, jEvent);
     } else if (env->IsInstanceOf(jEvent, gDecodeFirstVideoFrameEventCls)) {
         // DecodeFirstVideoFrameEvent
-        ALOGI("%s[%d] DecodeFirstVideoFrameEvent", __FUNCTION__, __LINE__);
+        ALOGI("[%s/%d] DecodeFirstVideoFrameEvent", __FUNCTION__, __LINE__);
         handleDecodeFirstVideoFrameEvent(env, jEvent);
     } else if (env->IsInstanceOf(jEvent, gDecodeFirstAudioFrameEventCls)) {
         // DecodeFirstAudioFrameEvent
-        ALOGI("%s[%d] DecodeFirstAudioFrameEvent", __FUNCTION__, __LINE__);
+        ALOGI("[%s/%d] DecodeFirstAudioFrameEvent", __FUNCTION__, __LINE__);
         handleDecodeFirstAudioFrameEvent(env, jEvent);
+    } else {
+        ALOGE("[%s/%d] notifyPlaybackEvent unknown event", __FUNCTION__, __LINE__);
     }
 }
 

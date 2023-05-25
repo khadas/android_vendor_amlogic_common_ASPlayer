@@ -282,9 +282,9 @@ extern "C" {
         __android_second(0, ## fmt, NULL) __android_rest(fmt))
 
 
-#define LOG_FUNCTION_ENTER() ALOGV("%s[%d] start", __func__, __LINE__)
-#define LOG_FUNCTION_END() ALOGV("%s[%d] ok", __func__, __LINE__)
-#define LOG_FUNCTION_INT_END(ret) ALOGV("%s[%d] ok, " #ret ": %d", __func__, __LINE__, ret)
+#define LOG_FUNCTION_ENTER() ALOGD("[%s/%d] start", __FUNCTION__, __LINE__)
+#define LOG_FUNCTION_END() ALOGD("[%s/%d] ok", __FUNCTION__, __LINE__)
+#define LOG_FUNCTION_INT_END(ret) ALOGD("[%s/%d] ok, " #ret ": %d", __FUNCTION__, __LINE__, ret)
 
 
 #ifdef __cplusplus
