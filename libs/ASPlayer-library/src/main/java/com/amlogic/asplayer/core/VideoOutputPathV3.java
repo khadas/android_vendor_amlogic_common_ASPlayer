@@ -67,6 +67,10 @@ class VideoOutputPathV3 extends VideoOutputPath {
     private class VideoMediaCodecOnFrameCallback implements MediaCodec.OnFrameRenderedListener {
         @Override
         public void onFrameRendered(MediaCodec codec, long presentationTimeUs, long nanoTime) {
+            if (mMediaCodec != codec) {
+                return;
+            }
+
             if (VideoMediaFormatEvent.isEventData(presentationTimeUs)) {
 //                TvLog.i("VideoOutputPathV3-%d media format event: %d", mId, presentationTimeUs);
                 handleMediaFormatEvent(presentationTimeUs);
@@ -144,6 +148,11 @@ class VideoOutputPathV3 extends VideoOutputPath {
         super(id);
         mMediaCodecOnFrameCallback = new VideoMediaCodecOnFrameCallback();
         mPlaybackMode = playbackMode;
+    }
+
+    @Override
+    public String getName() {
+        return "VideoOutputPathV3";
     }
 
     void setTrackFilterId(int filterId) {
@@ -236,6 +245,7 @@ class VideoOutputPathV3 extends VideoOutputPath {
             if (mediaCodec != null) {
                 mediaCodec.release();
             }
+            mMediaCodec = null;
             handleConfigurationError(exception.toString());
             exception.printStackTrace();
         }

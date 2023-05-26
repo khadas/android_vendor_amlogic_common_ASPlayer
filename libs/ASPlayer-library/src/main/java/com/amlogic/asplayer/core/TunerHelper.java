@@ -1,42 +1,57 @@
 package com.amlogic.asplayer.core;
 
-import android.media.tv.tuner.frontend.FrontendInfo;
 import android.os.Build;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.List;
 
 public class TunerHelper {
-    public static class Tuner {
-        static Method sGetFrontendIds;
-        static Method sGetFrontendInfoById;
+
+    public static class TunerVersionChecker {
+        public static int TUNER_VERSION_UNKNOWN;
+        public static int TUNER_VERSION_1_0;
+        public static int TUNER_VERSION_1_1;
+
+
+        static Method sIsHigherOrEqualVersionTo;
+        static Method sGetTunerVersion;
         static {
             try {
-                Class<?> Tuner = Class.forName("android.media.tv.tuner.Tuner");
-                sGetFrontendIds = Tuner.getDeclaredMethod("getFrontendIds");
-                sGetFrontendInfoById = Tuner.getDeclaredMethod("getFrontendInfoById", int.class);
+                Class<?> TunerVersionChecker =
+                        Class.forName("android.media.tv.tuner.TunerVersionChecker");
+                sIsHigherOrEqualVersionTo = TunerVersionChecker
+                        .getDeclaredMethod("isHigherOrEqualVersionTo", int.class);
+                sGetTunerVersion = TunerVersionChecker
+                        .getDeclaredMethod("getTunerVersion");
+                TUNER_VERSION_UNKNOWN = TunerVersionChecker
+                        .getDeclaredField("TUNER_VERSION_UNKNOWN").getInt(null);
+                TUNER_VERSION_1_0 = TunerVersionChecker
+                        .getDeclaredField("TUNER_VERSION_1_0").getInt(null);
+                TUNER_VERSION_1_1 = TunerVersionChecker
+                        .getDeclaredField("TUNER_VERSION_1_1").getInt(null);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
-        public static List<Integer> getFrontendIds(android.media.tv.tuner.Tuner tuner) {
+        public static boolean isHigherOrEqualVersionTo(int version) {
             try {
-                return (List<Integer>) sGetFrontendIds.invoke(tuner);
+                Boolean result = (Boolean) sIsHigherOrEqualVersionTo.invoke(null, version);
+                return result != null? result: false;
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            return null;
+            return false;
         }
 
-        public static FrontendInfo getFrontendInfoById(android.media.tv.tuner.Tuner tuner, int id) {
+        public static int getTunerVersion() {
             try {
-                return (FrontendInfo) sGetFrontendInfoById.invoke(tuner, id);
+                Integer result = (Integer) sGetTunerVersion.invoke(null);
+                return result != null? result: TUNER_VERSION_UNKNOWN;
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            return null;
+            return TUNER_VERSION_UNKNOWN;
         }
     }
 

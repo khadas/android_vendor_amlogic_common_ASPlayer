@@ -163,23 +163,7 @@ public class MediaCodecUtils {
             Log.v(TAG, "found codec name: " + bestCandidate.getName());
         }
 
-        // Sometimes, fail to get the audio decoder during an audio decoder transaction.
-        MediaCodec.CodecException exception = null;
-        for (int i = 0; i < CREATE_CODEC_RETRY_COUNT; i++) {
-            try {
-                return MediaCodec.createByCodecName(bestCandidate.getName());
-            } catch (MediaCodec.CodecException e) {
-                Log.e(TAG, "CodecException " + e.getMessage());
-                exception = e;
-            }
-
-            try {
-                Thread.sleep(CREATE_CODEC_RETRY_INTERVAL_MS);
-            } catch (InterruptedException e) {
-                break;
-            }
-        }
-        throw exception;
+        return MediaCodec.createByCodecName(bestCandidate.getName());
     }
 
     static boolean isTunneledPlaybackSupported() {

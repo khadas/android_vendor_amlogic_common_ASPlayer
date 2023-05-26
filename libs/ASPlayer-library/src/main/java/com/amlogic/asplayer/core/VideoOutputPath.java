@@ -174,8 +174,10 @@ class VideoOutputPath extends MediaOutputPath {
             ASPlayerLog.i("VideoOutputPath-%d setSurface: surface is null, release mediacodec", mId);
             mInputBufferIndexes.clear();
             mOutputBufferIndexes.clear();
-            mMediaCodec.reset();
-            mMediaCodec.release();
+            if (mMediaCodec != null) {
+                mMediaCodec.reset();
+                mMediaCodec.release();
+            }
             mMediaCodec = null;
         }
         setConfigured(false);
@@ -341,7 +343,9 @@ class VideoOutputPath extends MediaOutputPath {
         if (mTunneledPlayback) {
             format.setFeatureEnabled(MediaCodecInfo.CodecCapabilities.FEATURE_TunneledPlayback, true);
         }
-        format.setInteger(MediaFormat.KEY_AUDIO_SESSION_ID, mAudioSessionId);
+        if (mAudioSessionId != Constant.INVALID_AUDIO_SESSION_ID) {
+            format.setInteger(MediaFormat.KEY_AUDIO_SESSION_ID, mAudioSessionId);
+        }
 
         // activate secure playback if needed
         if (mSecurePlayback) {

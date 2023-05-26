@@ -336,11 +336,11 @@ class RendererPlayback extends Renderer {
                 mVideoOutputPath.reset();
                 mAudioOutputPath.reset();
                 if (mTunneledPlayback)
-                    mAudioOutputPath.reset();
+                    mAudioOutputPath.release();
                 break;
             case Renderer.RESET_REASON_DECODERS_BLOCKED:
-                mVideoOutputPath.reset();
-                mAudioOutputPath.reset();
+                mVideoOutputPath.release();
+                mAudioOutputPath.release();
                 break;
         }
         mSynchroMode = SYNCHRO_MODE_NONE;
@@ -425,8 +425,8 @@ class RendererPlayback extends Renderer {
             ASPlayerLog.i("RendererPlayback-%d tunneled mode must changed:%b -> %b", mId, wasTunneledPlayback, mTunneledPlayback);
             mVideoOutputPath.setTunneledPlayback(mTunneledPlayback);
             mAudioOutputPath.setTunneledPlayback(mTunneledPlayback);
-            mVideoOutputPath.reset();
-            mAudioOutputPath.reset();
+            mVideoOutputPath.release();
+            mAudioOutputPath.release();
         }
     }
 
@@ -549,8 +549,8 @@ class RendererPlayback extends Renderer {
         if (mAudioOutputPath.elapsedSinceInputBufferQueueFull() > SYNCHRO_MAX_AV_DELTA_US / 1000 ||
                 mVideoOutputPath.elapsedSinceInputBufferQueueFull() > SYNCHRO_MAX_AV_DELTA_US / 1000) {
             ASPlayerLog.w("RendererPlayback-%d injection blocked because of audio/video decoders, must restart", mId);
-            mAudioOutputPath.reset();
-            mVideoOutputPath.reset();
+            mAudioOutputPath.release();
+            mVideoOutputPath.release();
         }
 
         // there is no info on outputs

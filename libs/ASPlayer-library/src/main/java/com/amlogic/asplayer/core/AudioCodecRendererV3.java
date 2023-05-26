@@ -1,6 +1,5 @@
 package com.amlogic.asplayer.core;
 
-import android.annotation.SuppressLint;
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
 import android.media.AudioTimestamp;
@@ -36,8 +35,9 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     private int mAudioFilterId = INVALID_FILTER_ID;
     private int mAvSyncHwId = INVALID_AV_SYNC_HW_ID;
     private AudioTrack mAudioTrack;
-    private int mInputEncoding;
-    DecoderThread mDecoderThread;
+    private DecoderThread mDecoderThread;
+    private final Object mLock;
+    private static final long AUDIO_TRACK_PREPARE_TIMEOUT = 200;
     private static final int AUDIO_BUFFER_SIZE = 256;
     private OutputBufferListener mOutputBufferListener;
     private AudioTimestamp timestamp = new AudioTimestamp();
@@ -53,6 +53,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
     AudioCodecRendererV3(int id, MediaClock clock, Handler handler) {
         mId = id;
+        mLock = new Object();
         mHandler = handler;
         mGain = 1.f;
         mClock = clock;
@@ -167,18 +168,12 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
         ASPlayerLog.i("AudioCodecRendererV3-%d source format:%s", mId, format);
         try {
-            mInputEncoding = AudioUtils.getEncoding(format);
-
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_MEDIA)
                     .build();
 
-            AudioFormat audioFormat = getAudioFormat(audioAttributes, mInputEncoding);
-            ASPlayerLog.i("AudioCodecRendererV3-%d audio format: %s", mId, audioFormat);
-            @SuppressLint("WrongConstant")
             AudioTrack.Builder builder = new AudioTrack.Builder()
                     .setAudioAttributes(audioAttributes)
-                    .setAudioFormat(audioFormat)
                     .setBufferSizeInBytes(AUDIO_BUFFER_SIZE * 10);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     builder.setOffloadedPlayback(true);
@@ -187,17 +182,29 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
             ASPlayerLog.i("AudioCodecRendererV3-%d audio filter idt:%d, av sync id: %d", mId, mAudioFilterId, mAvSyncHwId);
             TunerHelper.AudioTrack.setTunerConfiguration(builder, mAudioFilterId, mAvSyncHwId);
 
+            AudioFormat audioFormat = null;
+            if (TunerHelper.TunerVersionChecker
+                    .isHigherOrEqualVersionTo(TunerHelper.TunerVersionChecker.TUNER_VERSION_1_1)) {
+                audioFormat = getAudioFormat(audioAttributes, AudioFormat.ENCODING_DEFAULT);
+            } else {
+                audioFormat = getAudioFormat(audioAttributes, AudioUtils.getEncoding(format));
+            }
+            builder.setAudioFormat(audioFormat);
+
             mAudioTrack = builder.build();
             ASPlayerLog.i("AudioCodecRendererV3-%d create AudioTrack success: %s", mId, mAudioTrack);
+            prepareAudioTrack();
 
-            ASPlayerLog.i("AudioCodecRendererV3-%d set volume %f", mId, mGain);
-            mAudioTrack.setVolume(mGain);
             if (mClock.getSpeed() == 0) {
                 mAudioTrack.pause();
             } else {
                 ASPlayerLog.i("AudioCodecRendererV3-%d AudioTrack play", mId);
                 mAudioTrack.play();
             }
+
+            ASPlayerLog.i("AudioCodecRendererV3-%d set volume %f", mId, mGain);
+            mAudioTrack.setVolume(mGain);
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 mAudioTrack.setAudioDescriptionMixLeveldB(mMixLevel);
             }
@@ -214,6 +221,55 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
         }
     }
 
+    private void prepareAudioTrack() {
+        long timeout = SystemClock.elapsedRealtime() + AUDIO_TRACK_PREPARE_TIMEOUT;
+        while (true) {
+            if (SystemClock.elapsedRealtime() >= timeout || !write()) {
+                break;
+            }
+        }
+    }
+
+    private boolean write() {
+        int written;
+        int expectedToWrite;
+
+        if (mEmptyPacket.remaining() <= 0) {
+            mEmptyPacket.rewind();
+        }
+        if (mEmptyPacket.remaining() >= AUDIO_BUFFER_SIZE) {
+            checkMetadata();
+        }
+
+        if (mMetadataPacket.remaining() > 0) {
+            expectedToWrite = mMetadataPacket.remaining();
+            written = mAudioTrack.write(mMetadataPacket, expectedToWrite,
+                    AudioTrack.WRITE_NON_BLOCKING);
+            ASPlayerLog.i("AudioCodecRendererV3-%d meta expected: %d, meta written: %d",
+                            mId, expectedToWrite, written);
+        } else {
+            expectedToWrite = mEmptyPacket.remaining();
+            written = mAudioTrack.write(mEmptyPacket, expectedToWrite,
+                    AudioTrack.WRITE_NON_BLOCKING);
+            if (expectedToWrite != AUDIO_BUFFER_SIZE ||
+                    expectedToWrite != written && written > 0) {
+                ASPlayerLog.i("AudioCodecRendererV3-%d expected: %d, written: %d",
+                                mId, expectedToWrite, written);
+            }
+        }
+
+        return written == expectedToWrite;
+    }
+
+    private void checkMetadata() {
+        synchronized (mMetadata) {
+            if (mMetadata.size() > 0) {
+                EncapsulationEncoder.encodePacket(mMetadataPacket, mMetadata, AUDIO_BUFFER_SIZE);
+                mMetadata.clear();
+            }
+        }
+    }
+
     class DecoderThread extends Thread {
         @Override
         public void run() {
@@ -221,65 +277,30 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
             ASPlayerLog.i("AudioCodecRendererV3-%d DecoderThread started.", mId);
 
             long mLastRenderNotificationTime = 0;
-            List<Metadata> metadataList = new ArrayList<>();
-            while (!isInterrupted()) {
-                int written;
-                int expectedToWrite;
 
-                if (mEmptyPacket.remaining() <= 0) {
-                    mEmptyPacket.rewind();
-                }
-                if (mEmptyPacket.remaining() >= AUDIO_BUFFER_SIZE) {
-                    checkMetadata(metadataList);
-                }
+            synchronized (mLock) {
+                while (!isInterrupted()) {
+                    write();
 
-                if (mMetadataPacket.remaining() > 0) {
-                    expectedToWrite = mMetadataPacket.remaining();
-                    written = mAudioTrack.write(mMetadataPacket, expectedToWrite,
-                            AudioTrack.WRITE_NON_BLOCKING);
-                    ASPlayerLog.i("AudioCodecRendererV3-%d meta expected: %d, meta written: %d",
-                            mId, expectedToWrite, written);
-                } else {
-                    expectedToWrite = mEmptyPacket.remaining();
-
-//                    TvLog.i("AudioCodecRendererV3-%d write %d bytes", mId, expectedToWrite);
-                    written = mAudioTrack.write(mEmptyPacket, expectedToWrite,
-                            AudioTrack.WRITE_NON_BLOCKING);
-                    if (expectedToWrite != AUDIO_BUFFER_SIZE ||
-                            expectedToWrite != written && written > 0) {
-                        ASPlayerLog.i("AudioCodecRendererV3-%d expected: %d, written: %d",
-                                mId, expectedToWrite, written);
-                    }
-                }
-
-                if ((SystemClock.elapsedRealtime() - mLastRenderNotificationTime > 500)
-                        && mAudioTrack.getTimestamp(timestamp)) {
-                    if (mOutputBufferListener != null) {
-                        mHandler.post(()-> {
-//                            TvLog.i("AudioCodecRendererV3-%d decoder thread", mId);
-                            mOutputBufferListener.onRender(timestamp.nanoTime / 1000);
+                    if ((SystemClock.elapsedRealtime() - mLastRenderNotificationTime > 500)
+                            && mAudioTrack.getTimestamp(timestamp)) {
+                        mHandler.post(() -> {
+                            if (mOutputBufferListener != null) {
+                                mOutputBufferListener
+                                        .onRender(timestamp.nanoTime / 1000);
+                            }
                         });
-                        mLastRenderedTimeUs = timestamp.nanoTime / 1000;
+                        mLastRenderNotificationTime = SystemClock.elapsedRealtime();
                     }
-                    mLastRenderNotificationTime = SystemClock.elapsedRealtime();
-                }
 
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
+                    try {
+                        mLock.wait(100);
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
                 }
             }
             ASPlayerLog.i("AudioCodecRendererV3-%d DecoderThread exiting..", mId);
-        }
-
-        private void checkMetadata(List<Metadata> metadataList) {
-            metadataList.clear();
-            synchronized (mMetadata) {
-                metadataList.addAll(mMetadata);
-                mMetadata.clear();
-            }
-            EncapsulationEncoder.encodePacket(mMetadataPacket, metadataList, AUDIO_BUFFER_SIZE);
         }
     }
 
@@ -347,13 +368,20 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
         AudioUtils.releaseAudioTrack(mAudioTrack);
         mAudioTrack = null;
-        mInputEncoding = AudioFormat.ENCODING_INVALID;
-
+        mOutputBufferListener = null;
         mErrorMessage = null;
     }
 
     @Override
     public void reset() {
+        synchronized (mLock) {
+            if (mAudioTrack != null) {
+                boolean isPlaying = mClock.getSpeed() != 0;
+                if (isPlaying) mAudioTrack.pause();
+                mAudioTrack.flush();
+                if (isPlaying) mAudioTrack.play();
+            }
+        }
     }
 
     @Override
