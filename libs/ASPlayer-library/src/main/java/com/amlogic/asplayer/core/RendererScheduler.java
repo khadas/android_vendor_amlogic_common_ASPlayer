@@ -438,9 +438,14 @@ class RendererScheduler implements Runnable {
     }
 
     void flush() {
-        mVideoOutputPath.flush();
+        ASPlayerLog.i("RendererScheduler-%d flush start", mId);
+
         mAudioOutputPath.reset();
+        mVideoOutputPath.flush();
         mPositionHandler.unsetOrigin();
+
+        mFirstVideoFrameDisplayed = false;
+        mFirstAudioFrameDisplayed = false;
     }
 
 }
