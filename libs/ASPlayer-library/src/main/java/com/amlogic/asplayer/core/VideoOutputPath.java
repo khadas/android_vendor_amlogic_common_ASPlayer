@@ -70,7 +70,7 @@ class VideoOutputPath extends MediaOutputPath {
             mTimestampKeeper.removeTimestamp(presentationTimeUs);
 //            ASPlayerLog.i("VideoOutputPath-%d onFrameRendered pts: %d, nanoTime: %d",
 //                    mId, presentationTimeUs, nanoTime);
-            notifyFrameDisplayed(nanoTime / 1000);
+            notifyFrameDisplayed(presentationTimeUs, nanoTime / 1000);
         }
     }
 
@@ -572,7 +572,7 @@ class VideoOutputPath extends MediaOutputPath {
             mMediaCodec.releaseOutputBuffer(index, false);
         }
         mTimestampKeeper.removeTimestamp(presentationTimeUs);
-        notifyFrameDisplayed(presentationTimeUs);
+        notifyFrameDisplayed(presentationTimeUs, System.nanoTime() / 1000);
         mFirstFrameDisplayed = true;
     }
 

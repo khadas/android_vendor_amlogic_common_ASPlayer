@@ -22,9 +22,9 @@ interface AudioCodecRenderer {
      * discarded(consumed)
      */
     interface OutputBufferListener {
-        void onRender(long presentationTimeUs);
+        void onRender(long presentationTimeUs, long renderTime);
 
-        void onConsume(long presentationTimeUs);
+        void onConsume(long presentationTimeUs, long renderTime);
     }
 
     /**

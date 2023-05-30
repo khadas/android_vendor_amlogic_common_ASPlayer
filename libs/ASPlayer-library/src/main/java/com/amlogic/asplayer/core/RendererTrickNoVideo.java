@@ -42,8 +42,6 @@ class RendererTrickNoVideo extends Renderer {
         // set next position
         mRequestedPositionWhenMs = mOriginPositionWhenMs;
         mRequestedPositionUs = mOriginPositionUs;
-        mRequestedPositionUs = Math.min(mPositionHandler.getEndPositionUs() - 1000000, mRequestedPositionUs);
-        mRequestedPositionUs = Math.max(mPositionHandler.getStartPositionUs(), mRequestedPositionUs);
         mRequestedPositionSet = true;
 
         // stop audio
@@ -84,30 +82,9 @@ class RendererTrickNoVideo extends Renderer {
                     (long) ((SystemClock.elapsedRealtime() - mOriginPositionWhenMs) * 1000. * mSpeed) -
                     1000000;
             mRequestedPositionSet = true;
-
-            // freeze if bounds are reached
-            long startPositionUs = mPositionHandler.getStartPositionUs();
-            long endPositionUs = mPositionHandler.getEndPositionUs();
-            if (mSpeed > 0 && mRequestedPositionUs > endPositionUs - BOUNDS_MARGIN_US) {
-                freezeToPosition(endPositionUs - BOUNDS_MARGIN_US);
-            } else if (mSpeed < 0 && mRequestedPositionUs < startPositionUs + BOUNDS_MARGIN_US) {
-                freezeToPosition(startPositionUs);
-            }
         }
 
         return delayUs;
     }
 
-    private void freezeToPosition(long position) {
-        ASPlayerLog.i("position:%d", position);
-
-        // set current origin
-        mOriginPositionUs = position;
-        mOriginPositionWhenMs = SystemClock.elapsedRealtime();
-
-        // set next position
-        mRequestedPositionWhenMs = mOriginPositionWhenMs;
-        mRequestedPositionUs = position;
-        mRequestedPositionSet = true;
-    }
 }

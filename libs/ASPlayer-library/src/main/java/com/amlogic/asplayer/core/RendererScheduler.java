@@ -1,3 +1,11 @@
+/*
+ * Copyright (c) 2019 Amlogic, Inc. All rights reserved.
+ *
+ * This source code is subject to the terms and conditions defined in the
+ * file 'LICENSE' which is part of this source code package.
+ *
+ * Description:
+ */
 package com.amlogic.asplayer.core;
 
 import android.content.Context;
@@ -33,6 +41,8 @@ class RendererScheduler implements Runnable {
 
     private VideoOutputPath mVideoOutputPath;
     private AudioOutputPath mAudioOutputPath;
+    private boolean mHasVideo;
+    private boolean mHasAudio;
 
     private boolean mVideoStarted;
     private boolean mAudioStarted;
@@ -47,7 +57,7 @@ class RendererScheduler implements Runnable {
     private final Renderer mNoVideoSpeedTask;
 
     private boolean mFirstVideoFrameDisplayed = false;
-    private boolean mFirstAudioFrameShowed = false;
+    private boolean mFirstAudioFrameDisplayed = false;
 
     RendererScheduler(int id,
                       Context context,
@@ -276,8 +286,10 @@ class RendererScheduler implements Runnable {
         if (mCurrentSpeedTask != null) {
             mCurrentSpeedTask.stopVideo();
         }
+
+        ASPlayerLog.i("RendererScheduler-%d reset VideoOutputPath", mId);
         mVideoOutputPath.reset();
-        ASPlayerLog.i("RendererScheduler-%d release VideoOutputPath", mId);
+
         ASPlayerLog.i("RendererScheduler-%d stopVideoDecoding end", mId);
     }
 
@@ -318,7 +330,7 @@ class RendererScheduler implements Runnable {
     void startAudioDecoding() {
         ASPlayerLog.i("RendererScheduler-%d startAudioDecoding start", mId);
         mAudioStarted = true;
-        mFirstAudioFrameShowed = false;
+        mFirstAudioFrameDisplayed = false;
         stopRendererTask();
         if (mCurrentSpeedTask != null) {
             mCurrentSpeedTask.startAudio();
@@ -330,7 +342,7 @@ class RendererScheduler implements Runnable {
     void stopAudioDecoding() {
         ASPlayerLog.i("RendererScheduler-%d stopAudioDecoding start", mId);
         mAudioStarted = false;
-        mFirstAudioFrameShowed = false;
+        mFirstAudioFrameDisplayed = false;
         stopRendererSchedulerIfNeed();
         if (mCurrentSpeedTask != null) {
             mCurrentSpeedTask.stopAudio();
@@ -341,7 +353,7 @@ class RendererScheduler implements Runnable {
 
     void pauseAudioDecoding() {
         mAudioStarted = false;
-        mFirstAudioFrameShowed = false;
+        mFirstAudioFrameDisplayed = false;
         stopRendererTaskIfNeed();
         if (mCurrentSpeedTask != null) {
             mCurrentSpeedTask.stopAudio();
@@ -351,7 +363,7 @@ class RendererScheduler implements Runnable {
 
     void resumeAudioDecoding() {
         mAudioStarted = true;
-        mFirstAudioFrameShowed = false;
+        mFirstAudioFrameDisplayed = false;
         stopRendererTask();
         if (mCurrentSpeedTask != null) {
             mCurrentSpeedTask.startAudio();
@@ -360,12 +372,12 @@ class RendererScheduler implements Runnable {
         mAudioOutputPath.resume();
     }
 
-    void onSetVideoParams() {
-        startRendererTaskIfNeed();
+    void onSetVideoParams(boolean hasVideo) {
+        mHasVideo = hasVideo;
     }
 
-    void onSetAudioParams() {
-        startRendererTaskIfNeed();
+    void onSetAudioParams(boolean hasAudio) {
+        mHasAudio = hasAudio;
     }
 
     void stop() {
@@ -388,31 +400,40 @@ class RendererScheduler implements Runnable {
         selectRendererTask();
     }
 
-    void setPositionUs(long positionUs) {
-        ASPlayerLog.i("RendererScheduler-%d Seek at position : %d ms", mId, positionUs / 1000);
-        if (mCurrentSpeedTask != null) {
-            mCurrentSpeedTask.setPositionUs(positionUs);
+    private void onMediaFrame(MediaOutputPath outputPath, long presentationTimeUs, long renderTime) {
+//        ASPlayerLog.i("RendererScheduler-%d onMediaFrame", mId);
+        if (mPositionHandler.isUpdateNeeded()) {
+            mPositionHandler.setPresentationTimestampUs(presentationTimeUs);
+        }
+
+        if (mHasVideo && outputPath == mVideoOutputPath) {
+            onVideoFrame(presentationTimeUs, renderTime);
+        } else if (mHasAudio && outputPath == mAudioOutputPath) {
+            onAudioFrame(presentationTimeUs, renderTime);
         }
     }
 
-    private void onMediaFrame(MediaOutputPath outputPath, long timestampUs) {
-//        ASPlayerLog.i("RendererScheduler-%d onMediaFrame", mId);
-        if (!mPositionHandler.isUpdateNeeded() && mFirstVideoFrameDisplayed && mFirstAudioFrameShowed) return;
-//        ASPlayerLog.i("RendererScheduler-%d onMediaFrame need update, mFirstVideoFrameDisplayed: %b, mFirstAudioFrameShowed: %b", mId, mFirstVideoFrameDisplayed, mFirstAudioFrameShowed);
-
-        long positionUs = mPositionHandler.getPositionUs();
-        if (outputPath != mVideoOutputPath && outputPath != mAudioOutputPath) {
-            return;
+    private void onVideoFrame(long presentationTimeUs, long renderTime) {
+        if (!mFirstVideoFrameDisplayed) {
+            ASPlayerLog.i("RendererScheduler-%d first video frame", mId);
+            mEventNotifier.notifyRenderFirstVideoFrame(renderTime);
+            mFirstVideoFrameDisplayed = true;
         }
 
-        if (outputPath == mVideoOutputPath && !mFirstVideoFrameDisplayed) {
-            ASPlayerLog.i("RendererScheduler-%d first video frame", mId);
-            mEventNotifier.notifyRenderFirstVideoFrame(timestampUs);
-            mFirstVideoFrameDisplayed = true;
-        } else if (outputPath == mAudioOutputPath && !mFirstAudioFrameShowed) {
+        if (mConfig.isPtsEventEnabled()) {
+            mEventNotifier.notifyVideoFrameRendered(presentationTimeUs, renderTime);
+        }
+    }
+
+    private void onAudioFrame(long presentationTimeUs, long renderTime) {
+        if (!mFirstAudioFrameDisplayed) {
             ASPlayerLog.i("RendererScheduler-%d first audio frame", mId);
-            mEventNotifier.notifyRenderFirstAudioFrame(timestampUs);
-            mFirstAudioFrameShowed = true;
+            mEventNotifier.notifyRenderFirstAudioFrame(renderTime);
+            mFirstAudioFrameDisplayed = true;
+        }
+
+        if (mConfig.isPtsEventEnabled()) {
+            mEventNotifier.notifyAudioFrameRendered(presentationTimeUs, renderTime);
         }
     }
 

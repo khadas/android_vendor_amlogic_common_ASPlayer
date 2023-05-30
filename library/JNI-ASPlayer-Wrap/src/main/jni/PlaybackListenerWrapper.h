@@ -28,6 +28,7 @@ public:
     virtual ~PlaybackListenerWrapper();
 
 private:
+    void notifyPtsEvent(jni_asplayer_event *event);
     void notifyVideoFormatChangeEvent(jni_asplayer_event *event);
     void notifyAudioFormatChangeEvent(jni_asplayer_event *event);
     void notifyVideoFirstFrameEvent(jni_asplayer_event *event);

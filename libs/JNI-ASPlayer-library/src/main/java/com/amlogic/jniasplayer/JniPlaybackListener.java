@@ -21,7 +21,6 @@ public class JniPlaybackListener implements TsPlaybackListener {
 
     @Override
     public void onPlaybackEvent(PlaybackEvent event) {
-        ASPlayerLog.d("onPlaybackEvent, event: " + event);
         native_notifyPlaybackEvent(event);
     }
 

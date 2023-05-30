@@ -32,4 +32,19 @@ public class StreamType {
      * Subtitle
      */
     public static final int SUBTITLE = 3;
+
+    public static String toString(int streamType) {
+        switch (streamType) {
+            case VIDEO:
+                return "VIDEO";
+            case AUDIO:
+                return "AUDIO";
+            case AUDIO_DESCRIPTION:
+                return "AD";
+            case SUBTITLE:
+                return "SUBTITLE";
+            default:
+                return "UNKNOWN";
+        }
+    }
 }

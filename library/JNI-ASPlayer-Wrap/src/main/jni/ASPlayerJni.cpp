@@ -87,6 +87,13 @@ struct decode_first_audio_frame_event_t {
     jmethodID constructor;
 };
 
+struct pts_event_t {
+    jmethodID constructor;
+    jfieldID streamType;
+    jfieldID pts;
+    jfieldID renderTime;
+};
+
 struct playback_listener_t {
     jmethodID onPlaybackEvent;
 };
@@ -117,6 +124,8 @@ static jclass gDecodeFirstVideoFrameEventCls;
 static decode_first_video_frame_event_t gDecodeFirstVideoFrameEventCtx;
 static jclass gDecodeFirstAudioFrameEventCls;
 static decode_first_audio_frame_event_t gDecodeFirstAudioFrameEventCtx;
+static jclass gPtsEventCls;
+static pts_event_t gPtsEventCtx;
 
 static jclass gPlaybackListenerCls;
 static playback_listener_t gPlaybackListenerCtx;
@@ -159,7 +168,7 @@ bool ASPlayerJni::initJni(JNIEnv *env) {
         gInitParamsCtx.inputSourceType = env->GetFieldID(gInitParamsCls, "mInputSourceType", "I");
         gInitParamsCtx.inputBufferType = env->GetFieldID(gInitParamsCls, "mInputBufferType", "I");
         gInitParamsCtx.dmxDevId = env->GetFieldID(gInitParamsCls, "mDmxDevId", "I");
-        gInitParamsCtx.eventMask = env->GetFieldID(gInitParamsCls, "mEventMask", "I");
+        gInitParamsCtx.eventMask = env->GetFieldID(gInitParamsCls, "mEventMask", "J");
     }
 
     // init VideoParams
@@ -257,6 +266,15 @@ bool ASPlayerJni::initJni(JNIEnv *env) {
         gDecodeFirstAudioFrameEventCtx.base = gFirstFrameEventCtx;
     }
 
+    // PtsEvent
+    if (makeClassGlobalRef(&gPtsEventCls, env,
+                           "com/amlogic/asplayer/api/TsPlaybackListener$PtsEvent")) {
+        gPtsEventCtx.constructor = env->GetMethodID(gPtsEventCls, "<init>", "(IJJ)V");
+        gPtsEventCtx.streamType = env->GetFieldID(gPtsEventCls, "mStreamType", "I");
+        gPtsEventCtx.pts = env->GetFieldID(gPtsEventCls, "mPts", "J");
+        gPtsEventCtx.renderTime = env->GetFieldID(gPtsEventCls, "mRenderTime", "J");
+    }
+
     // init PlaybackListener
     if (makeClassGlobalRef(&gPlaybackListenerCls, env,
             "com/amlogic/asplayer/api/TsPlaybackListener")) {
@@ -283,7 +301,7 @@ bool ASPlayerJni::convertInitParams(
     jni_asplayer_input_buffer_type drmmode = static_cast<jni_asplayer_input_buffer_type>(env->GetIntField(
             jInitParam, gInitParamsCtx.inputBufferType));
     int32_t dmxDevId = env->GetIntField(jInitParam, gInitParamsCtx.dmxDevId);
-    int32_t eventMask = env->GetIntField(jInitParam, gInitParamsCtx.eventMask);
+    int64_t eventMask = env->GetLongField(jInitParam, gInitParamsCtx.eventMask);
 
     outParams->playback_mode = playbackMode;
     outParams->source = tsType;
@@ -399,6 +417,25 @@ bool ASPlayerJni::convertInputBuffer(
     outInputBuffer->buf_data = bufferData;
 
 //    LOG_FUNCTION_END();
+    return true;
+}
+
+bool ASPlayerJni::createPtsEvent(JNIEnv *env, jni_asplayer_event *event, jobject *jEvent) {
+    if (env == nullptr) {
+        return false;
+    } else if (event == nullptr) {
+        return false;
+    } else if (jEvent == nullptr) {
+        return false;
+    }
+
+    jint streamType = event->event.pts.stream_type;
+    jlong pts = event->event.pts.pts;
+    jlong renderTime = event->event.pts.renderTime;
+
+    jobject ptsEvent = env->NewObject(gPtsEventCls, gPtsEventCtx.constructor, streamType, pts, renderTime);
+    *jEvent = ptsEvent;
+
     return true;
 }
 

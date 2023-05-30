@@ -287,7 +287,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
                         mHandler.post(() -> {
                             if (mOutputBufferListener != null) {
                                 mOutputBufferListener
-                                        .onRender(timestamp.nanoTime / 1000);
+                                        .onRender(0, timestamp.nanoTime / 1000);
                             }
                         });
                         mLastRenderNotificationTime = SystemClock.elapsedRealtime();

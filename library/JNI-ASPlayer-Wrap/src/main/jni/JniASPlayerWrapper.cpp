@@ -30,6 +30,7 @@ static void asplayer_callback(void *user_data, jni_asplayer_event *event) {
         case JNI_ASPLAYER_EVENT_TYPE_RENDER_FIRST_FRAME_AUDIO:
         case JNI_ASPLAYER_EVENT_TYPE_DECODE_FIRST_FRAME_VIDEO:
         case JNI_ASPLAYER_EVENT_TYPE_DECODE_FIRST_FRAME_AUDIO:
+        case JNI_ASPLAYER_EVENT_TYPE_PTS:
             player->notifyPlaybackListeners(event);
             break;
         default:

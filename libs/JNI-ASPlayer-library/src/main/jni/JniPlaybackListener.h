@@ -50,6 +50,8 @@ private:
 
     void handleDecodeFirstAudioFrameEvent(JNIEnv *env, jobject jEvent);
 
+    void handlePtsEvent(JNIEnv *env, jobject jEvent);
+
     void notifyCallbackEvent(jni_asplayer_event *event);
 
 private:

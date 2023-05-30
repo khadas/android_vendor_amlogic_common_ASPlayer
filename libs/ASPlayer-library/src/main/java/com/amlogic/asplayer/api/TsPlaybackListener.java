@@ -97,5 +97,20 @@ public interface TsPlaybackListener {
         }
     }
 
+    /**
+     * pts event
+     */
+    public static class PtsEvent extends PlaybackEvent {
+        public final int mStreamType;
+        public final long mPts;
+        public final long mRenderTime;
+
+        public PtsEvent(int streamType, long pts, long renderTime) {
+            this.mStreamType = streamType;
+            this.mPts = pts;
+            this.mRenderTime = renderTime;
+        }
+    }
+
     void onPlaybackEvent(PlaybackEvent event);
 }

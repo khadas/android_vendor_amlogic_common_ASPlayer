@@ -26,6 +26,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.amlogic.asplayer.api.AudioFormat;
+import com.amlogic.asplayer.api.StreamType;
 import com.amlogic.asplayer.api.TsPlaybackListener;
 import com.amlogic.asplayer.api.VideoFormat;
 import com.amlogic.asplayer.demo.Constant;
@@ -128,7 +129,6 @@ public class LocalTvPlayerActivity extends Activity implements TsPlaybackListene
 
     @Override
     public void onPlaybackEvent(final TsPlaybackListener.PlaybackEvent event) {
-        TvLog.i("onPlaybackEvent %s", event);
         if (event instanceof VideoFormatChangeEvent) {
             VideoFormatChangeEvent ev = (VideoFormatChangeEvent) event;
             MediaFormat mediaFormat = ev.getVideoFormat();
@@ -156,6 +156,10 @@ public class LocalTvPlayerActivity extends Activity implements TsPlaybackListene
 
         } else if (event instanceof DecodeFirstAudioFrameEvent) {
 
+        } else if (event instanceof PtsEvent) {
+            PtsEvent ev = (PtsEvent) event;
+            TvLog.d("PtsEvent stream: %s, pts: %d, rendertime: %d",
+                    StreamType.toString(ev.mStreamType), ev.mPts, ev.mRenderTime);
         }
     }
 

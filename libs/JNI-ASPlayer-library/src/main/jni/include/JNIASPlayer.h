@@ -88,10 +88,11 @@ typedef struct {
 
 
 /*Callback event mask*/
-#define JNI_ASPLAYER_EVENT_TYPE_USERDATA_AFD_MASK   (1 << 0)
-#define JNI_ASPLAYER_EVENT_TYPE_USERDATA_CC_MASK    (1 << 1)
-#define JNI_ASPLAYER_EVENT_TYPE_DATA_LOSS_MASK      (1 << 2)
-#define JNI_ASPLAYER_EVENT_TYPE_DATA_RESUME_MASK    (1 << 3)
+#define JNI_ASPLAYER_EVENT_TYPE_PTS_MASK            (1 << 0)
+#define JNI_ASPLAYER_EVENT_TYPE_USERDATA_AFD_MASK   (1 << 1)
+#define JNI_ASPLAYER_EVENT_TYPE_USERDATA_CC_MASK    (1 << 2)
+#define JNI_ASPLAYER_EVENT_TYPE_DATA_LOSS_MASK      (1 << 3)
+#define JNI_ASPLAYER_EVENT_TYPE_DATA_RESUME_MASK    (1 << 4)
 
 /*Secure level which should be consistent with definition of dmx.h*/
 #define JNI_ASPLAYER_DMX_FILTER_SEC_LEVEL1   (1 << 10)
@@ -191,7 +192,7 @@ typedef struct {
     jni_asplayer_input_source_type source;  // Input source type
     jni_asplayer_input_buffer_type drmmode; // Input buffer type (normal, secure, tvp)
     int32_t dmx_dev_id;                    // Demux device id
-    int32_t event_mask;                    // Mask the event type needed by caller
+    int64_t event_mask;                    // Mask the event type needed by caller
 } jni_asplayer_init_params;
 
 /*JniASPlayer input buffer type*/
@@ -290,7 +291,8 @@ typedef struct {
 
 typedef struct {
     jni_asplayer_stream_type stream_type;
-    uint64_t  pts;
+    uint64_t pts;
+    uint64_t renderTime;
 } jni_asplayer_pts_t;
 
 typedef struct {

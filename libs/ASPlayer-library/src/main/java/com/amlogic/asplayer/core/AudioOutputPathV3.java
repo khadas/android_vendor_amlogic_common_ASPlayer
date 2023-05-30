@@ -90,14 +90,14 @@ class AudioOutputPathV3 extends AudioOutputPath {
 
         audioCodecRenderer.setOutputBufferListener(new AudioCodecRenderer.OutputBufferListener() {
             @Override
-            public void onRender(long presentationTimeUs) {
-//                TvLog.i("AudioOutputPathV3-%d onRender", mId);
-                notifyFrameDisplayed(presentationTimeUs);
+            public void onRender(long presentationTimeUs, long renderTime) {
+//                ASPlayerLog.i("AudioOutputPathV3-%d onRender", mId);
+                notifyFrameDisplayed(presentationTimeUs, renderTime);
                 mTimestampKeeper.removeTimestamp(presentationTimeUs);
             }
 
             @Override
-            public void onConsume(long presentationTimeUs) {
+            public void onConsume(long presentationTimeUs, long renderTime) {
                 mTimestampKeeper.removeTimestamp(presentationTimeUs);
             }
         });

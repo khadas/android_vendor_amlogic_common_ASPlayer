@@ -55,8 +55,6 @@ class RendererTrickBySeek extends Renderer {
         // set next position
         mRequestedPositionWhenMs = mOriginPositionWhenMs;
         mRequestedPositionUs = mOriginPositionUs;
-        mRequestedPositionUs = Math.min(mPositionHandler.getEndPositionUs() - 1000000, mRequestedPositionUs);
-        mRequestedPositionUs = Math.max(mPositionHandler.getStartPositionUs(), mRequestedPositionUs);
         mRequestedPositionSet = true;
 
         //
@@ -145,11 +143,9 @@ class RendererTrickBySeek extends Renderer {
             // next position
             boolean isLimitOfStreamReached = false;
             long currentPositionUs = mPositionHandler.getPositionUs();
-            long startPositionUs = mPositionHandler.getStartPositionUs();
-            long endPositionUs = mPositionHandler.getEndPositionUs();
-            if (mSpeed < 0 && currentPositionUs < startPositionUs + BOUNDS_MARGIN_US)
+            if (mSpeed < 0)
                 isLimitOfStreamReached = true;
-            if (mSpeed > 0 && currentPositionUs > endPositionUs - BOUNDS_MARGIN_US)
+            if (mSpeed > 0)
                 isLimitOfStreamReached = true;
             if (mSpeed != 0 && !isLimitOfStreamReached) {
                 armNextRequestedPosition();
@@ -184,15 +180,6 @@ class RendererTrickBySeek extends Renderer {
                 (long) ((SystemClock.elapsedRealtime() - mOriginPositionWhenMs) * 1000. * mSpeed) -
                 1000000;
         mRequestedPositionSet = true;
-
-        long startPositionUs = mPositionHandler.getStartPositionUs();
-        long endPositionUs = mPositionHandler.getEndPositionUs();
-
-        if (mSpeed > 0 && mRequestedPositionUs > endPositionUs - BOUNDS_MARGIN_US) {
-            freezeToPosition(endPositionUs - BOUNDS_MARGIN_US);
-        } else if (mSpeed < 0 && mRequestedPositionUs < startPositionUs + BOUNDS_MARGIN_US) {
-            freezeToPosition(startPositionUs);
-        }
 
         mVideoOutputPath.flush();
     }

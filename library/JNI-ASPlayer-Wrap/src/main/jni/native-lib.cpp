@@ -14,8 +14,8 @@
 #include <dlfcn.h>
 
 #include <JNIASPlayer.h>
-#include "../common/utils/Log.h"
-#include "../common/utils/AutoEnv.h"
+#include "common/utils/Log.h"
+#include "common/utils/AutoEnv.h"
 #include "BaseJniASPlayerWrapper.h"
 #if (USE_SYSTEM_SO == 1)
 #include "DynamicJniASPlayerWrapper.h"

@@ -22,6 +22,7 @@ public:
     bool convertAudioParams(JNIEnv *env, jobject jAudioParam, jni_asplayer_audio_params *outParams);
     bool convertInputBuffer(JNIEnv *env, jobject jInputBuffer, jni_asplayer_input_buffer *outInputBuffer);
 
+    static bool createPtsEvent(JNIEnv *env, jni_asplayer_event *event, jobject *jEvent);
     static bool createVideoFormatChangeEvent(JNIEnv *env, jni_asplayer_event *event, jobject *jEvent);
     static bool createAudioFormatChangeEvent(JNIEnv *env, jni_asplayer_event *event, jobject *jEvent);
     static bool createVideoFirstFrameEvent(JNIEnv *env, jni_asplayer_event *event, jobject *jEvent);

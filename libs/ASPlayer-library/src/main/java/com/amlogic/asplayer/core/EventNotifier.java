@@ -6,6 +6,7 @@ import android.os.Looper;
 import android.os.Message;
 
 import com.amlogic.asplayer.api.EventType;
+import com.amlogic.asplayer.api.StreamType;
 import com.amlogic.asplayer.api.TsPlaybackListener;
 
 import static com.amlogic.asplayer.api.TsPlaybackListener.AudioFirstFrameEvent;
@@ -14,6 +15,7 @@ import static com.amlogic.asplayer.api.TsPlaybackListener.DecodeFirstAudioFrameE
 import static com.amlogic.asplayer.api.TsPlaybackListener.DecodeFirstVideoFrameEvent;
 import static com.amlogic.asplayer.api.TsPlaybackListener.VideoFirstFrameEvent;
 import static com.amlogic.asplayer.api.TsPlaybackListener.VideoFormatChangeEvent;
+import static com.amlogic.asplayer.api.TsPlaybackListener.PtsEvent;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -91,6 +93,18 @@ class EventNotifier {
                 new DecodeFirstAudioFrameEvent(positionMs));
     }
 
+    void notifyFrameRendered(int type, long presentationTimeUs, long renderTime) {
+         postEvent(EventType.EVENT_TYPE_PTS, new PtsEvent(type, presentationTimeUs, renderTime));
+    }
+
+    void notifyVideoFrameRendered(long presentationTimeUs, long renderTime) {
+        notifyFrameRendered(StreamType.VIDEO, presentationTimeUs, renderTime);
+    }
+
+    void notifyAudioFrameRendered(long presentationTimeUs, long renderTime) {
+        notifyFrameRendered(StreamType.AUDIO, presentationTimeUs, renderTime);
+    }
+
     private void postEvent(int eventType, Object object) {
         mEventHandler.obtainMessage(eventType, object).sendToTarget();
     }
@@ -151,8 +165,11 @@ class EventNotifier {
                 notifyPlaybackEvent(event);
             }
                 break;
+            case EventType.EVENT_TYPE_PTS:
+                notifyPlaybackEvent((PtsEvent) msg.obj);
+                break;
             default:
-                ASPlayerLog.w("EventNotifier-%d, unexpected event:%s", mId, eventType);
+                ASPlayerLog.w("EventNotifier-%d, unexpected event:%d", mId, eventType);
                 break;
         }
     }
@@ -163,4 +180,3 @@ class EventNotifier {
         }
     }
 }
-

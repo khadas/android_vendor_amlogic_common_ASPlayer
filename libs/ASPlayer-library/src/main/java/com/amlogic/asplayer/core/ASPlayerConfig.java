@@ -10,7 +10,9 @@ package com.amlogic.asplayer.core;
 
 import android.util.Pair;
 
+import com.amlogic.asplayer.api.EventMask;
 import com.amlogic.asplayer.api.InitParams;
+import com.amlogic.asplayer.api.InputBufferType;
 import com.amlogic.asplayer.api.InputSourceType;
 
 import java.util.ArrayList;
@@ -22,9 +24,12 @@ public class ASPlayerConfig {
     public static final int PLAYBACK_MODE_ES_SECURE = InitParams.PLAYBACK_MODE_ES_SECURE;
 
     private static final int DEFAULT_INPUT_SOURCE_TYPE = InputSourceType.TS_MEMORY;
+    private static final int DEFAULT_INPUT_BUFFER_TYPE = InputBufferType.NORMAL;
 
     private int mPlaybackMode;
     private int mInputSourceType = DEFAULT_INPUT_SOURCE_TYPE;
+    private int mInputBufferType = DEFAULT_INPUT_BUFFER_TYPE;
+    private long mEventMask = 0;
     private long mReadTimeoutMs;
     private List<Pair<Float, Float>> mSupportedSmoothTrickSpeed;
 
@@ -40,12 +45,20 @@ public class ASPlayerConfig {
         return mPlaybackMode;
     }
 
+    private void setInputSourceType(int inputSourceType) {
+        this.mInputSourceType = inputSourceType;
+    }
+
     public int getInputSourceType() {
         return mInputSourceType;
     }
 
-    public void setInputSourceType(int inputSourceType) {
-        this.mInputSourceType = inputSourceType;
+    private void setInputBufferType(int inputBufferType) {
+        this.mInputBufferType = inputBufferType;
+    }
+
+    public int getInputBufferType() {
+        return mInputBufferType;
     }
 
     private void setReadTimeoutMs(long timeoutMs) {
@@ -54,6 +67,10 @@ public class ASPlayerConfig {
 
     public long getReadTimeoutMs() {
         return mReadTimeoutMs;
+    }
+
+    private void setEventMask(long eventMask) {
+        this.mEventMask = eventMask;
     }
 
     public void setSupportedSmoothTrickSpeed(List<Pair<Float, Float>> supportedSpeed) {
@@ -71,9 +88,15 @@ public class ASPlayerConfig {
         return false;
     }
 
+    public boolean isPtsEventEnabled() {
+        return (mEventMask & EventMask.EVENT_TYPE_PTS_MASK) != 0;
+    }
+
     public static class Builder {
         private int mPlaybackMode;
         private int mInputSourceType;
+        private int mInputBufferType;
+        private long mEventMask;
         private long mReadTimeoutMs;
         private List<Pair<Float, Float>> mSupportedSmoothTrickSpeed = new ArrayList<>();
 
@@ -86,6 +109,8 @@ public class ASPlayerConfig {
         public Builder() {
             mPlaybackMode = PLAYBACK_MODE_PASSTHROUGH;
             mInputSourceType = DEFAULT_INPUT_SOURCE_TYPE;
+            mInputBufferType = DEFAULT_INPUT_BUFFER_TYPE;
+            mEventMask = 0;
             mReadTimeoutMs = 1000;
             mSupportedSmoothTrickSpeed.addAll(DEFAULT_SMOOTH_TRICK_SPEED);
         }
@@ -97,6 +122,16 @@ public class ASPlayerConfig {
 
         public Builder setInputSourceType(int inputSourceType) {
             mInputSourceType = inputSourceType;
+            return this;
+        }
+
+        public Builder setInputBufferType(int inputBufferType) {
+            mInputBufferType = inputBufferType;
+            return this;
+        }
+
+        public Builder setEventMask(long eventMask) {
+            mEventMask = eventMask;
             return this;
         }
 
@@ -114,6 +149,8 @@ public class ASPlayerConfig {
             ASPlayerConfig config = new ASPlayerConfig();
             config.setPlaybackMode(mPlaybackMode);
             config.setInputSourceType(mInputSourceType);
+            config.setInputBufferType(mInputBufferType);
+            config.setEventMask(mEventMask);
             config.setReadTimeoutMs(mReadTimeoutMs);
             config.setSupportedSmoothTrickSpeed(mSupportedSmoothTrickSpeed);
             return config;

@@ -86,7 +86,7 @@ class VideoOutputPathV3 extends VideoOutputPath {
             }
 //            ASPlayerLog.i("VideoOutputPathV3-%d onFrameRendered pts: %d, nanoTime: %d",
 //                    mId, presentationTimeUs, nanoTime);
-            notifyFrameDisplayed(nanoTime / 1000);
+            notifyFrameDisplayed(presentationTimeUs, nanoTime / 1000);
             mLastRenderedTimeUs = presentationTimeUs;
             mFirstFrameDisplayed = true;
         }

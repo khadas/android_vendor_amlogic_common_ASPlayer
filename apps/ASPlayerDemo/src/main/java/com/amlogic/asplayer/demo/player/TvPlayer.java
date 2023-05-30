@@ -31,10 +31,12 @@ import android.util.Log;
 import android.view.Surface;
 
 import com.amlogic.asplayer.api.AudioParams;
+import com.amlogic.asplayer.api.EventMask;
 import com.amlogic.asplayer.api.InitParams;
 import com.amlogic.asplayer.api.InputBufferType;
 import com.amlogic.asplayer.api.InputSourceType;
 import com.amlogic.asplayer.api.IASPlayer;
+import com.amlogic.asplayer.api.StreamType;
 import com.amlogic.asplayer.api.TsPlaybackListener;
 import com.amlogic.asplayer.api.VideoParams;
 import com.amlogic.asplayer.demo.Constant;
@@ -106,6 +108,7 @@ public class TvPlayer {
                 .setPlaybackMode(InitParams.PLAYBACK_MODE_PASSTHROUGH)
                 .setInputSourceType(InputSourceType.TS_DEMOD)
                 .setInputBufferType(InputBufferType.NORMAL)
+                .setEventMask(EventMask.EVENT_TYPE_PTS_MASK)
                 .build();
         mASPlayer = new JniASPlayerWrapper(initParams, mTuner);
         mASPlayer.addPlaybackListener(this::onPlaybackEvent);
@@ -649,7 +652,6 @@ public class TvPlayer {
     }
 
     protected void onPlaybackEvent(TsPlaybackListener.PlaybackEvent event) {
-        TvLog.i("TvPlayer-%d onPlaybackEvent, event: %s", mId, event);
         if (event instanceof TsPlaybackListener.VideoFormatChangeEvent) {
             TsPlaybackListener.VideoFormatChangeEvent ev = (TsPlaybackListener.VideoFormatChangeEvent) event;
             MediaFormat mediaFormat = ev.getVideoFormat();
@@ -670,6 +672,10 @@ public class TvPlayer {
             TvLog.i("TvPlayer-%d DecodeFirstVideoFrameEvent", mId);
         } else if (event instanceof TsPlaybackListener.DecodeFirstAudioFrameEvent) {
             TvLog.i("TvPlayer-%d DecodeFirstAudioFrameEvent", mId);
+        } else if (event instanceof TsPlaybackListener.PtsEvent) {
+            TsPlaybackListener.PtsEvent ev = (TsPlaybackListener.PtsEvent) event;
+            TvLog.d("TvPlayer-%d PtsEvent, stream: %s, pts: %d, rendertime: %d",
+                    mId, StreamType.toString(ev.mStreamType), ev.mPts, ev.mRenderTime);
         }
 
         if (mTsPlaybackListener != null) {

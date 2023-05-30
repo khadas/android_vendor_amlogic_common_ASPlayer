@@ -9,15 +9,17 @@
 package com.amlogic.asplayer.api;
 
 /**
- * Call back event mask
+ * Callback event mask
  */
 public class EventMask {
 
-    public static final int EVENT_TYPE_USERDATA_AFD_MASK = 1 << 0;
+    public static final int EVENT_TYPE_PTS_MASK                     = 1 << 0;
 
-    public static final int EVENT_TYPE_USERDATA_CC_MASK = 1 << 1;
+    public static final int EVENT_TYPE_USERDATA_AFD_MASK            = 1 << 1;
 
-    public static final int EVENT_TYPE_DATA_LOSS_MASK = 1 << 2;
+    public static final int EVENT_TYPE_USERDATA_CC_MASK             = 1 << 2;
 
-    public static final int EVENT_TYPE_DATA_RESUME_MASK = 1 << 3;
+    public static final int EVENT_TYPE_DATA_LOSS_MASK               = 1 << 3;
+
+    public static final int EVENT_TYPE_DATA_RESUME_MASK             = 1 << 4;
 }

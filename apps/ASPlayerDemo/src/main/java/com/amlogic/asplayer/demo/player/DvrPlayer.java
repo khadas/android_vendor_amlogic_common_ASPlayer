@@ -18,6 +18,7 @@ import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.amlogic.asplayer.api.EventMask;
 import com.amlogic.asplayer.api.InitParams;
 import com.amlogic.asplayer.api.InputBuffer;
 import com.amlogic.asplayer.api.InputBufferType;
@@ -66,6 +67,7 @@ public class DvrPlayer extends TvPlayer {
                 .setPlaybackMode(InitParams.PLAYBACK_MODE_PASSTHROUGH)
                 .setInputSourceType(InputSourceType.TS_MEMORY)
                 .setInputBufferType(InputBufferType.NORMAL)
+                .setEventMask(EventMask.EVENT_TYPE_PTS_MASK)
                 .build();
         mASPlayer = new JniASPlayerWrapper(initParams, mTuner);
         mASPlayer.addPlaybackListener(this::onPlaybackEvent);

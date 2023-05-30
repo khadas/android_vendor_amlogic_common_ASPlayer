@@ -505,6 +505,8 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
                 outputPathV3.setTrackFilterId(filterId);
                 outputPathV3.setAvSyncHwId(avSyncHwId);
             }
+
+            mRendererScheduler.onSetVideoParams(true);
         } else {
             mVideoOutputPath.setMediaFormat(null);
             if (mVideoOutputPath instanceof VideoOutputPathV3) {
@@ -512,8 +514,9 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
                 outputPathV3.setTrackFilterId(MediaContainerExtractor.INVALID_FILTER_ID);
                 outputPathV3.setAvSyncHwId(MediaContainerExtractor.INVALID_AV_SYNC_HW_ID);
             }
+
+            mRendererScheduler.onSetVideoParams(false);
         }
-        mRendererScheduler.onSetVideoParams();
     }
 
     @Override
@@ -737,6 +740,8 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
                 outputPathV3.setAudioFilterId(params.getTrackFilterId());
                 outputPathV3.setAvSyncHwId(params.getAvSyncHwId());
             }
+
+            mRendererScheduler.onSetAudioParams(true);
         } else {
             ASPlayerLog.i("%s-%d setAudioParams params is null", TAG, mId);
             mAudioOutputPath.setMediaFormat(null);
@@ -746,8 +751,9 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
                 outputPathV3.setAudioSubTrackFilterId(MediaContainerExtractor.INVALID_FILTER_ID);
                 outputPathV3.setAvSyncHwId(MediaContainerExtractor.INVALID_AV_SYNC_HW_ID);
             }
+
+            mRendererScheduler.onSetAudioParams(false);
         }
-        mRendererScheduler.onSetAudioParams();
     }
 
     @Override

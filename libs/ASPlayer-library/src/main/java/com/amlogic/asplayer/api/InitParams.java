@@ -47,7 +47,7 @@ public class InitParams {
     /**
      * Mask the event type need by caller
      */
-    private int mEventMask;
+    private long mEventMask;
 
     private InitParams() {
 
@@ -95,11 +95,11 @@ public class InitParams {
         this.mDmxDevId = dmxDevId;
     }
 
-    public int getEventMask() {
+    public long getEventMask() {
         return mEventMask;
     }
 
-    private void setEventMask(int eventMask) {
+    private void setEventMask(long eventMask) {
         this.mEventMask = eventMask;
     }
 
@@ -113,7 +113,7 @@ public class InitParams {
 
         private int mDmxDevId = -1;
 
-        private int mEventMask = 0;
+        private long mEventMask = 0;
 
         public Builder() {
         }
@@ -160,7 +160,7 @@ public class InitParams {
             return this;
         }
 
-        public Builder setEventMask(int eventMask) {
+        public Builder setEventMask(long eventMask) {
             this.mEventMask = eventMask;
             return this;
         }

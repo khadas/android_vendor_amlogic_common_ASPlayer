@@ -55,8 +55,6 @@ class RendererTrickBySeekV3 extends Renderer {
         // set next position
         mRequestedPositionWhenMs = mOriginPositionWhenMs;
         mRequestedPositionUs = mOriginPositionUs;
-        mRequestedPositionUs = Math.min(mPositionHandler.getEndPositionUs() - 1000000, mRequestedPositionUs);
-        mRequestedPositionUs = Math.max(mPositionHandler.getStartPositionUs(), mRequestedPositionUs);
         mRequestedPositionSet = true;
 
         //
@@ -163,18 +161,7 @@ class RendererTrickBySeekV3 extends Renderer {
         mRequestedPositionSet = true;
         ASPlayerLog.i("RendererTrickBySeekV3-%d position: %d", mId, mRequestedPositionUs);
 
-        long startPositionUs = mPositionHandler.getStartPositionUs();
-        long endPositionUs = mPositionHandler.getEndPositionUs();
-
-        if (mSpeed > 0 && mRequestedPositionUs > endPositionUs - BOUNDS_MARGIN_US) {
-            freezeToPosition(endPositionUs - BOUNDS_MARGIN_US);
-            mPositionHandler.setPositionUs(endPositionUs);
-        } else if (mSpeed < 0 && mRequestedPositionUs < startPositionUs + BOUNDS_MARGIN_US) {
-            freezeToPosition(startPositionUs);
-            mPositionHandler.setPositionUs(startPositionUs);
-        } else {
-            mPositionHandler.setPositionUs(mRequestedPositionUs);
-        }
+        mPositionHandler.setPositionUs(mRequestedPositionUs);
     }
 
     private void armNextRequestedPosition() {

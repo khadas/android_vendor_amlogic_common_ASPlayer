@@ -61,17 +61,8 @@ class RendererTrickSmooth extends Renderer {
         // check decoders
         mVideoOutputPath.checkErrors();
 
-        // check position
-        boolean boundReached =
-                mPositionHandler.getPositionUs() > (mPositionHandler.getEndPositionUs() - END_OF_STREAM_MARGIN_US);
-
-        // when end of stream
-        if (boundReached && mVideoOutputPath.mClock.isStarted()) {
-            mVideoOutputPath.mClock.reset();
-        }
-
         // check speed
-        boolean needSetSpeed = !boundReached;
+        boolean needSetSpeed = true;
         needSetSpeed &= mVideoOutputPath.hasOutputBuffers();
         needSetSpeed &= !mVideoOutputPath.mClock.isStarted();
         if (needSetSpeed) {

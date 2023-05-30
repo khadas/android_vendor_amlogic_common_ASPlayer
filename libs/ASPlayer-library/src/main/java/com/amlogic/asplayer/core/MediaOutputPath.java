@@ -29,7 +29,7 @@ abstract class MediaOutputPath {
     private static final int CONFIGURATION_ERROR = 3;
 
     interface FrameListener {
-        void onFrame(MediaOutputPath outputPath, long timestampUs);
+        void onFrame(MediaOutputPath outputPath, long presentationTimeUs, long renderTime);
     }
 
     interface DataListener {
@@ -325,9 +325,9 @@ abstract class MediaOutputPath {
         mDataListener = listener;
     }
 
-    void notifyFrameDisplayed(long timestampUs) {
+    void notifyFrameDisplayed(long presentationTimeUs, long renderTime) {
         if (mFrameListener != null) {
-            mFrameListener.onFrame(this, timestampUs);
+            mFrameListener.onFrame(this, presentationTimeUs, renderTime);
         }
     }
 

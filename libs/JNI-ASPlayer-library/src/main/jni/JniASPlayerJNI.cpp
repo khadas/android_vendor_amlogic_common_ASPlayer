@@ -261,7 +261,7 @@ bool JniASPlayerJNI::createInitParams(JNIEnv *env, jni_asplayer_init_params para
     env->SetIntField(initParams, gInitParamsCtx.inputSourceType, (jint)params.source);
     env->SetIntField(initParams, gInitParamsCtx.inputBufferType, (jint)params.drmmode);
     env->SetIntField(initParams, gInitParamsCtx.dmxDevId, (jint)params.dmx_dev_id);
-    env->SetIntField(initParams, gInitParamsCtx.eventMask, (jint)params.event_mask);
+    env->SetLongField(initParams, gInitParamsCtx.eventMask, (jlong)params.event_mask);
     *outJInitParams = initParams;
     ALOGD("%s[%d] end", __func__, __LINE__);
     return true;
@@ -439,7 +439,7 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
     gInitParamsCtx.inputSourceType = env->GetFieldID(gInitParamsCls, "mInputSourceType", "I");
     gInitParamsCtx.inputBufferType = env->GetFieldID(gInitParamsCls, "mInputBufferType", "I");
     gInitParamsCtx.dmxDevId = env->GetFieldID(gInitParamsCls, "mDmxDevId", "I");
-    gInitParamsCtx.eventMask = env->GetFieldID(gInitParamsCls, "mEventMask", "I");
+    gInitParamsCtx.eventMask = env->GetFieldID(gInitParamsCls, "mEventMask", "J");
 
     // VideoParams
     jclass videoParamCls = env->FindClass("com/amlogic/asplayer/api/VideoParams");
