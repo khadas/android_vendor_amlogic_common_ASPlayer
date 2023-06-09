@@ -339,9 +339,12 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     public int flush() {
         ASPlayerLog.i("%s-%d flush start", TAG, mId);
         if (mPlayerHandler != null) {
+            ConditionVariable lock = new ConditionVariable();
             mPlayerHandler.post(() -> {
                 handleFlush();
+                lock.open();
             });
+            lock.block();
             return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.e("%s-%d flush called, but playerHandler is null", TAG, mId);
@@ -539,10 +542,13 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     @Override
     public int startVideoDecoding() {
         if (mPlayerHandler != null) {
+            ConditionVariable lock = new ConditionVariable();
             mPlayerHandler.post(() -> {
                 handleStart();
                 mRendererScheduler.startVideoDecoding();
+                lock.open();
             });
+            lock.block();
             return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.i("%s-%d startVideoDecoding failed, playerHandler is null", TAG, mId);
@@ -582,9 +588,12 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     @Override
     public int pauseVideoDecoding() {
         if (mPlayerHandler != null) {
+            ConditionVariable lock = new ConditionVariable();
             mPlayerHandler.post(() -> {
                 mRendererScheduler.pauseVideoDecoding();
+                lock.open();
             });
+            lock.block();
             return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.i("%s-%d pauseVideoDecoding failed, playerHandler is null", TAG, mId);
@@ -595,9 +604,12 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     @Override
     public int resumeVideoDecoding() {
         if (mPlayerHandler != null) {
+            ConditionVariable lock = new ConditionVariable();
             mPlayerHandler.post(() -> {
                 mRendererScheduler.resumeVideoDecoding();
+                lock.open();
             });
+            lock.block();
             return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.i("%s-%d resumeVideoDecoding failed, playerHandler is null", TAG, mId);
@@ -608,9 +620,12 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     @Override
     public int stopVideoDecoding() {
         if (mPlayerHandler != null) {
+            ConditionVariable lock = new ConditionVariable();
             mPlayerHandler.post(() -> {
                 mRendererScheduler.stopVideoDecoding();
+                lock.open();
             });
+            lock.block();
             return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.i("%s-%d stopVideoDecoding failed, playerHandler is null", TAG, mId);
@@ -763,10 +778,13 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     @Override
     public int startAudioDecoding() {
         if (mPlayerHandler != null) {
+            ConditionVariable lock = new ConditionVariable();
             mPlayerHandler.post(() -> {
                 handleStart();
                 mRendererScheduler.startAudioDecoding();
+                lock.open();
             });
+            lock.block();
             return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.i("%s-%d startAudioDecoding failed, playerHandler is null", TAG, mId);
@@ -777,9 +795,12 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     @Override
     public int pauseAudioDecoding() {
         if (mPlayerHandler != null) {
+            ConditionVariable lock = new ConditionVariable();
             mPlayerHandler.post(() -> {
                 mRendererScheduler.pauseAudioDecoding();
+                lock.open();
             });
+            lock.block();
             return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.i("%s-%d pauseAudioDecoding failed, playerHandler is null", TAG, mId);
@@ -790,9 +811,12 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     @Override
     public int resumeAudioDecoding() {
         if (mPlayerHandler != null) {
+            ConditionVariable lock = new ConditionVariable();
             mPlayerHandler.post(() -> {
                 mRendererScheduler.resumeAudioDecoding();
+                lock.open();
             });
+            lock.block();
             return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.i("%s-%d resumeAudioDecoding failed, playerHandler is null", TAG, mId);
@@ -803,9 +827,12 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     @Override
     public int stopAudioDecoding() {
         if (mPlayerHandler != null) {
+            ConditionVariable lock = new ConditionVariable();
             mPlayerHandler.post(() -> {
                 mRendererScheduler.stopAudioDecoding();
+                lock.open();
             });
+            lock.block();
             return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.i("%s-%d stopAudioDecoding failed, playerHandler is null", TAG, mId);
