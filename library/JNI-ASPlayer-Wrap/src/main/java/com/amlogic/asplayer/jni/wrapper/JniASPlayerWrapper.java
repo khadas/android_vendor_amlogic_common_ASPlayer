@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.Surface;
 
 import com.amlogic.asplayer.api.AudioParams;
+import com.amlogic.asplayer.api.ErrorCode;
 import com.amlogic.asplayer.api.InitParams;
 import com.amlogic.asplayer.api.InputBuffer;
 import com.amlogic.asplayer.api.InputFrameBuffer;
@@ -115,13 +116,13 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
-    public void flush() {
-        native_flush();
+    public int flush() {
+        return native_flush();
     }
 
     @Override
-    public void flushDvr() {
-        native_flushDvr();
+    public int flushDvr() {
+        return native_flushDvr();
     }
 
     @Override
@@ -217,8 +218,8 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
-    public void setAudioVolume(int volume) {
-        native_setAudioVolume(volume);
+    public int setAudioVolume(int volume) {
+        return native_setAudioVolume(volume);
     }
 
     @Override
@@ -339,12 +340,12 @@ public class JniASPlayerWrapper implements IASPlayer {
     private native int native_resumeAudioDecoding();
     private native int native_setVideoParams(VideoParams params);
     private native int native_setAudioParams(AudioParams params);
-    private native void native_flush();
-    private native void native_flushDvr();
+    private native int native_flush();
+    private native int native_flushDvr();
     private native int native_writeData(InputBuffer buffer, long timeoutMillSecond);
     private native int native_setSurface(Surface surface);
     private native int native_setAudioMute(boolean analogMute, boolean digitMute);
-    private native void native_setAudioVolume(int volume);
+    private native int native_setAudioVolume(int volume);
     private native int native_getAudioVolume();
     private native int native_startFast(float speed);
     private native int native_stopFast();

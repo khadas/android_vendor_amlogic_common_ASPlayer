@@ -331,7 +331,6 @@ bool JniASPlayerJNI::createAudioParams(JNIEnv *env, jni_asplayer_audio_params *p
 }
 
 bool JniASPlayerJNI::createInputBuffer(JNIEnv *env, jni_asplayer_input_buffer *inputBuffer, jobject *outJInputBuffer) {
-    LOG_FUNCTION_ENTER();
     if (!env || !inputBuffer || !outJInputBuffer) {
         ALOGE("%s[%d] create InputBuffer failed, invalid parameter", __func__, __LINE__);
         return false;
@@ -361,15 +360,13 @@ bool JniASPlayerJNI::createInputBuffer(JNIEnv *env, jni_asplayer_input_buffer *i
         // 这里数据是从下标 0 开始的, 需要修改 offset 为 0
         env->SetIntField(buffer, gInputBufferCtx.offset, 0);
         env->SetObjectField(buffer, gInputBufferCtx.buffer, buf);
-        ALOGD("%s[%d] set InputBuffer buffer success, buffer length: %d", __func__, __LINE__, bufferSize);
+//        ALOGD("[%s/%d] set InputBuffer buffer success, buffer length: %d", __func__, __LINE__, bufferSize);
     } else {
         env->SetObjectField(buffer, gInputBufferCtx.buffer, nullptr);
-        ALOGD("%s[%d] set InputBuffer buffer field, buffer null", __func__, __LINE__);
+        ALOGD("[%s/%d] set InputBuffer buffer failed, buffer is null", __func__, __LINE__);
     }
 
     *outJInputBuffer = buffer;
-
-    LOG_FUNCTION_END();
 
     return true;
 }
@@ -416,13 +413,13 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
     gASPlayerCtx.resumeAudioDecodingMID = GetMethodIDOrDie(env, gASPlayerCls, "resumeAudioDecoding", "()I");
     gASPlayerCtx.setVideoParamsMID = GetMethodIDOrDie(env, gASPlayerCls, "setVideoParams", "(Lcom/amlogic/asplayer/api/VideoParams;)V");
     gASPlayerCtx.setAudioParamsMID = GetMethodIDOrDie(env, gASPlayerCls, "setAudioParams", "(Lcom/amlogic/asplayer/api/AudioParams;)V");
-    gASPlayerCtx.flushMID = GetMethodIDOrDie(env, gASPlayerCls, "flush", "()V");
-    gASPlayerCtx.flushDvrMID = GetMethodIDOrDie(env, gASPlayerCls, "flushDvr", "()V");
+    gASPlayerCtx.flushMID = GetMethodIDOrDie(env, gASPlayerCls, "flush", "()I");
+    gASPlayerCtx.flushDvrMID = GetMethodIDOrDie(env, gASPlayerCls, "flushDvr", "()I");
 //    gASPlayerCtx.writeByteBufferMID = GetMethodIDOrDie(env, gASPlayerCls, "writeData", "(I[BJJJ)I");
     gASPlayerCtx.writeDataMID = GetMethodIDOrDie(env, gASPlayerCls, "writeData", "(Lcom/amlogic/asplayer/api/InputBuffer;J)I");
     gASPlayerCtx.setSurfaceMID = GetMethodIDOrDie(env, gASPlayerCls, "setSurface", "(Landroid/view/Surface;)I");
     gASPlayerCtx.setAudioMuteMID = GetMethodIDOrDie(env, gASPlayerCls, "setAudioMute", "(ZZ)I");
-    gASPlayerCtx.setAudioVolumeMID = GetMethodIDOrDie(env, gASPlayerCls, "setAudioVolume", "(I)V");
+    gASPlayerCtx.setAudioVolumeMID = GetMethodIDOrDie(env, gASPlayerCls, "setAudioVolume", "(I)I");
     gASPlayerCtx.getAudioVolumeMID = GetMethodIDOrDie(env, gASPlayerCls, "getAudioVolume", "()I");
     gASPlayerCtx.startFastMID = GetMethodIDOrDie(env, gASPlayerCls, "startFast", "(F)I");
     gASPlayerCtx.stopFastMID = GetMethodIDOrDie(env, gASPlayerCls, "stopFast", "()I");
@@ -581,14 +578,14 @@ bool JniASPlayer::create(jni_asplayer_init_params params, void *tuner) {
         return false;
     }
 
-    ALOGD("%s[%d] call createJniASPlayer", __func__, __LINE__);
+    ALOGD("[%s/%d] call createJniASPlayer", __func__, __LINE__);
     jobject javaPlayer;
     if (!JniASPlayerJNI::createJniASPlayer(env, params, tuner, &javaPlayer)) {
-        ALOGE("%s[%d] createJniASPlayer failed", __func__, __LINE__);
+        ALOGE("[%s/%d] createJniASPlayer failed", __func__, __LINE__);
         return false;
     }
 
-    ALOGD("%s[%d] call createJniASPlayer end", __func__, __LINE__);
+    ALOGD("[%s/%d] call createJniASPlayer end", __func__, __LINE__);
     mJavaPlayer = MakeGlobalRefOrDie(env, javaPlayer);
 
     setJavaASPlayerHandle(env, mJavaPlayer);
@@ -596,20 +593,20 @@ bool JniASPlayer::create(jni_asplayer_init_params params, void *tuner) {
     // register playback listener
     mPlaybackListener = new JniPlaybackListener(mEventCallback, mEventUserData);
     if (!mPlaybackListener->createPlaybackListener(env)) {
-        ALOGE("%s[%d] prepare failed, failed to create playback listener", __func__, __LINE__);
+        ALOGE("[%s/%d] prepare failed, failed to create playback listener", __func__, __LINE__);
         return false;
     }
 
     jobject playbackListener = mPlaybackListener->getJavaPlaybackListener();
     if (playbackListener == nullptr) {
-        ALOGE("%s[%d] prepare failed, failed to get playback listener", __func__, __LINE__);
+        ALOGE("[%s/%d] prepare failed, failed to get playback listener", __func__, __LINE__);
         return false;
     }
 
     // register playback listener
     int result = addPlaybackListener(playbackListener);
     if (result != 0) {
-        ALOGE("%s[%d] prepare failed, failed to add playback listener", __func__, __LINE__);
+        ALOGE("[%s/%d] prepare failed, failed to add playback listener", __func__, __LINE__);
         return false;
     }
 
@@ -635,134 +632,138 @@ int JniASPlayer::setJavaASPlayerHandle(JNIEnv *env, jobject javaPlayer) {
     return 0;
 }
 
-int JniASPlayer::prepare() {
+jni_asplayer_result JniASPlayer::prepare() {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
-        return -1;
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.prepareMID);
-    ALOGV("prepare result: %d", result);
-    return result;
+    LOG_FUNCTION_INT_END(result);
+    return static_cast<jni_asplayer_result>(result);
 }
 
-int JniASPlayer::addPlaybackListener(jobject listener) {
+jni_asplayer_result JniASPlayer::addPlaybackListener(jobject listener) {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
-        return -1;
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
     env->CallVoidMethod(mJavaPlayer, gASPlayerCtx.addPlaybackListenerMID, listener);
-    return 0;
+    return JNI_ASPLAYER_OK;
 }
 
-int JniASPlayer::removePlaybackListener(jobject listener) {
+jni_asplayer_result JniASPlayer::removePlaybackListener(jobject listener) {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
-        return -1;
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
     env->CallVoidMethod(mJavaPlayer, gASPlayerCtx.removePlaybackListenerMID, listener);
-    return 0;
+    return JNI_ASPLAYER_OK;
 }
 
-int JniASPlayer::startVideoDecoding() {
+jni_asplayer_result JniASPlayer::startVideoDecoding() {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
-        return -1;
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.startVideoDecodingMID);
-    ALOGV("startVideoDecoding result: %d", result);
-    return result;
+    return static_cast<jni_asplayer_result>(result);
 }
 
-int JniASPlayer::stopVideoDecoding() {
+jni_asplayer_result JniASPlayer::stopVideoDecoding() {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
-        return -1;
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.stopVideoDecodingMID);
-    ALOGV("stopVideoDecoding result: %d", result);
-    return result;
+    return static_cast<jni_asplayer_result>(result);
 }
 
-int JniASPlayer::pauseVideoDecoding() {
+jni_asplayer_result JniASPlayer::pauseVideoDecoding() {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
-        return -1;
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.pauseVideoDecodingMID);
-    ALOGV("pauseVideoDecoding result: %d", result);
-    return result;
+    return static_cast<jni_asplayer_result>(result);
 }
 
-int JniASPlayer::resumeVideoDecoding() {
+jni_asplayer_result JniASPlayer::resumeVideoDecoding() {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
-        return -1;
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.resumeVideoDecodingMID);
-    ALOGV("resumeVideoDecoding result: %d", result);
-    return result;
+    return static_cast<jni_asplayer_result>(result);
 }
 
-int JniASPlayer::startAudioDecoding() {
+jni_asplayer_result JniASPlayer::startAudioDecoding() {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
-        return -1;
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.startAudioDecodingMID);
-    ALOGV("startAudioDecoding result: %d", result);
-    return result;
+    return static_cast<jni_asplayer_result>(result);
 }
 
-int JniASPlayer::stopAudioDecoding() {
+jni_asplayer_result JniASPlayer::stopAudioDecoding() {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
-        return -1;
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.stopAudioDecodingMID);
-    ALOGV("stopAudioDecoding result: %d", result);
-    return result;
+    return static_cast<jni_asplayer_result>(result);
 }
 
-int JniASPlayer::pauseAudioDecoding() {
+jni_asplayer_result JniASPlayer::pauseAudioDecoding() {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
-        return -1;
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.pauseAudioDecodingMID);
-    ALOGV("pauseAudioDecoding result: %d", result);
-    return result;
+    return static_cast<jni_asplayer_result>(result);
 }
 
-int JniASPlayer::resumeAudioDecoding() {
+jni_asplayer_result JniASPlayer::resumeAudioDecoding() {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
-        return -1;
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.resumeAudioDecodingMID);
-    ALOGV("resumeAudioDecoding result: %d", result);
-    return result;
+    return static_cast<jni_asplayer_result>(result);
 }
 
-int JniASPlayer::setVideoParams(jni_asplayer_video_params *params) {
+jni_asplayer_result JniASPlayer::setVideoParams(jni_asplayer_video_params *params) {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
     jobject videoParam;
     if (!JniASPlayerJNI::createVideoParams(env, params, &videoParam)) {
-        ALOGE("%s[%d] failed to convert VideoParams", __func__, __LINE__);
+        ALOGE("[%s/%d] failed to convert VideoParams", __func__, __LINE__);
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
@@ -775,7 +776,7 @@ int JniASPlayer::setVideoParams(jni_asplayer_video_params *params) {
 
     env->DeleteLocalRef(videoParam);
 
-    int result = JNI_ASPLAYER_OK;
+    jni_asplayer_result result = JNI_ASPLAYER_OK;
     if (exception != nullptr) {
         if (env->IsInstanceOf(exception, gExceptionsCtx.nullPointerExceptionCls)
             || env->IsInstanceOf(exception, gExceptionsCtx.illegalArgumentExceptionCls)) {
@@ -796,15 +797,16 @@ int JniASPlayer::setVideoParams(jni_asplayer_video_params *params) {
     return result;
 }
 
-int JniASPlayer::setAudioParams(jni_asplayer_audio_params *params) {
+jni_asplayer_result JniASPlayer::setAudioParams(jni_asplayer_audio_params *params) {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
     jobject audioParam;
     if (!JniASPlayerJNI::createAudioParams(env, params, &audioParam)) {
-        ALOGE("%s[%d] failed to convert AudioParams", __func__, __LINE__);
+        ALOGE("[%s/%d] failed to convert AudioParams", __func__, __LINE__);
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
@@ -817,7 +819,7 @@ int JniASPlayer::setAudioParams(jni_asplayer_audio_params *params) {
 
     env->DeleteLocalRef(audioParam);
 
-    int result = JNI_ASPLAYER_OK;
+    jni_asplayer_result result = JNI_ASPLAYER_OK;
     if (exception != nullptr) {
         if (env->IsInstanceOf(exception, gExceptionsCtx.nullPointerExceptionCls)
             || env->IsInstanceOf(exception, gExceptionsCtx.illegalArgumentExceptionCls)) {
@@ -839,112 +841,127 @@ int JniASPlayer::setAudioParams(jni_asplayer_audio_params *params) {
     return result;
 }
 
-void JniASPlayer::flush() {
+jni_asplayer_result JniASPlayer::flush() {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
-        return;
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
-    env->CallVoidMethod(mJavaPlayer, gASPlayerCtx.flushMID);
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.flushMID);
+    return static_cast<jni_asplayer_result>(ret);
 }
 
-void JniASPlayer::flushDvr() {
+jni_asplayer_result JniASPlayer::flushDvr() {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
-        return;
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
-    env->CallVoidMethod(mJavaPlayer, gASPlayerCtx.flushDvrMID);
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.flushDvrMID);
+    return static_cast<jni_asplayer_result>(ret);
 }
 
-int JniASPlayer::writeData(jni_asplayer_input_buffer *buffer, uint64_t timeout_ms) {
+jni_asplayer_result JniASPlayer::writeData(jni_asplayer_input_buffer *buffer, uint64_t timeout_ms) {
+    if (buffer == nullptr) {
+        LOG_FUNCTION_INT_FAILED(JNI_ASPLAYER_ERROR_INVALID_PARAMS);
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
-    if (env == nullptr || buffer == nullptr) {
-        return -1;
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
     jobject inputBuffer = nullptr;
     if (!JniASPlayerJNI::createInputBuffer(env, buffer, &inputBuffer)) {
-        ALOGE("%s[%d] failed to convert InputBuffer", __func__, __LINE__);
-        return -1;
+        ALOGE("[%s/%d] failed to convert InputBuffer", __FUNCTION__, __LINE__);
+        return JNI_ASPLAYER_ERROR_INVALID_OPERATION;
     }
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.writeDataMID, inputBuffer, timeout_ms);
     env->DeleteLocalRef(inputBuffer);
 
-    ALOGV("writeData result: %d", result);
-    return result;
+    if (result <= 0 && result != JNI_ASPLAYER_ERROR_RETRY && result != JNI_ASPLAYER_ERROR_BUSY) {
+        ALOGD("[%s/%d] writeData error: %d", __FUNCTION__, __LINE__, result);
+    }
+    return static_cast<jni_asplayer_result>(result);
 }
 
-int JniASPlayer::setSurface(void *surface) {
+jni_asplayer_result JniASPlayer::setSurface(void *surface) {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
-        return -1;
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setSurfaceMID, (jobject)surface);
     LOG_FUNCTION_INT_END(result);
-    return result;
+    return static_cast<jni_asplayer_result>(result);
 }
 
-int JniASPlayer::setAudioMute(bool analogMute, bool digitMute) {
+jni_asplayer_result JniASPlayer::setAudioMute(bool analogMute, bool digitMute) {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
-        return -1;
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setAudioMuteMID, (jboolean)analogMute, (jboolean)digitMute);
     LOG_FUNCTION_INT_END(result);
-    return result;
+    return static_cast<jni_asplayer_result>(result);
 }
 
-void JniASPlayer::setAudioVolume(int32_t volume) {
+jni_asplayer_result JniASPlayer::setAudioVolume(int32_t volume) {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
-        ALOGE("%s[%d] error, failed to get jni env", __func__, __LINE__);
-        return;
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
-    env->CallVoidMethod(mJavaPlayer, gASPlayerCtx.setAudioVolumeMID, (jint) volume);
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setAudioVolumeMID, (jint) volume);
+    return static_cast<jni_asplayer_result>(ret);
 }
 
-bool JniASPlayer::getAudioVolume(int *volume) {
+jni_asplayer_result JniASPlayer::getAudioVolume(int *volume) {
     if (volume == nullptr) {
-        ALOGE("%s[%d] error, failed to get audio volume, invalid parameter", __func__, __LINE__);
-        return false;
+        ALOGE("[%s/%d] error, failed to get audio volume, invalid parameter", __func__, __LINE__);
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
 
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
-        ALOGE("%s[%d] error, failed to get jni env", __func__, __LINE__);
-        return false;
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
     jint vol = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.getAudioVolumeMID);
     *volume = vol;
-    return true;
+    return JNI_ASPLAYER_OK;
 }
 
-int JniASPlayer::startFast(float scale) {
+jni_asplayer_result JniASPlayer::startFast(float scale) {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
-        ALOGE("%s[%d] error, failed to get jni env", __func__, __LINE__);
-        return -1;
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
-    jint ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.startFastMID, scale);
-    return ret;
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.startFastMID, scale);
+    return static_cast<jni_asplayer_result>(ret);
 }
 
-int JniASPlayer::stopFast() {
+jni_asplayer_result JniASPlayer::stopFast() {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
-        ALOGE("%s[%d] error, failed to get jni env", __func__, __LINE__);
-        return -1;
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
-    jint ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.stopFastMID);
-    return ret;
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.stopFastMID);
+    return static_cast<jni_asplayer_result>(ret);
 }
 
 void JniASPlayer::setEventCallback(event_callback callback, void *eventUserData) {

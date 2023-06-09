@@ -8,7 +8,6 @@
  */
 package com.amlogic.asplayer.api;
 
-// TODO 跟Event相关
 public class AVFlow {
 
     /**

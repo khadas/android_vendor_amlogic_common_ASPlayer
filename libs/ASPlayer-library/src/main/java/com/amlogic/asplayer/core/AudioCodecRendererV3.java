@@ -185,14 +185,17 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
             AudioFormat audioFormat = null;
             if (TunerHelper.TunerVersionChecker
                     .isHigherOrEqualVersionTo(TunerHelper.TunerVersionChecker.TUNER_VERSION_1_1)) {
+                ASPlayerLog.i("AudioCodecRendererV3-%d tuner version >= 1.1", mId);
                 audioFormat = getAudioFormat(audioAttributes, AudioFormat.ENCODING_DEFAULT);
             } else {
+                ASPlayerLog.i("AudioCodecRendererV3-%d get tuner version failed, or tuner version < 1.1", mId);
                 audioFormat = getAudioFormat(audioAttributes, AudioUtils.getEncoding(format));
             }
             builder.setAudioFormat(audioFormat);
 
             mAudioTrack = builder.build();
             ASPlayerLog.i("AudioCodecRendererV3-%d create AudioTrack success: %s", mId, mAudioTrack);
+
             prepareAudioTrack();
 
             if (mClock.getSpeed() == 0) {

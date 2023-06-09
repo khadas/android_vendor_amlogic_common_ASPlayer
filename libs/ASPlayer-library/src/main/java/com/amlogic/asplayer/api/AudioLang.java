@@ -8,7 +8,6 @@
  */
 package com.amlogic.asplayer.api;
 
-//TODO 合到AudioParams类
 public class AudioLang {
 
     public int firstLang;

@@ -23,6 +23,7 @@ import android.os.Process;
 import android.view.Surface;
 
 import com.amlogic.asplayer.api.AudioParams;
+import com.amlogic.asplayer.api.ErrorCode;
 import com.amlogic.asplayer.api.InputBuffer;
 import com.amlogic.asplayer.api.InputFrameBuffer;
 import com.amlogic.asplayer.api.InputSourceType;
@@ -35,30 +36,20 @@ import java.util.Locale;
 
 import static com.amlogic.asplayer.api.ASPlayer.INFO_BUSY;
 import static com.amlogic.asplayer.api.ASPlayer.INFO_ERROR_RETRY;
-import static com.amlogic.asplayer.api.ASPlayer.INFO_UNKNOWN_ERROR;
+import static com.amlogic.asplayer.api.ASPlayer.INFO_INVALID_OPERATION;
+import static com.amlogic.asplayer.api.ASPlayer.INFO_INVALID_PARAMS;
 import static com.amlogic.asplayer.core.TsPlaybackConfig.PLAYBACK_BUFFER_SIZE;
 import static com.amlogic.asplayer.core.TsPlaybackConfig.TS_PACKET_SIZE;
 
 public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListener,
         AudioOutputPath.AudioFormatListener {
 
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
     private static final String TAG = Constant.LOG_TAG;
-
-    private enum State {
-        STATE_NONE,
-        STATE_READY,
-        STATE_PLAYING,
-        STATE_ERROR,
-    }
 
     private Tuner mTuner;
 
     private ASPlayerConfig mConfig;
-
-    // state of the player
-    private State mState;
-    private int mErrorBits;
 
     private HandlerThread mPlayerThread;
     private Handler mPlayerHandler;
@@ -116,13 +107,12 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     @Override
     public int prepare() {
-        if (DEBUG) ASPlayerLog.d("%s-%d prepare start", TAG, mId);
         if (mPlayerThread != null) {
             ASPlayerLog.w("Player-%d already prepared", mId);
-            return -1;
+            return ErrorCode.ERROR_INVALID_OPERATION;
         }
 
-        mPlayerThread = new HandlerThread(String.format(Locale.US, "TvPlayer:%d", mId),
+        mPlayerThread = new HandlerThread(String.format(Locale.US, "AsPlayer:%d", mId),
                 Process.THREAD_PRIORITY_AUDIO);
         mPlayerThread.start();
         mPlayerHandler = new Handler(mPlayerThread.getLooper());
@@ -132,9 +122,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             prepareTsPlayback();
         }
 
-        mState = State.STATE_READY;
-        mErrorBits = 0;
-        return 0;
+        return ErrorCode.SUCCESS;
     }
 
     private void handlePrepare() {
@@ -260,8 +248,6 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         mAudioOutputPath = null;
 
         mTuner = null;
-        mState = State.STATE_NONE;
-        mErrorBits = 0;
     }
 
     private void handleRelease() {
@@ -293,51 +279,73 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     @Override
     public int writeData(InputBuffer inputBuffer, long timeoutMillSecond) {
 //        if (DEBUG) ASPlayerLog.d("%s-%d writeData start, buffer size: %d", TAG, mId, (inputBuffer != null ? inputBuffer.mBufferSize : 0));
-        if (inputBuffer == null || inputBuffer.mBuffer == null || inputBuffer.mBufferSize < 0) {
-            ASPlayerLog.i("%s-%d writeData failed, invalid param", TAG, mId);
-            return INFO_UNKNOWN_ERROR;
+        if (inputBuffer == null) {
+            ASPlayerLog.i("%s-%d writeData failed, invalid param, inputBuffer is null", TAG, mId);
+            return INFO_INVALID_PARAMS;
+        } else if (inputBuffer.mBuffer == null) {
+            ASPlayerLog.i("%s-%d writeData failed, invalid param, inputBuffer.mBuffer is null", TAG, mId);
+            return INFO_INVALID_PARAMS;
+        } else if (inputBuffer.mOffset < 0 || inputBuffer.mBufferSize < 0) {
+            ASPlayerLog.i("%s-%d writeData failed, invalid param, offset: %d, bufferSize: %d",
+                    TAG, mId, inputBuffer.mOffset, inputBuffer.mBufferSize);
+            return INFO_INVALID_PARAMS;
         } else if (inputBuffer.mBufferSize == 0) {
             ASPlayerLog.i("%s-%d writeData buffer is empty", TAG, mId);
             return INFO_ERROR_RETRY;
         }
 
         if (mTsPlayback != null) {
-//            byte[] buffer = new byte[inputBuffer.bufferSize];
-//            System.arraycopy(inputBuffer.buffer, 0, buffer, 0, inputBuffer.bufferSize);
-            byte[] buffer = inputBuffer.mBuffer;
-            long offset = inputBuffer.mOffset;
-            long ret = mTsPlayback.write(buffer, offset, inputBuffer.mBufferSize);
-            if (ret > 0) {
-                return (int)ret;
-            } else if (ret == 0) {
-//                ASPlayerLog.i("%s-%d writeData ret 0", TAG, mId);
-                return INFO_BUSY;
-            } else {
-                ASPlayerLog.w("%s-%d writeData error, ret: %d", TAG, mId);
-                return INFO_ERROR_RETRY;
-            }
+            return writeToTsPlayback(inputBuffer.mBuffer, inputBuffer.mOffset, inputBuffer.mBufferSize);
         } else {
             ASPlayerLog.w("%s-%d writeData failed", TAG, mId);
+            return INFO_INVALID_OPERATION;
         }
-        return INFO_UNKNOWN_ERROR;
     }
 
-    public long writeData(byte[] buffer, long offset, long size) {
-        if (mTsPlayback != null) {
-            return mTsPlayback.write(buffer, offset, size);
+    public int writeData(int inputBufferType, byte[] buffer, int offset, int size, long timeoutMillSecond) {
+        if (buffer == null) {
+            ASPlayerLog.i("%s-%d writeData failed, invalid param, buffer is null", TAG, mId);
+            return INFO_INVALID_PARAMS;
+        } else if (offset < 0 || size < 0) {
+            ASPlayerLog.i("%s-%d writeData failed, invalid param, offset: %d, size: %d",
+                    TAG, mId, offset, size);
+            return INFO_INVALID_PARAMS;
+        } else if (size == 0) {
+            ASPlayerLog.i("%s-%d writeData buffer is empty", TAG, mId);
+            return INFO_ERROR_RETRY;
         }
-        return INFO_UNKNOWN_ERROR;
+
+        if (mTsPlayback != null) {
+            return writeToTsPlayback(buffer, offset, size);
+        } else {
+            ASPlayerLog.w("%s-%d writeData failed", TAG, mId);
+            return INFO_INVALID_OPERATION;
+        }
+    }
+
+    private int writeToTsPlayback(byte[] buffer, int offset, int size) {
+        long ret = mTsPlayback.write(buffer, offset, size);
+        if (ret > 0) {
+            return (int)ret;
+        } else if (ret == 0) {
+            return INFO_BUSY;
+        } else {
+            ASPlayerLog.w("%s-%d writeData error, ret: %d", TAG, mId, ret);
+            return INFO_ERROR_RETRY;
+        }
     }
 
     @Override
-    public void flush() {
+    public int flush() {
         ASPlayerLog.i("%s-%d flush start", TAG, mId);
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
                 handleFlush();
             });
+            return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.e("%s-%d flush called, but playerHandler is null", TAG, mId);
+            return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
 
@@ -346,14 +354,16 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     @Override
-    public void flushDvr() {
+    public int flushDvr() {
         ASPlayerLog.i("%s-%d flushDvr start", TAG, mId);
         if (mTsPlayback != null) {
             mTsPlayback.stop();
             mTsPlayback.flush();
             mTsPlayback.start();
+            return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.e("%s-%d flushDvr failed, mTsPlayback is null", TAG, mId);
+            return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
 
@@ -395,15 +405,15 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     @Override
     public int startFast(float scale) {
-        if (DEBUG) ASPlayerLog.d("%s-%d startFast start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s-%d startFast start, scale: %.3f", TAG, mId, scale);
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
                 handleStartFast(scale);
             });
-            return 0;
+            return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.w("%s-%d startFast called, but playerHandler is null", TAG, mId);
-            return -1;
+            return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
 
@@ -422,10 +432,10 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             mPlayerHandler.post(() -> {
                 handleStopFast();
             });
-            return 0;
+            return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.w("%s-%d stopFast called, but playerHandler is null", TAG, mId);
-            return -1;
+            return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
 
@@ -437,7 +447,6 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     @Override
     public int setSurface(Surface surface) {
-        ASPlayerLog.i("%s-%d setSurface start, surface: %s", TAG, mId, surface);
         if (mPlayerHandler != null && mPlayerThread != null && mPlayerThread.isAlive()) {
             ConditionVariable lock = new ConditionVariable();
 
@@ -450,12 +459,11 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             mVideoOutputPath.setSurface(surface);
             ASPlayerLog.w("%s-%d setSurface called, but playerHandler is null", TAG, mId);
         }
-        return 0;
+        return ErrorCode.SUCCESS;
     }
 
     @Override
     public void setVideoParams(VideoParams params) throws NullPointerException, IllegalArgumentException, IllegalStateException {
-        ASPlayerLog.i("%s-%d setVideoParams start, params: %s", TAG, mId, params);
         if (params == null) {
             throw new NullPointerException("VideoParams can not be null");
         }
@@ -521,27 +529,24 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     @Override
     public void setVideoBlackOut(boolean blackout) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setVideoBlackOut start", TAG, mId);
     }
 
     @Override
     public MediaFormat getVideoInfo() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getVideoInfo start", TAG, mId);
         return null;
     }
 
     @Override
     public int startVideoDecoding() {
-        if (DEBUG) ASPlayerLog.d("%s-%d startVideoDecoding start", TAG, mId);
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
                 handleStart();
                 mRendererScheduler.startVideoDecoding();
             });
-            return 0;
+            return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.i("%s-%d startVideoDecoding failed, playerHandler is null", TAG, mId);
-            return -1;
+            return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
 
@@ -576,43 +581,40 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     @Override
     public int pauseVideoDecoding() {
-        if (DEBUG) ASPlayerLog.d("%s-%d pauseVideoDecoding start", TAG, mId);
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
                 mRendererScheduler.pauseVideoDecoding();
             });
-            return 0;
+            return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.i("%s-%d pauseVideoDecoding failed, playerHandler is null", TAG, mId);
-            return -1;
+            return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
 
     @Override
     public int resumeVideoDecoding() {
-        if (DEBUG) ASPlayerLog.d("%s-%d resumeVideoDecoding start", TAG, mId);
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
                 mRendererScheduler.resumeVideoDecoding();
             });
-            return 0;
+            return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.i("%s-%d resumeVideoDecoding failed, playerHandler is null", TAG, mId);
-            return -1;
+            return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
 
     @Override
     public int stopVideoDecoding() {
-        if (DEBUG) ASPlayerLog.d("%s-%d stopVideoDecoding start", TAG, mId);
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
                 mRendererScheduler.stopVideoDecoding();
             });
-            return 0;
+            return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.i("%s-%d stopVideoDecoding failed, playerHandler is null", TAG, mId);
-            return -1;
+            return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
 
@@ -626,11 +628,10 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     @Override
-    public void setAudioVolume(int volume) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setAudioVolume start", TAG, mId);
+    public int setAudioVolume(int volume) {
         if (volume < 0 || volume > 100) {
             ASPlayerLog.w("%s-%d setAudioVolume invalid parameter, volume should in[0, 100], current: %d", TAG, mId, volume);
-            return;
+            return ErrorCode.ERROR_INVALID_PARAMS;
         }
 
         if (mPlayerHandler != null) {
@@ -638,12 +639,15 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
                 float vol = 1.0f * volume / 100;
                 mAudioOutputPath.setVolume(vol);
             });
+            return ErrorCode.SUCCESS;
+        } else {
+            ASPlayerLog.i("%s-%d setAudioVolume failed, playerHandler is null", TAG, mId);
+            return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
 
     @Override
     public int getAudioVolume() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getAudioVolume start", TAG, mId);
         float vol = mAudioOutputPath.getVolume();
         int volume = (int)(vol * 100);
         ASPlayerLog.i("%s-%d getAudioVolume, volume: %.2f, return: %d", TAG, mId, vol, volume);
@@ -652,39 +656,33 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     @Override
     public void setAudioStereoMode(int audioStereoMode) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setAudioStereoMode start", TAG, mId);
-
     }
 
     @Override
     public int getAudioStereoMode() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getAudioStereoMode start", TAG, mId);
         return 0;
     }
 
     @Override
     public int setAudioMute(boolean analogMute, boolean digitalMute) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setAudioMute start", TAG, mId);
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
                 mAudioOutputPath.setMuted(digitalMute);
             });
-            return 0;
+            return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.w("%s-%d setAudioMute failed, playerHandler is null", TAG, mId);
-            return -1;
+            return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
 
     @Override
     public int getAudioAnalogMute() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getAudioAnalogMute start", TAG, mId);
         return 0;
     }
 
     @Override
     public int getAudioDigitMute() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getAudioDigitMute start", TAG, mId);
         return 0;
     }
 
@@ -764,58 +762,54 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     @Override
     public int startAudioDecoding() {
-        if (DEBUG) ASPlayerLog.d("%s-%d startAudioDecoding start", TAG, mId);
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
                 handleStart();
                 mRendererScheduler.startAudioDecoding();
             });
-            return 0;
+            return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.i("%s-%d startAudioDecoding failed, playerHandler is null", TAG, mId);
-            return -1;
+            return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
 
     @Override
     public int pauseAudioDecoding() {
-        if (DEBUG) ASPlayerLog.d("%s-%d pauseAudioDecoding start", TAG, mId);
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
                 mRendererScheduler.pauseAudioDecoding();
             });
-            return 0;
+            return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.i("%s-%d pauseAudioDecoding failed, playerHandler is null", TAG, mId);
-            return -1;
+            return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
 
     @Override
     public int resumeAudioDecoding() {
-        if (DEBUG) ASPlayerLog.d("%s-%d resumeAudioDecoding start", TAG, mId);
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
                 mRendererScheduler.resumeAudioDecoding();
             });
-            return 0;
+            return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.i("%s-%d resumeAudioDecoding failed, playerHandler is null", TAG, mId);
-            return -1;
+            return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
 
     @Override
     public int stopAudioDecoding() {
-        if (DEBUG) ASPlayerLog.d("%s-%d stopAudioDecoding start", TAG, mId);
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
                 mRendererScheduler.stopAudioDecoding();
             });
-            return 0;
+            return ErrorCode.SUCCESS;
         } else {
             ASPlayerLog.i("%s-%d stopAudioDecoding failed, playerHandler is null", TAG, mId);
-            return -1;
+            return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
 

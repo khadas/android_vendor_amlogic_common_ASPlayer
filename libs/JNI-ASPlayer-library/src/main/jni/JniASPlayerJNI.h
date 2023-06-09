@@ -71,49 +71,50 @@ public:
 
     bool getJavaASPlayer(jobject **pPlayer);
 
-    int prepare();
+    jni_asplayer_result prepare();
 
-    int addPlaybackListener(jobject listener);
+    jni_asplayer_result addPlaybackListener(jobject listener);
 
-    int removePlaybackListener(jobject listener);
+    jni_asplayer_result removePlaybackListener(jobject listener);
 
-    int startVideoDecoding();
+    jni_asplayer_result startVideoDecoding();
 
-    int stopVideoDecoding();
+    jni_asplayer_result stopVideoDecoding();
 
-    int pauseVideoDecoding();
+    jni_asplayer_result pauseVideoDecoding();
 
-    int resumeVideoDecoding();
+    jni_asplayer_result resumeVideoDecoding();
 
-    int startAudioDecoding();
+    jni_asplayer_result startAudioDecoding();
 
-    int pauseAudioDecoding();
+    jni_asplayer_result pauseAudioDecoding();
 
-    int resumeAudioDecoding();
+    jni_asplayer_result resumeAudioDecoding();
 
-    int stopAudioDecoding();
+    jni_asplayer_result stopAudioDecoding();
 
-    int setVideoParams(jni_asplayer_video_params *params);
+    jni_asplayer_result setVideoParams(jni_asplayer_video_params *params);
 
-    int setAudioParams(jni_asplayer_audio_params *params);
+    jni_asplayer_result setAudioParams(jni_asplayer_audio_params *params);
 
-    void flush();
+    jni_asplayer_result flush();
 
-    void flushDvr();
+    jni_asplayer_result flushDvr();
 
-    int writeData(jni_asplayer_input_buffer *buffer, uint64_t timeout_ms);
+    jni_asplayer_result writeData(jni_asplayer_input_buffer *buffer, uint64_t timeout_ms);
 
-    int setSurface(void *surface);
+    jni_asplayer_result setSurface(void *surface);
 
-    int setAudioMute(bool analogMute, bool digitMute);
+    jni_asplayer_result setAudioMute(bool analogMute, bool digitMute);
 
-    void setAudioVolume(int32_t volume);
+    jni_asplayer_result setAudioVolume(int32_t volume);
 
-    bool getAudioVolume(int *volume);
+    jni_asplayer_result getAudioVolume(int *volume);
 
-    int startFast(float scale);
+    jni_asplayer_result startFast(float scale);
 
-    int stopFast();
+    jni_asplayer_result stopFast();
+
 
     void setEventCallback(event_callback callback, void *eventUserData);
 

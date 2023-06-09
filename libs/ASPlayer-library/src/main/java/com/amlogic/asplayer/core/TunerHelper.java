@@ -1,6 +1,7 @@
 package com.amlogic.asplayer.core;
 
 import android.os.Build;
+import android.util.Log;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -37,18 +38,34 @@ public class TunerHelper {
         public static boolean isHigherOrEqualVersionTo(int version) {
             try {
                 Boolean result = (Boolean) sIsHigherOrEqualVersionTo.invoke(null, version);
-                return result != null? result: false;
+                return result != null ? result : false;
             } catch (Exception e) {
+                ASPlayerLog.w("isHigherOrEqualVersionTo failed, error: %s, %s",
+                        e.getMessage(), Log.getStackTraceString(e));
                 e.printStackTrace();
             }
             return false;
         }
 
+        public static Boolean isHigherOrEqualVersionToOrNull(int version) {
+            try {
+                Boolean result = (Boolean) sIsHigherOrEqualVersionTo.invoke(null, version);
+                ASPlayerLog.w("isHigherOrEqualVersionTo : %s", result);
+                return result != null ? result : Boolean.FALSE;
+            } catch (Exception e) {
+                ASPlayerLog.w("isHigherOrEqualVersionTo failed, error: %s, %s",
+                        e.getMessage(), Log.getStackTraceString(e));
+                return null;
+            }
+        }
+
         public static int getTunerVersion() {
             try {
                 Integer result = (Integer) sGetTunerVersion.invoke(null);
-                return result != null? result: TUNER_VERSION_UNKNOWN;
+                ASPlayerLog.i("getTunerVersion : %s", result != null ? String.valueOf(result) : "null");
+                return result != null ? result : TUNER_VERSION_UNKNOWN;
             } catch (Exception e) {
+                ASPlayerLog.i("getTunerVersion failed, error: %s, %s", e.getMessage(), Log.getStackTraceString(e));
                 e.printStackTrace();
             }
             return TUNER_VERSION_UNKNOWN;

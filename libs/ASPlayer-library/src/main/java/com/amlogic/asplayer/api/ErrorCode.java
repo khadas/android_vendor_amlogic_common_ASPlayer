@@ -6,16 +6,11 @@
  *
  * Description:
  */
-package com.amlogic.asplayer.jni.wrapper;
-
+package com.amlogic.asplayer.api;
 
 public class ErrorCode {
 
-    /**
-     * error code according to JNIASPlayer.h
-     */
-
-    public static final int OK = 0;
+    public static final int SUCCESS = 0;
 
     public static final int ERROR_INVALID_PARAMS = -1;
 

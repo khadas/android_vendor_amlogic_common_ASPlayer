@@ -21,12 +21,15 @@ class PositionHandler {
 
     private long mPositionUs;
 
-    PositionHandler() {
+    final int mId;
+
+    PositionHandler(int id) {
+        mId = id;
         mTimeFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
     synchronized void reset() {
-        ASPlayerLog.i("reset");
+        ASPlayerLog.i("PositionHandler-%d reset", mId);
         mOriginSet = false;
         mPositionUs = 0;
 
@@ -35,7 +38,7 @@ class PositionHandler {
     }
 
     synchronized void unsetOrigin() {
-        ASPlayerLog.i("unsetOrigin");
+        ASPlayerLog.i("PositionHandler-%d unsetOrigin", mId);
         mOriginSet = false;
     }
 
@@ -54,7 +57,7 @@ class PositionHandler {
     }
 
     synchronized void setPositionUs(long positionUs) {
-        if (DEBUG) ASPlayerLog.i("positionUs: %d", positionUs);
+        if (DEBUG) ASPlayerLog.i("PositionHandler-%d positionUs: %d", mId, positionUs);
         mPositionUs = positionUs;
     }
 
@@ -67,8 +70,8 @@ class PositionHandler {
     }
 
     private void logPosition() {
-        ASPlayerLog.i(String.format("current: %d, %s",
-                mPositionUs, formatTime(mPositionUs / 1000)));
+        ASPlayerLog.i(String.format("PositionHandler-%d current: %d, %s",
+                mId, mPositionUs, formatTime(mPositionUs / 1000)));
     }
 
     private String formatTime(long timeMs) {

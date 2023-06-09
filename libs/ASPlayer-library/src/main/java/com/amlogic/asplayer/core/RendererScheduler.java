@@ -22,7 +22,7 @@ class RendererScheduler implements Runnable {
 
     private static final boolean DEBUG = false;
 
-    private static final String TAG = Constant.LOG_TAG;
+    private static final String TAG = RendererScheduler.class.getSimpleName();
 
     private static final double SPEED_DIFF_THRESHOLD = 0.001;
 
@@ -51,7 +51,6 @@ class RendererScheduler implements Runnable {
 
     // renderer, by speed
     private Renderer mCurrentSpeedTask;
-    private final RendererStarter mStarterTask;
     private final Renderer mPlaybackTask;
     private final Renderer mSmoothSpeedTask;
     private final Renderer mNoVideoSpeedTask;
@@ -79,9 +78,7 @@ class RendererScheduler implements Runnable {
         mAudioOutputPath.setFrameListener(frameListener);
         mVideoOutputPath.setFrameListener(frameListener);
 
-        mPositionHandler = new PositionHandler();
-
-        mStarterTask = new RendererStarter(this);
+        mPositionHandler = new PositionHandler(mId);
 
         int playbackMode = mConfig.getPlaybackMode();
 
@@ -170,9 +167,7 @@ class RendererScheduler implements Runnable {
 
         Renderer selectedSpeedTask = mCurrentSpeedTask;
         if (isPauseSpeed) {
-            // don't change the renderer task, unless there is none
-            if (mCurrentSpeedTask == null || mCurrentSpeedTask == mStarterTask)
-                selectedSpeedTask = mPlaybackTask;
+            selectedSpeedTask = mPlaybackTask;
         } else if (isNormalPlaySpeed) {
             selectedSpeedTask = mPlaybackTask;
         } else if (mSpeed > 0 && mConfig.canSupportSmoothTrick(mSpeed)) {
@@ -186,7 +181,7 @@ class RendererScheduler implements Runnable {
         ASPlayerLog.i("RendererScheduler-%d setSpeedTask: %s", mId, speedTask);
         Renderer previousRenderer = mCurrentSpeedTask;
         mCurrentSpeedTask = speedTask;
-        if (previousRenderer != mCurrentSpeedTask) {
+        if (previousRenderer != null && previousRenderer != mCurrentSpeedTask) {
             previousRenderer.reset(Renderer.RESET_REASON_RENDERER_CHANGED);
         }
         if (mCurrentSpeedTask != null) {
@@ -201,7 +196,7 @@ class RendererScheduler implements Runnable {
             long delayUs = 10000;
             if (mCurrentSpeedTask != null)
                 delayUs = mCurrentSpeedTask.doSomeWork();
-            if (mCurrentSpeedTask == mStarterTask)
+            if (mCurrentSpeedTask == null)
                 selectRendererTask();
             long t1 = SystemClock.elapsedRealtime();
             long marginUs = (40 - (t1 - to)) * 1000;
@@ -228,12 +223,7 @@ class RendererScheduler implements Runnable {
 
     void prepareStart() {
         mSpeed = 1.0;
-        // shortcut for default speed
-        if (mSpeed == 1)
-            mCurrentSpeedTask = mPlaybackTask;
-        // else mStarterTask will get the list of tracks to be able to select the right renderer
-        else
-            mCurrentSpeedTask = mStarterTask;
+        mCurrentSpeedTask = mPlaybackTask;
 
         mCurrentSpeedTask.setSpeed(null, mSpeed);
     }

@@ -268,7 +268,7 @@ public class DvrPlayer extends TvPlayer {
         int write = mASPlayer.writeData(mInputBuffer, 0);
         if (write < 0) {
             Log.i(TAG, "write ts error, ret: " + write);
-            if (write == ASPlayer.INFO_UNKNOWN_ERROR) {
+            if (write == ASPlayer.INFO_INVALID_OPERATION) {
                 // write error
                 delayMs = 1000;
             } else if (write == ASPlayer.INFO_ERROR_RETRY) {

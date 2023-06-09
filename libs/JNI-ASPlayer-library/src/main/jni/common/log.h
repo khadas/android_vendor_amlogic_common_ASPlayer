@@ -285,7 +285,9 @@ extern "C" {
 #define LOG_FUNCTION_ENTER() ALOGD("[%s/%d] start", __FUNCTION__, __LINE__)
 #define LOG_FUNCTION_END() ALOGD("[%s/%d] ok", __FUNCTION__, __LINE__)
 #define LOG_FUNCTION_INT_END(ret) ALOGD("[%s/%d] ok, " #ret ": %d", __FUNCTION__, __LINE__, ret)
+#define LOG_FUNCTION_INT_FAILED(error) ALOGE("[%s/%d] failed, err: %d", __FUNCTION__, __LINE__, error)
 
+#define LOG_GET_JNIENV_FAILED() ALOGE("[%s/%d] failed to get jni env", __FUNCTION__, __LINE__)
 
 #ifdef __cplusplus
 }

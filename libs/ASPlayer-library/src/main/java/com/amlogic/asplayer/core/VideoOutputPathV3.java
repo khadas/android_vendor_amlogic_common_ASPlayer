@@ -4,6 +4,7 @@ package com.amlogic.asplayer.core;
 import android.media.MediaCodec;
 import android.media.MediaFormat;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.Surface;
 
 
@@ -187,6 +188,11 @@ class VideoOutputPathV3 extends VideoOutputPath {
         mMimeType = format.getString(MediaFormat.KEY_MIME);
         mSecurePlayback = format.containsFeature(FEATURE_SecurePlayback) &&
                 format.getFeatureEnabled(FEATURE_SecurePlayback);
+
+        if (TextUtils.isEmpty(mMimeType)) {
+            if (DEBUG) ASPlayerLog.i("VideoOutputPathV3-%d configure failed, mimeType is null", mId);
+            return false;
+        }
 
         mNbDecodedFrames = 0;
         mFirstFrameDisplayed = false;

@@ -32,30 +32,4 @@ public class AVSyncMode {
      * Free run
      */
     public static final int NOSYNC = 3;
-
-//    /**
-//     * Video Master
-//     */
-//    VMASTER(0),
-//
-//    /**
-//     * Audio Master
-//     */
-//    AMASTER(1),
-//
-//    /**
-//     * PCR Master
-//     */
-//    PCRMASTER(2),
-//
-//    /**
-//     * Free run
-//     */
-//    NOSYNC(3);
-//
-//    private int value;
-//
-//    AVSyncMode(int value) {
-//        this.value = value;
-//    }
 }

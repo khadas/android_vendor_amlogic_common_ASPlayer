@@ -102,12 +102,12 @@ public interface IASPlayer {
     /**
      * Flush data of ASPlayer instance.
      */
-    public void flush();
+    public int flush();
 
     /**
      * Flush DvrPlayback of ASPlayer instance.
      */
-    public void flushDvr();
+    public int flushDvr();
 
     /**
      * Set work mode to ASPlayer instance.
@@ -229,7 +229,7 @@ public interface IASPlayer {
      *
      * @param volume Volume value
      */
-    public void setAudioVolume(int volume);
+    public int setAudioVolume(int volume);
 
     /**
      * Get audio volume value from ASPlayer instance.

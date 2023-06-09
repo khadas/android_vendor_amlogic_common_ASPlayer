@@ -83,9 +83,9 @@ jni_asplayer_result  JniASPlayer_prepare(jni_asplayer_handle handle) {
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
-    int ret = player->prepare();
+    jni_asplayer_result ret = player->prepare();
     LOG_FUNCTION_INT_END(ret);
-    return static_cast<jni_asplayer_result>(ret);
+    return ret;
 }
 
 /**
@@ -100,9 +100,9 @@ jni_asplayer_result  JniASPlayer_startVideoDecoding(jni_asplayer_handle handle) 
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
-    int ret = player->startVideoDecoding();
+    jni_asplayer_result ret = player->startVideoDecoding();
     LOG_FUNCTION_INT_END(ret);
-    return static_cast<jni_asplayer_result>(ret);
+    return ret;
 }
 
 /**
@@ -117,9 +117,9 @@ jni_asplayer_result  JniASPlayer_stopVideoDecoding(jni_asplayer_handle handle) {
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
-    int ret = player->stopVideoDecoding();
+    jni_asplayer_result ret = player->stopVideoDecoding();
     LOG_FUNCTION_INT_END(ret);
-    return static_cast<jni_asplayer_result>(ret);
+    return ret;
 }
 
 /**
@@ -134,9 +134,9 @@ jni_asplayer_result  JniASPlayer_pauseVideoDecoding(jni_asplayer_handle handle) 
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
-    int ret = player->pauseVideoDecoding();
+    jni_asplayer_result ret = player->pauseVideoDecoding();
     LOG_FUNCTION_INT_END(ret);
-    return static_cast<jni_asplayer_result>(ret);
+    return ret;
 }
 
 /**
@@ -151,9 +151,9 @@ jni_asplayer_result  JniASPlayer_resumeVideoDecoding(jni_asplayer_handle handle)
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
-    int ret = player->resumeVideoDecoding();
+    jni_asplayer_result ret = player->resumeVideoDecoding();
     LOG_FUNCTION_INT_END(ret);
-    return static_cast<jni_asplayer_result>(ret);
+    return ret;
 }
 
 /**
@@ -168,9 +168,9 @@ jni_asplayer_result  JniASPlayer_startAudioDecoding(jni_asplayer_handle handle) 
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
-    int ret = player->startAudioDecoding();
+    jni_asplayer_result ret = player->startAudioDecoding();
     LOG_FUNCTION_INT_END(ret);
-    return static_cast<jni_asplayer_result>(ret);
+    return ret;
 }
 
 /**
@@ -185,9 +185,9 @@ jni_asplayer_result  JniASPlayer_pauseAudioDecoding(jni_asplayer_handle handle) 
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
-    int ret = player->pauseAudioDecoding();
+    jni_asplayer_result ret = player->pauseAudioDecoding();
     LOG_FUNCTION_INT_END(ret);
-    return static_cast<jni_asplayer_result>(ret);
+    return ret;
 }
 
 /**
@@ -202,9 +202,9 @@ jni_asplayer_result  JniASPlayer_resumeAudioDecoding(jni_asplayer_handle handle)
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
-    int ret = player->resumeAudioDecoding();
+    jni_asplayer_result ret = player->resumeAudioDecoding();
     LOG_FUNCTION_INT_END(ret);
-    return static_cast<jni_asplayer_result>(ret);
+    return ret;
 }
 
 /**
@@ -219,9 +219,9 @@ jni_asplayer_result  JniASPlayer_stopAudioDecoding(jni_asplayer_handle handle) {
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
-    int ret = player->stopAudioDecoding();
+    jni_asplayer_result ret = player->stopAudioDecoding();
     LOG_FUNCTION_INT_END(ret);
-    return static_cast<jni_asplayer_result>(ret);
+    return ret;
 }
 
 /**
@@ -238,9 +238,9 @@ jni_asplayer_result  JniASPlayer_setVideoParams(jni_asplayer_handle handle, jni_
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
-    int ret = player->setVideoParams(pParams);
+    jni_asplayer_result ret = player->setVideoParams(pParams);
     LOG_FUNCTION_INT_END(ret);
-    return static_cast<jni_asplayer_result>(ret);
+    return ret;
 }
 
 /**
@@ -257,9 +257,9 @@ jni_asplayer_result  JniASPlayer_setAudioParams(jni_asplayer_handle handle, jni_
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
-    int ret = player->setAudioParams(pParams);
+    jni_asplayer_result ret = player->setAudioParams(pParams);
     LOG_FUNCTION_INT_END(ret);
-    return static_cast<jni_asplayer_result>(ret);
+    return ret;
 }
 
 /**
@@ -274,9 +274,9 @@ jni_asplayer_result  JniASPlayer_flush(jni_asplayer_handle handle) {
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
-    player->flush();
-    LOG_FUNCTION_END();
-    return JNI_ASPLAYER_OK;
+    jni_asplayer_result ret = player->flush();
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
 }
 
 /**
@@ -291,9 +291,9 @@ jni_asplayer_result  JniASPlayer_flushDvr(jni_asplayer_handle handle) {
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
-    player->flushDvr();
-    LOG_FUNCTION_END();
-    return JNI_ASPLAYER_OK;
+    jni_asplayer_result ret = player->flushDvr();
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
 }
 
 /**
@@ -311,9 +311,9 @@ jni_asplayer_result  JniASPlayer_writeData(jni_asplayer_handle handle, jni_aspla
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
-    int ret = player->writeData(buf, timeout_ms);
+    jni_asplayer_result ret = player->writeData(buf, timeout_ms);
     LOG_FUNCTION_INT_END(ret);
-    return static_cast<jni_asplayer_result>(ret);
+    return ret;
 }
 
 /**
@@ -329,9 +329,9 @@ jni_asplayer_result  JniASPlayer_setSurface(jni_asplayer_handle handle, void* pS
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
-    int ret = player->setSurface(pSurface);
+    jni_asplayer_result ret = player->setSurface(pSurface);
     LOG_FUNCTION_INT_END(ret);
-    return static_cast<jni_asplayer_result>(ret);
+    return ret;
 }
 
 /**
@@ -350,9 +350,9 @@ jni_asplayer_result  JniASPlayer_setAudioMute(jni_asplayer_handle handle, bool_t
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     bool aMute = analog_mute ? true : false;
     bool dMute = digital_mute ? true : false;
-    int ret = player->setAudioMute(aMute, dMute);
+    jni_asplayer_result ret = player->setAudioMute(aMute, dMute);
     LOG_FUNCTION_INT_END(ret);
-    return static_cast<jni_asplayer_result>(ret);
+    return ret;
 }
 
 /**
@@ -368,9 +368,9 @@ jni_asplayer_result  JniASPlayer_setAudioVolume(jni_asplayer_handle handle, int3
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
-    player->setAudioVolume(volume);
-    LOG_FUNCTION_END();
-    return JNI_ASPLAYER_OK;
+    jni_asplayer_result ret = player->setAudioVolume(volume);
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
 }
 
 /**
@@ -380,13 +380,15 @@ jni_asplayer_result  JniASPlayer_setAudioVolume(jni_asplayer_handle handle, int3
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_getAudioVolume(jni_asplayer_handle handle, int32_t *volume) {
+    LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
-    player->getAudioVolume(volume);
-    return JNI_ASPLAYER_OK;
+    jni_asplayer_result ret = player->getAudioVolume(volume);
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
 }
 
 /**
@@ -402,9 +404,9 @@ jni_asplayer_result  JniASPlayer_startFast(jni_asplayer_handle handle, float sca
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
-    int ret = player->startFast(scale);
+    jni_asplayer_result ret = player->startFast(scale);
     LOG_FUNCTION_INT_END(ret);
-    return static_cast<jni_asplayer_result>(ret);
+    return ret;
 }
 
 /**
@@ -419,8 +421,9 @@ jni_asplayer_result  JniASPlayer_stopFast(jni_asplayer_handle handle) {
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
-    int ret = player->stopFast();
+    jni_asplayer_result ret = player->stopFast();
     LOG_FUNCTION_INT_END(ret);
+    return ret;
     return static_cast<jni_asplayer_result>(ret);
 }
 

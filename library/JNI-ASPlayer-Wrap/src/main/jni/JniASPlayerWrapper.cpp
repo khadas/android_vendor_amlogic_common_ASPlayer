@@ -11,7 +11,7 @@
 #include "JniASPlayerWrapper.h"
 #include "common/utils/Log.h"
 
-#define LOG_PLAYER_OP_FAILED(ret) ALOGE("%s[%d] %s failed, ret: %d", __func__, __LINE__, __func__, ret)
+#define LOG_PLAYER_OP_FAILED(ret) ALOGE("[%s/%d] %s failed, ret: %d", __func__, __LINE__, __func__, ret)
 
 static void asplayer_callback(void *user_data, jni_asplayer_event *event) {
     ALOGI("%s[%d] event type: %d", __FUNCTION__, __LINE__, event ? event->type : -1);

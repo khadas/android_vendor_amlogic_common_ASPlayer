@@ -396,8 +396,6 @@ bool ASPlayerJni::convertInputBuffer(
         return false;
     }
 
-//    LOG_FUNCTION_ENTER();
-
     jint inputBufferType = env->GetIntField(jInputBuffer, gInputBufferCtx.inputBufferType);
     jint offset = env->GetIntField(jInputBuffer, gInputBufferCtx.offset);
     jint bufferSize = env->GetIntField(jInputBuffer, gInputBufferCtx.bufferSize);
@@ -412,11 +410,10 @@ bool ASPlayerJni::convertInputBuffer(
         jsize bufferLength = env->GetArrayLength(buffer);
         bufferData = new jbyte[bufferLength];
         env->GetByteArrayRegion(buffer, 0, bufferLength, bufferData);
-        ALOGD("%s[%d] alloc buffer %d success, offset: %d, bufferSize: %d", __func__, __LINE__, bufferLength, offset, bufferSize);
+//        ALOGD("[%s/%d] alloc buffer %d success, offset: %d, bufferSize: %d", __func__, __LINE__, bufferLength, offset, bufferSize);
     }
     outInputBuffer->buf_data = bufferData;
 
-//    LOG_FUNCTION_END();
     return true;
 }
 

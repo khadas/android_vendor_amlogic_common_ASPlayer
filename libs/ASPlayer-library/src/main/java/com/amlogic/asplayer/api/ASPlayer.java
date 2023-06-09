@@ -21,25 +21,27 @@ import com.amlogic.asplayer.core.ASPlayerConfig;
 import com.amlogic.asplayer.core.ASPlayerImpl;
 import com.amlogic.asplayer.core.ASPlayerLog;
 
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ASPlayer implements IASPlayer {
 
     private static final boolean DEBUG = true;
     private static final String TAG = "ASPlayer";
 
-    public static final int INFO_ERROR_RETRY = -1;
-    public static final int INFO_BUSY = -2;
-    public static final int INFO_UNKNOWN_ERROR = -3;
+    public static final int INFO_ERROR_RETRY = ErrorCode.ERROR_RETRY;
+    public static final int INFO_BUSY = ErrorCode.ERROR_BUSY;
+    public static final int INFO_INVALID_PARAMS = ErrorCode.ERROR_INVALID_PARAMS;
+    public static final int INFO_INVALID_OPERATION = ErrorCode.ERROR_INVALID_OPERATION;
 
     // Mainly for debug
-    private int mId;
-    private static int sId = 0;
+    private final int mId;
+    private static AtomicInteger sId = new AtomicInteger(0);
 
     private ASPlayerConfig mConfig;
     private ASPlayerImpl mPlayer;
 
     public ASPlayer(InitParams initParams, Tuner tuner, Looper looper) {
-        mId = sId++;
+        mId = sId.getAndIncrement();
 
         ASPlayerConfig config = new ASPlayerConfig.Builder()
                 .setPlaybackMode(initParams.getPlaybackMode())
@@ -62,7 +64,7 @@ public class ASPlayer implements IASPlayer {
             StringBuilder sb = new StringBuilder();
             sb.append("------------------------------------\n");
             sb.append(String.format("branch name:          %s\n", BuildConfiguration.BRANCH_NAME));
-            sb.append(String.format("%s\n", BuildConfiguration.COMMIT_CHANGE_ID));
+            sb.append(String.format("%s\n",                       BuildConfiguration.COMMIT_CHANGE_ID));
             sb.append(String.format("ID:                   %s\n", BuildConfiguration.COMMIT_PD));
             sb.append(String.format("last changed:         %s\n", BuildConfiguration.LAST_CHANGED));
             sb.append(String.format("build-time:           %s\n", BuildConfiguration.BUILD_TIME));
@@ -167,6 +169,12 @@ public class ASPlayer implements IASPlayer {
      *
      * @param inputBuffer
      * @param timeoutMillSecond
+     *
+     * @return the actual buffer size written successfully or an error code,
+     *  {@link #INFO_ERROR_RETRY},
+     *  {@link #INFO_BUSY},
+     *  {@link #INFO_INVALID_PARAM},
+     *  {@link #INFO_INVALID_OPERATION}
      */
     @Override
     public int writeData(InputBuffer inputBuffer, long timeoutMillSecond) {
@@ -174,22 +182,20 @@ public class ASPlayer implements IASPlayer {
         return mPlayer.writeData(inputBuffer, timeoutMillSecond);
     }
 
-    public long writeData(int inputBufferType, byte[] buffer, long offset, long size, long timeoutMillSecond) {
-        return mPlayer.writeData(buffer, offset, size);
+    public int writeData(int inputBufferType, byte[] buffer, int offset, int size, long timeoutMillSecond) {
+        return mPlayer.writeData(inputBufferType, buffer, offset, size, timeoutMillSecond);
     }
 
     @Override
-    public void flush() {
+    public int flush() {
         ASPlayerLog.i("%s-%d flush start", TAG, mId);
-        if (mPlayer != null) {
-            mPlayer.flush();
-        }
+        return mPlayer.flush();
     }
 
     @Override
-    public void flushDvr() {
+    public int flushDvr() {
         ASPlayerLog.i("%s-%d flushDvr start", TAG, mId);
-        mPlayer.flushDvr();
+        return mPlayer.flushDvr();
     }
 
     /**
@@ -273,7 +279,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int startFast(float scale) {
-        if (DEBUG) ASPlayerLog.d("%s-%d startFast start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s-%d startFast start, scale: %.3f", TAG, mId, scale);
         return mPlayer.startFast(scale);
     }
 
@@ -383,9 +389,9 @@ public class ASPlayer implements IASPlayer {
      * @param volume Volume value
      */
     @Override
-    public void setAudioVolume(int volume) {
+    public int setAudioVolume(int volume) {
         if (DEBUG) ASPlayerLog.d("%s-%d setAudioVolume start, volume: %d", TAG, mId, volume);
-        mPlayer.setAudioVolume(volume);
+        return mPlayer.setAudioVolume(volume);
     }
 
     /**
@@ -428,8 +434,7 @@ public class ASPlayer implements IASPlayer {
     @Override
     public int setAudioMute(boolean analogMute, boolean digitalMute) {
         if (DEBUG) ASPlayerLog.d("%s-%d setAudioMute start", TAG, mId);
-        mPlayer.setAudioMute(analogMute, digitalMute);
-        return 0;
+        return mPlayer.setAudioMute(analogMute, digitalMute);
     }
 
     /**

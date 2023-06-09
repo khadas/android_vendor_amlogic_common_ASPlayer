@@ -8,7 +8,6 @@
  */
 package com.amlogic.asplayer.api;
 
-// TODO json
 public class State {
 
     public byte[] data;

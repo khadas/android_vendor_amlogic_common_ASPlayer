@@ -11,7 +11,6 @@ package com.amlogic.asplayer.api;
 /**
  * Video qos information
  */
-// VideoInfo里
 public class VideoQos {
 
     public int num;
