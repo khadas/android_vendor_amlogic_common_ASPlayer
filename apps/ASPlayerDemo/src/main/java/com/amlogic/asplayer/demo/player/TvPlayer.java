@@ -300,8 +300,8 @@ public class TvPlayer {
 
         AvSettings.Builder builder = AvSettings.builder(Filter.TYPE_TS, false)
                 .setPassthrough(true);
-        if (Build.VERSION.SDK_INT >= 33 && mTunerHalVersion == Constant.TUNER_HAL_VERSION_1_1) {
-            // Android T
+        if (Build.VERSION.SDK_INT >= 32 && mTunerHalVersion == Constant.TUNER_HAL_VERSION_1_1) {
+            // Android S
             TunerHelper.setVideoStreamType(builder, videoStreamType);
         }
         Settings settings = builder.build();
@@ -333,8 +333,8 @@ public class TvPlayer {
 
         AvSettings.Builder builder = AvSettings.builder(Filter.TYPE_TS, true)
                 .setPassthrough(true);
-        if (Build.VERSION.SDK_INT >= 33 && mTunerHalVersion == Constant.TUNER_HAL_VERSION_1_1) {
-            // Android T
+        if (Build.VERSION.SDK_INT >= 32 && mTunerHalVersion == Constant.TUNER_HAL_VERSION_1_1) {
+            // Android S
             TunerHelper.setAudioStreamType(builder, audioStreamType);
         }
         Settings settings = builder.build();

@@ -25,6 +25,7 @@ import androidx.annotation.Nullable;
 import com.amlogic.asplayer.demo.Constant;
 import com.amlogic.asplayer.demo.R;
 import com.amlogic.asplayer.demo.utils.TunerHelper;
+import com.amlogic.asplayer.demo.utils.TvLog;
 import com.amlogic.asplayer.demo.utils.ViewUtils;
 
 public class ProgramInputSettingView extends LinearLayout {
@@ -167,15 +168,21 @@ public class ProgramInputSettingView extends LinearLayout {
                 break;
         }
 
-//        if (TunerHelper.TunerVersionChecker.isHigherOrEqualVersionTo(
-//                TunerHelper.TunerVersionChecker.TUNER_VERSION_1_1)
-//        ) {
-//           mRdoTunerVersion_1_0.setEnabled(false);
-//           mRdoTunerVersion_1_1.setEnabled(true);
-//        } else {
-//            mRdoTunerVersion_1_0.setEnabled(true);
-//            mRdoTunerVersion_1_1.setEnabled(false);
-//        }
+        // check tuner version
+        int tunerVersion = TunerHelper.TunerVersionChecker.getTunerVersion();
+        Boolean isTunerHal1_1 = TunerHelper.TunerVersionChecker.isHigherOrEqualVersionToOrNull(
+                TunerHelper.TunerVersionChecker.TUNER_VERSION_1_1);
+        if (tunerVersion > 0 && isTunerHal1_1 != null) {
+            if (isTunerHal1_1) {
+                mRdoTunerVersion_1_0.setEnabled(false);
+                mRdoTunerVersion_1_1.setEnabled(true);
+            } else {
+                mRdoTunerVersion_1_0.setEnabled(true);
+                mRdoTunerVersion_1_1.setEnabled(false);
+            }
+        } else {
+            TvLog.i("getTunerVersion failed, enable tuner1.0 and tuner1.1 setting");
+        }
     }
 
     private void initDefaultValues() {

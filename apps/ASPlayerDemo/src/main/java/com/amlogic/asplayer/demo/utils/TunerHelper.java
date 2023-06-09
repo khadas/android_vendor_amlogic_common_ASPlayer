@@ -161,18 +161,32 @@ public class TunerHelper {
         public static boolean isHigherOrEqualVersionTo(int version) {
             try {
                 Boolean result = (Boolean) sIsHigherOrEqualVersionTo.invoke(null, version);
-                return result != null? result: false;
+                return result != null ? result : false;
             } catch (Exception e) {
+                TvLog.w("isHigherOrEqualVersionTo failed, error: %s, %s", e.getMessage(), Log.getStackTraceString(e));
                 e.printStackTrace();
             }
             return false;
         }
 
+        public static Boolean isHigherOrEqualVersionToOrNull(int version) {
+            try {
+                Boolean result = (Boolean) sIsHigherOrEqualVersionTo.invoke(null, version);
+                TvLog.w("isHigherOrEqualVersionToOrNull : %s", result);
+                return result != null ? result : Boolean.FALSE;
+            } catch (Exception e) {
+                TvLog.w("isHigherOrEqualVersionToOrNull failed, error: %s, %s", e.getMessage(), Log.getStackTraceString(e));
+                return null;
+            }
+        }
+
         public static int getTunerVersion() {
             try {
                 Integer result = (Integer) sGetTunerVersion.invoke(null);
-                return result != null? result: TUNER_VERSION_UNKNOWN;
+                TvLog.i("getTunerVersion : %s", result != null ? String.valueOf(result) : "null");
+                return result != null ? result : TUNER_VERSION_UNKNOWN;
             } catch (Exception e) {
+                TvLog.i("getTunerVersion failed, error: %s, %s", e.getMessage(), Log.getStackTraceString(e));
                 e.printStackTrace();
             }
             return TUNER_VERSION_UNKNOWN;
