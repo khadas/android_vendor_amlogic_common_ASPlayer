@@ -115,6 +115,7 @@ public:
 
     jni_asplayer_result stopFast();
 
+    jni_asplayer_result setTrickMode(jni_asplayer_video_trick_mode trickMode);
 
     void setEventCallback(event_callback callback, void *eventUserData);
 

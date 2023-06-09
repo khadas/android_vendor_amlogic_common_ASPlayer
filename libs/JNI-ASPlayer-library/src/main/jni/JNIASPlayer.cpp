@@ -424,7 +424,24 @@ jni_asplayer_result  JniASPlayer_stopFast(jni_asplayer_handle handle) {
     jni_asplayer_result ret = player->stopFast();
     LOG_FUNCTION_INT_END(ret);
     return ret;
-    return static_cast<jni_asplayer_result>(ret);
+}
+
+/**
+ *@brief:        Set trick mode for specified JniASPlayer instance.
+ *@param:        Handle        JniASPlayer handle.
+ *@param:        trickmode     The enum of trick mode type
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_setTrickMode(jni_asplayer_handle handle, jni_asplayer_video_trick_mode trickmode) {
+    LOG_FUNCTION_ENTER();
+    if (handle == 0) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
+    jni_asplayer_result ret = player->setTrickMode(trickmode);
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
 }
 
 /**

@@ -177,8 +177,8 @@ typedef enum {
 /*Video decoder trick mode*/
 typedef enum {
     JNI_ASPLAYER_AV_VIDEO_TRICK_MODE_NONE = 0,          // Disable trick mode
-    JNI_ASPLAYER_AV_VIDEO_TRICK_MODE_PAUSE = 1,         // Pause the video decoder
-    JNI_ASPLAYER_AV_VIDEO_TRICK_MODE_PAUSE_NEXT = 2,    // Pause the video decoder when a new frame displayed
+    JNI_ASPLAYER_AV_VIDEO_TRICK_MODE_SMOOTH = 1,        // Smooth trick mode
+    JNI_ASPLAYER_AV_VIDEO_TRICK_MODE_BY_SEEK = 2,       // Trick mode by seek
     JNI_ASPLAYER_AV_VIDEO_TRICK_MODE_IONLY = 3          // Decode and out I frame only
 } jni_asplayer_video_trick_mode;
 

@@ -302,7 +302,14 @@ public class ASPlayer implements IASPlayer {
     @Override
     public int setTrickMode(int trickMode) {
         if (DEBUG) ASPlayerLog.d("%s-%d setTrickMode start", TAG, mId);
-        throw new RuntimeException("Not Implementation");
+        if (trickMode != VideoTrickMode.NONE
+            && trickMode != VideoTrickMode.TRICK_MODE_SMOOTH
+            && trickMode != VideoTrickMode.TRICK_MODE_BY_SEEK
+            && trickMode != VideoTrickMode.TRICK_MODE_IONLY) {
+            ASPlayerLog.e("%s-%d setTrickMode failed, invalid trickMode: %d", TAG, mId, trickMode);
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        }
+        return mPlayer.setTrickMode(trickMode);
     }
 
     /**

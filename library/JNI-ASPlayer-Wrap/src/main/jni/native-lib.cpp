@@ -789,6 +789,35 @@ native_stop_fast(JNIEnv *env, jobject thiz) {
     return result;
 }
 
+static jint
+asplayer_set_trick_mode(JNIEnv *env, jobject thiz, jint jTrickMode) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
+    if (player == nullptr) {
+        LOG_GET_PLAYER_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jni_asplayer_video_trick_mode trickMode = static_cast<jni_asplayer_video_trick_mode>(jTrickMode);
+    jni_asplayer_result ret = player->setTrickMode(trickMode);
+
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+static jint
+native_set_trick_mode(JNIEnv *env, jobject thiz, jint jTrickMode) {
+    LOG_FUNCTION_ENTER();
+    jint result = asplayer_set_trick_mode(env, thiz, jTrickMode);
+    LOG_FUNCTION_INT_END(result);
+    return result;
+}
+
 static void
 asplayer_release(JNIEnv* env, jobject thiz) {
     LOG_FUNCTION_ENTER();
@@ -850,6 +879,7 @@ static JNINativeMethod methods[] = {
         {"native_getAudioVolume", "()I", (void*)native_get_audio_volume },
         {"native_startFast", "(F)I", (void*)native_start_fast },
         {"native_stopFast", "()I", (void*)native_stop_fast },
+        {"native_setTrickMode", "(I)I", (void*)native_set_trick_mode },
         {"native_release", "()V", (void*)native_release },
 };
 

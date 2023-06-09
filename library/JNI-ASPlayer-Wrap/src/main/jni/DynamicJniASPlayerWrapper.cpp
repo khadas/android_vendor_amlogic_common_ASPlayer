@@ -837,6 +837,29 @@ jni_asplayer_result DynamicJniASPlayerWrapper::stopFast() {
     return ret;
 }
 
+jni_asplayer_result DynamicJniASPlayerWrapper::setTrickMode(jni_asplayer_video_trick_mode trickMode) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_setTrickMode == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_setTrickMode(handle, trickMode);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
 jni_asplayer_result DynamicJniASPlayerWrapper::release() {
     LOG_FUNCTION_ENTER();
     jni_asplayer_handle handle = mHandle;

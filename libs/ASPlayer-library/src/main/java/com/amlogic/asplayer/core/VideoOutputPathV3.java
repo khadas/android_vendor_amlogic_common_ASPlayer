@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Surface;
 
+import com.amlogic.asplayer.api.VideoTrickMode;
 
 import java.nio.ByteBuffer;
 
@@ -40,11 +41,9 @@ class VideoOutputPathV3 extends VideoOutputPath {
 
     public static final String PARAM_TRICK_MODE = "vendor.tunerhal.passthrough.trick-mode";
     public static final String PARAM_TRICK_SPEED = "vendor.tunerhal.passthrough.trick-speed";
-    public static final String PARAM_FRAME_ADVANCE = "vendor.tunerhal.passthrough.frame-advance";
 
     public static final Bundle PARAMS_TRICK_NONE;
     public static final Bundle PARAMS_TRICK_BY_SEEK;
-    public static final Bundle PARAMS_REQUEST_FRAME;
 
     static {
         PARAMS_TRICK_NONE = new Bundle();
@@ -54,9 +53,6 @@ class VideoOutputPathV3 extends VideoOutputPath {
         PARAMS_TRICK_BY_SEEK = new Bundle();
         PARAMS_TRICK_BY_SEEK.putInt(PARAM_TRICK_MODE, TRICK_MODE_BY_SEEK);
         PARAMS_TRICK_BY_SEEK.putInt(PARAM_TRICK_SPEED, 0);
-
-        PARAMS_REQUEST_FRAME = new Bundle();
-        PARAMS_REQUEST_FRAME.putInt(PARAM_FRAME_ADVANCE, 1);
     }
 
     int mPlaybackMode;
@@ -287,6 +283,11 @@ class VideoOutputPathV3 extends VideoOutputPath {
     @Override
     long getDisplayPositionUs() {
         return mLastRenderedTimeUs;
+    }
+
+    @Override
+    void setTrickMode(int trickMode) {
+        super.setTrickMode(trickMode);
     }
 
     @Override

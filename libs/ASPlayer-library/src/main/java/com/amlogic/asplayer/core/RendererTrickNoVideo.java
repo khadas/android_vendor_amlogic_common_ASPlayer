@@ -1,16 +1,11 @@
 package com.amlogic.asplayer.core;
 
+import static com.amlogic.asplayer.core.VideoOutputPathV3.PARAMS_TRICK_BY_SEEK;
+
 import android.os.SystemClock;
 
 
 class RendererTrickNoVideo extends Renderer {
-
-    private static final int BOUNDS_MARGIN_US = 2000000;
-
-    private long mOriginPositionUs;
-    private long mOriginPositionWhenMs;
-
-    private long mRequestedPositionWhenMs;
 
     private final int mId;
 
@@ -21,13 +16,6 @@ class RendererTrickNoVideo extends Renderer {
 
     void setPositionUs(long positionUs) {
         super.setPositionUs(positionUs);
-
-        // set current origin
-        mOriginPositionUs = positionUs;
-        mOriginPositionWhenMs = SystemClock.elapsedRealtime();
-
-        // set next position
-        mRequestedPositionWhenMs = mOriginPositionWhenMs;
     }
 
     @Override
@@ -35,13 +23,6 @@ class RendererTrickNoVideo extends Renderer {
         ASPlayerLog.i("speed:%f", speed);
         super.setSpeed(previousRenderer, speed);
 
-        // set current origin
-        mOriginPositionUs = mPositionHandler.getPositionUs();
-        mOriginPositionWhenMs = SystemClock.elapsedRealtime();
-
-        // set next position
-        mRequestedPositionWhenMs = mOriginPositionWhenMs;
-        mRequestedPositionUs = mOriginPositionUs;
         mRequestedPositionSet = true;
 
         // stop audio
@@ -52,6 +33,9 @@ class RendererTrickNoVideo extends Renderer {
         // deactivate tunneling mode
         mVideoOutputPath.setTunneledPlayback(false);
         mAudioOutputPath.setTunneledPlayback(false);
+
+        mVideoOutputPath.setTrickModeSpeed(speed);
+        mVideoOutputPath.setParameters(PARAMS_TRICK_BY_SEEK);
     }
 
     @Override
@@ -65,24 +49,6 @@ class RendererTrickNoVideo extends Renderer {
     @Override
     long doSomeWork() {
         long delayUs = 10000;
-
-        // inject
-        handleFeeding();
-
-        // check if we must jump
-        if ((SystemClock.elapsedRealtime() - mRequestedPositionWhenMs) < 200) {
-            // update position
-            long positionUs = mOriginPositionUs +
-                    (long) ((SystemClock.elapsedRealtime() - mOriginPositionWhenMs) * 1000. * mSpeed) - 1000000;
-            mPositionHandler.setPositionUs(positionUs);
-        } else {
-            // compute next position
-            mRequestedPositionWhenMs = SystemClock.elapsedRealtime();
-            mRequestedPositionUs = mOriginPositionUs +
-                    (long) ((SystemClock.elapsedRealtime() - mOriginPositionWhenMs) * 1000. * mSpeed) -
-                    1000000;
-            mRequestedPositionSet = true;
-        }
 
         return delayUs;
     }

@@ -167,7 +167,7 @@ public class JniASPlayerWrapper implements IASPlayer {
 
     @Override
     public int setTrickMode(int trickMode) {
-        return 0;
+        return native_setTrickMode(trickMode);
     }
 
     @Override
@@ -349,5 +349,6 @@ public class JniASPlayerWrapper implements IASPlayer {
     private native int native_getAudioVolume();
     private native int native_startFast(float speed);
     private native int native_stopFast();
+    private native int native_setTrickMode(int trickMode);
     private native void native_release();
 }

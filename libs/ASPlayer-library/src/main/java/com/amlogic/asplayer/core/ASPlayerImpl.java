@@ -444,8 +444,19 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     @Override
     public int setTrickMode(int trickMode) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setTrickMode start", TAG, mId);
-        return 0;
+        if (mPlayerHandler != null) {
+            mPlayerHandler.post(() -> {
+                handleSetTrickMode(trickMode);
+            });
+            return ErrorCode.SUCCESS;
+        } else {
+            ASPlayerLog.w("%s-%d setTrickMode called, but playerHandler is null", TAG, mId);
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+    }
+
+    private void handleSetTrickMode(int trickMode) {
+        mRendererScheduler.setTrickMode(trickMode);
     }
 
     @Override

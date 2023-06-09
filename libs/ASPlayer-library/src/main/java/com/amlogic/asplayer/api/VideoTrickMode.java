@@ -19,17 +19,17 @@ public class VideoTrickMode {
     public static final int NONE = 0;
 
     /**
-     * Pause the video decoder
+     * Smooth trick mode
      */
-    public static final int PAUSE = 1;
+    public static final int TRICK_MODE_SMOOTH = 1;
 
     /**
-     * Pause the video decoder when a new frame displayed
+     * Trick mode by seek
      */
-    public static final int PAUSE_NEXT = 2;
+    public static final int TRICK_MODE_BY_SEEK = 2;
 
     /**
      * Decoding and Out I frame only
      */
-    public static final int IONLY = 3;
+    public static final int TRICK_MODE_IONLY = 3;
 }

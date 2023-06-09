@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.Surface;
 
 
+import com.amlogic.asplayer.api.VideoTrickMode;
 import com.amlogic.asplayer.api.WorkMode;
 
 import java.lang.reflect.InvocationTargetException;
@@ -141,6 +142,7 @@ class VideoOutputPath extends MediaOutputPath {
     protected long mNbDecodedFrames;
     private int mNbSuspiciousTimestamps;
 
+    protected int mTrickMode = VideoTrickMode.NONE;
     protected double mTrickModeSpeed;
 
     VideoOutputPath(int id) {
@@ -839,47 +841,16 @@ class VideoOutputPath extends MediaOutputPath {
                 mId, isBest ? "best" : "normal");
     }
 
-    private void applyAmlTrickModeWorkaround() {
-        if (mMediaCodec == null)
-            return;
+    void setTrickMode(int trickMode) {
+        mTrickMode = trickMode;
+    }
 
-        // On amlogic platform, if MAX_WIDTH and MAX_HEIGHT are set, a video deinterlacer is
-        // activated for a best video quality.
-        // The problem is that
-        // - 3 frames must be pushed to have the first frame visible on screen
-        // - rendering is slower, making x2 trick mode impossible
-        // The idea here is to use normal mediacodec when trick mode are activated
-        MediaFormat format = mMediaCodec.getInputFormat();
-        String mime = format.getString(MediaFormat.KEY_MIME);
-        if (!mime.equals(MediaFormat.MIMETYPE_VIDEO_AVC) &&
-                !mime.equals(MediaFormat.MIMETYPE_VIDEO_MPEG2))
-            return;
-        if (!format.containsKey(MediaFormat.KEY_MAX_WIDTH) ||
-                !format.containsKey(MediaFormat.KEY_MAX_HEIGHT))
-            return;
-
-        mMediaCodec.reset();
-
-        mInputBufferIndexes.clear();
-        mOutputBufferIndexes.clear();
-        Arrays.fill(mOutputBufferInfos, null);
-
-        MediaFormat newFormat = new MediaFormat();
-        newFormat.setString(MediaFormat.KEY_MIME, format.getString(MediaFormat.KEY_MIME));
-        newFormat.setInteger(MediaFormat.KEY_WIDTH, format.getInteger(MediaFormat.KEY_WIDTH));
-        newFormat.setInteger(MediaFormat.KEY_HEIGHT, format.getInteger(MediaFormat.KEY_HEIGHT));
-        mMediaCodec.setCallback(mMediaCodecCallback, getHandler());
-        mMediaCodec.configure(newFormat, mSurface, null, 0);
-        discardOutstandingCallbacksAndStart();
-
-        ASPlayerLog.i("VideoOutputPath-%d  workaround, best quality to normal for trick mode", mId);
+    int getTrickMode() {
+        return mTrickMode;
     }
 
     void setTrickModeSpeed(double speed) {
         mTrickModeSpeed = speed;
-        if (speed != 0 && speed != 1) {
-            applyAmlTrickModeWorkaround();
-        }
     }
 
     void setParameters(Bundle params) {

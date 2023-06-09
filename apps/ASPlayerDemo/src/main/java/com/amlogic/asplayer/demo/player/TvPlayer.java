@@ -39,6 +39,7 @@ import com.amlogic.asplayer.api.IASPlayer;
 import com.amlogic.asplayer.api.StreamType;
 import com.amlogic.asplayer.api.TsPlaybackListener;
 import com.amlogic.asplayer.api.VideoParams;
+import com.amlogic.asplayer.api.VideoTrickMode;
 import com.amlogic.asplayer.demo.Constant;
 import com.amlogic.asplayer.demo.utils.HandlerExecutor;
 import com.amlogic.asplayer.demo.utils.TunerHelper;
@@ -646,7 +647,11 @@ public class TvPlayer {
             mASPlayer.pauseAudioDecoding();
         } else if (isNormalPlaySpeed) {
             mASPlayer.stopFast();
+        } else if (speed > 0f && speed <= 2.0f) {
+            mASPlayer.setTrickMode(VideoTrickMode.TRICK_MODE_SMOOTH);
+            mASPlayer.startFast(speed);
         } else {
+            mASPlayer.setTrickMode(VideoTrickMode.TRICK_MODE_BY_SEEK);
             mASPlayer.startFast(speed);
         }
     }

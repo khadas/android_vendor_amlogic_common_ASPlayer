@@ -57,6 +57,7 @@ struct asplayer_t {
     jmethodID getAudioVolumeMID;
     jmethodID startFastMID;
     jmethodID stopFastMID;
+    jmethodID setTrickModeMID;
     jmethodID releaseMID;
     jmethodID addPlaybackListenerMID;
     jmethodID removePlaybackListenerMID;
@@ -423,6 +424,7 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
     gASPlayerCtx.getAudioVolumeMID = GetMethodIDOrDie(env, gASPlayerCls, "getAudioVolume", "()I");
     gASPlayerCtx.startFastMID = GetMethodIDOrDie(env, gASPlayerCls, "startFast", "(F)I");
     gASPlayerCtx.stopFastMID = GetMethodIDOrDie(env, gASPlayerCls, "stopFast", "()I");
+    gASPlayerCtx.setTrickModeMID = GetMethodIDOrDie(env, gASPlayerCls, "setTrickMode", "(I)I");
     gASPlayerCtx.addPlaybackListenerMID = GetMethodIDOrDie(env, gASPlayerCls, "addPlaybackListener", "(Lcom/amlogic/asplayer/api/TsPlaybackListener;)V");
     gASPlayerCtx.removePlaybackListenerMID = GetMethodIDOrDie(env, gASPlayerCls, "removePlaybackListener", "(Lcom/amlogic/asplayer/api/TsPlaybackListener;)V");
     gASPlayerCtx.releaseMID = GetMethodIDOrDie(env, gASPlayerCls, "release", "()V");
@@ -961,6 +963,17 @@ jni_asplayer_result JniASPlayer::stopFast() {
     }
 
     int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.stopFastMID);
+    return static_cast<jni_asplayer_result>(ret);
+}
+
+jni_asplayer_result JniASPlayer::setTrickMode(jni_asplayer_video_trick_mode trickMode) {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setTrickModeMID, (jint)(trickMode));
     return static_cast<jni_asplayer_result>(ret);
 }
 

@@ -16,7 +16,7 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.amlogic.asplayer.api.IASPlayer;
-import com.amlogic.asplayer.api.WorkMode;
+import com.amlogic.asplayer.api.VideoTrickMode;
 
 class RendererScheduler implements Runnable {
 
@@ -53,6 +53,7 @@ class RendererScheduler implements Runnable {
     private Renderer mCurrentSpeedTask;
     private final Renderer mPlaybackTask;
     private final Renderer mSmoothSpeedTask;
+    private final Renderer mSpeedBySeekTask;
     private final Renderer mNoVideoSpeedTask;
 
     private boolean mFirstVideoFrameDisplayed = false;
@@ -86,10 +87,12 @@ class RendererScheduler implements Runnable {
             ASPlayerLog.i("playback mode passthrough");
             mPlaybackTask = new RendererPlaybackV3(this);
             mSmoothSpeedTask = new RendererTrickSmoothV3(mId, this);
+            mSpeedBySeekTask = new RendererTrickBySeekV3(mId, this);
         } else {
             ASPlayerLog.i("playback mode normal mode");
             mPlaybackTask = new RendererPlayback(this);
             mSmoothSpeedTask = new RendererTrickSmooth(mId, this);
+            mSpeedBySeekTask = new RendererTrickBySeek(mId, this);
         }
 
         mNoVideoSpeedTask = new RendererTrickNoVideo(mId, this);
@@ -170,8 +173,24 @@ class RendererScheduler implements Runnable {
             selectedSpeedTask = mPlaybackTask;
         } else if (isNormalPlaySpeed) {
             selectedSpeedTask = mPlaybackTask;
-        } else if (mSpeed > 0 && mConfig.canSupportSmoothTrick(mSpeed)) {
-            selectedSpeedTask = mSmoothSpeedTask;
+        } else if (!mHasVideo) {
+            selectedSpeedTask = mNoVideoSpeedTask;
+        } else {
+            int trickMode = mVideoOutputPath.getTrickMode();
+            ASPlayerLog.i("RendererScheduler-%d trick mode: %d", mId, trickMode);
+            switch (trickMode) {
+                case VideoTrickMode.TRICK_MODE_SMOOTH:
+                    selectedSpeedTask = mSmoothSpeedTask;
+                    break;
+                case VideoTrickMode.TRICK_MODE_BY_SEEK:
+                case VideoTrickMode.TRICK_MODE_IONLY:
+                    selectedSpeedTask = mSpeedBySeekTask;
+                    break;
+                case VideoTrickMode.NONE:
+                default:
+                    selectedSpeedTask = mPlaybackTask;
+                    break;
+            }
         }
 
         setSpeedTask(selectedSpeedTask);
@@ -438,4 +457,7 @@ class RendererScheduler implements Runnable {
         mFirstAudioFrameDisplayed = false;
     }
 
+    void setTrickMode(int trickMode) {
+        mVideoOutputPath.setTrickMode(trickMode);
+    }
 }
