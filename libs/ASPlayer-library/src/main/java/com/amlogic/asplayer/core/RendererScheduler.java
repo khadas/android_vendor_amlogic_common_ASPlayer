@@ -168,7 +168,7 @@ class RendererScheduler implements Runnable {
         boolean isNormalPlaySpeed = Math.abs(mSpeed - 1) < SPEED_DIFF_THRESHOLD;
         boolean isPauseSpeed = Math.abs(mSpeed) < SPEED_DIFF_THRESHOLD;
 
-        Renderer selectedSpeedTask = mCurrentSpeedTask;
+        Renderer selectedSpeedTask;
         if (isPauseSpeed) {
             selectedSpeedTask = mPlaybackTask;
         } else if (isNormalPlaySpeed) {
@@ -291,10 +291,10 @@ class RendererScheduler implements Runnable {
         ASPlayerLog.i("RendererScheduler-%d stopVideoDecoding start", mId);
         mVideoStarted = false;
         mFirstVideoFrameDisplayed = false;
-        stopRendererSchedulerIfNeed();
         if (mCurrentSpeedTask != null) {
             mCurrentSpeedTask.stopVideo();
         }
+        stopRendererSchedulerIfNeed();
 
         ASPlayerLog.i("RendererScheduler-%d reset VideoOutputPath", mId);
         mVideoOutputPath.reset();
@@ -311,10 +311,10 @@ class RendererScheduler implements Runnable {
     void pauseVideoDecoding() {
         mVideoStarted = false;
         mFirstVideoFrameDisplayed = false;
-        stopRendererTaskIfNeed();
         if (mCurrentSpeedTask != null) {
             mCurrentSpeedTask.stopVideo();
         }
+        stopRendererTaskIfNeed();
 
         if (mConfig.getPlaybackMode() == ASPlayerConfig.PLAYBACK_MODE_PASSTHROUGH) {
             // we can not pause video only
@@ -352,10 +352,10 @@ class RendererScheduler implements Runnable {
         ASPlayerLog.i("RendererScheduler-%d stopAudioDecoding start", mId);
         mAudioStarted = false;
         mFirstAudioFrameDisplayed = false;
-        stopRendererSchedulerIfNeed();
         if (mCurrentSpeedTask != null) {
             mCurrentSpeedTask.stopAudio();
         }
+        stopRendererSchedulerIfNeed();
         mAudioOutputPath.reset();
         ASPlayerLog.i("RendererScheduler-%d stopAudioDecoding end", mId);
     }
@@ -363,10 +363,10 @@ class RendererScheduler implements Runnable {
     void pauseAudioDecoding() {
         mAudioStarted = false;
         mFirstAudioFrameDisplayed = false;
-        stopRendererTaskIfNeed();
         if (mCurrentSpeedTask != null) {
             mCurrentSpeedTask.stopAudio();
         }
+        stopRendererTaskIfNeed();
         mAudioOutputPath.pause();
     }
 
@@ -396,7 +396,6 @@ class RendererScheduler implements Runnable {
         }
 
         mPositionHandler.reset();
-        mCurrentSpeedTask = null;
         mSpeed = 1.0;
     }
 

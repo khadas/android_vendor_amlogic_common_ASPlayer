@@ -337,7 +337,6 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     @Override
     public int flush() {
-        ASPlayerLog.i("%s-%d flush start", TAG, mId);
         if (mPlayerHandler != null) {
             ConditionVariable lock = new ConditionVariable();
             mPlayerHandler.post(() -> {
@@ -358,14 +357,19 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     @Override
     public int flushDvr() {
-        ASPlayerLog.i("%s-%d flushDvr start", TAG, mId);
-        if (mTsPlayback != null) {
-            mTsPlayback.stop();
-            mTsPlayback.flush();
-            mTsPlayback.start();
+        if (mPlayerHandler != null && mTsPlayback != null) {
+            ConditionVariable lock = new ConditionVariable();
+            mPlayerHandler.post(() -> {
+                mTsPlayback.stop();
+                mTsPlayback.flush();
+                mTsPlayback.start();
+                lock.open();
+            });
+            lock.block();
             return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.e("%s-%d flushDvr failed, mTsPlayback is null", TAG, mId);
+            ASPlayerLog.e("%s-%d flushDvr failed, playerHandler: %s, tsPlayback: %s",
+                    TAG, mId, mPlayerHandler, mTsPlayback);
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
@@ -503,6 +507,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             });
         } else {
             ASPlayerLog.e("%s-%d failed to set video params, playerHandler is null", TAG, mId);
+            throw new IllegalStateException("ASPlayer not prepared");
         }
     }
 
