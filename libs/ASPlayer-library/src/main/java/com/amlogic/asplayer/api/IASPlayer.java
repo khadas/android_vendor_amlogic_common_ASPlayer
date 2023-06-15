@@ -195,9 +195,11 @@ public interface IASPlayer {
     /**
      * Set if need keep last frame for video display for ASPlayer instance.
      *
-     * @param blackout If blackout for last frame.
+     * @param transitionModeBefore transition mode before.
+     *
+     * @see com.amlogic.asplayer.api.TransitionSettings.TransitionModeBefore
      */
-    public void setVideoBlackOut(boolean blackout);
+    public int setTransitionModeBefore(int transitionModeBefore);
 
     /**
      * Get video basic info of ASPlayer instance.

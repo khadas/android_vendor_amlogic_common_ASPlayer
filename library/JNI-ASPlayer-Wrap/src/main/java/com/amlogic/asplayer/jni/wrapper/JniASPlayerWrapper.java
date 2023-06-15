@@ -188,8 +188,8 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
-    public void setVideoBlackOut(boolean blackout) {
-
+    public int setTransitionModeBefore(int transitionModeBefore) {
+        return native_setTransitionModeBefore(transitionModeBefore);
     }
 
     @Override
@@ -350,5 +350,6 @@ public class JniASPlayerWrapper implements IASPlayer {
     private native int native_startFast(float speed);
     private native int native_stopFast();
     private native int native_setTrickMode(int trickMode);
+    private native int native_setTransitionModeBefore(int mode);
     private native void native_release();
 }

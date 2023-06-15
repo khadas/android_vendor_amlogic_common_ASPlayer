@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.Surface;
 
 
+import com.amlogic.asplayer.api.TransitionSettings;
 import com.amlogic.asplayer.api.VideoTrickMode;
 import com.amlogic.asplayer.api.WorkMode;
 
@@ -145,6 +146,9 @@ class VideoOutputPath extends MediaOutputPath {
     protected int mTrickMode = VideoTrickMode.NONE;
     protected double mTrickModeSpeed;
 
+    protected int mTransitionModeBefore = TransitionSettings.TransitionModeBefore.BLACK;
+    protected boolean mRequestTransitionModeBefore = false;
+
     VideoOutputPath(int id) {
         super(id, String.format("v%d", id));
         mInputBufferIndexes = new ArrayDeque<>();
@@ -155,6 +159,8 @@ class VideoOutputPath extends MediaOutputPath {
 
         mMediaCodecCallback = new VideoMediaCodecCallback();
         mMediaCodecOnFrameCallback = new VideoMediaCodecOnFrameCallback();
+
+        mRequestTransitionModeBefore = false;
     }
 
     void setAudioSessionId(int sessionId) {
@@ -177,10 +183,8 @@ class VideoOutputPath extends MediaOutputPath {
             mInputBufferIndexes.clear();
             mOutputBufferIndexes.clear();
             if (mMediaCodec != null) {
-                mMediaCodec.reset();
-                mMediaCodec.release();
+                releaseMediaCodec();
             }
-            mMediaCodec = null;
         }
         setConfigured(false);
     }
@@ -219,9 +223,8 @@ class VideoOutputPath extends MediaOutputPath {
         mMediaCodec.configure(format, mSurface, null, 0);
         mMediaCodec.start();
         mMediaCodec.stop();
-        mMediaCodec.release();
+        releaseMediaCodec();
         ASPlayerLog.i("VideoOutputPath-%d pushBlankFrame, release mediacodec", mId);
-        mMediaCodec = null;
     }
 
     String getCodecName() {
@@ -269,6 +272,10 @@ class VideoOutputPath extends MediaOutputPath {
         if (mSurface == null) {
             ASPlayerLog.w("VideoOutputPath-%d surface is null", mId);
             return false;
+        }
+
+        if (mMediaCodec != null) {
+            releaseMediaCodec();
         }
 
         mNbDecodedFrames = 0;
@@ -328,8 +335,10 @@ class VideoOutputPath extends MediaOutputPath {
             configured = true;
         } catch (Exception exception) {
             ASPlayerLog.w("VideoOutputPath-%d can't create mediacodec error:%s", mId, exception.getMessage());
-            if (mediaCodec != null)
-                mediaCodec.release();
+            if (mediaCodec != null) {
+                releaseMediaCodec(mediaCodec);
+            }
+            mMediaCodec = null;
             handleConfigurationError(exception.toString());
         }
 
@@ -469,6 +478,7 @@ class VideoOutputPath extends MediaOutputPath {
     }
 
     public void flush() {
+        ASPlayerLog.i("VideoOutputPath-%d flush mediacodec: %s", mId, mMediaCodec);
         if (mMediaCodec != null) {
             mMediaCodec.flush();
             discardOutstandingCallbacksAndStart();
@@ -487,12 +497,15 @@ class VideoOutputPath extends MediaOutputPath {
 
     @Override
     public void reset() {
-        if (mMediaCodec != null) {
-            stopMediaCodec(mMediaCodec);
-            releaseMediaCodec(mMediaCodec);
-            mMediaCodec = null;
-        }
         ASPlayerLog.i("VideoOutputPath-%d reset stop mediacodec: %s", mId, mMediaCodec);
+        if (mMediaCodec != null) {
+            if (mRequestTransitionModeBefore) {
+                handleSetTransitionModeBefore();
+                mRequestTransitionModeBefore = false;
+            }
+            stopMediaCodec(mMediaCodec);
+            releaseMediaCodec();
+        }
         mFirstFrameDisplayed = false;
 
         if (mMediaCodecStarter != null)
@@ -516,7 +529,7 @@ class VideoOutputPath extends MediaOutputPath {
         super.reset();
     }
 
-    private void stopMediaCodec(MediaCodec mediaCodec) {
+    protected void stopMediaCodec(MediaCodec mediaCodec) {
         if (mediaCodec == null) {
             return;
         }
@@ -529,7 +542,7 @@ class VideoOutputPath extends MediaOutputPath {
         }
     }
 
-    private void releaseMediaCodec(MediaCodec mediaCodec) {
+    protected void releaseMediaCodec(MediaCodec mediaCodec) {
         if (mediaCodec == null) {
             return;
         }
@@ -540,6 +553,11 @@ class VideoOutputPath extends MediaOutputPath {
             ASPlayerLog.e("VideoOutputPath-%d release mediacodec error: %s", mId, e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    protected void releaseMediaCodec() {
+        releaseMediaCodec(mMediaCodec);
+        mMediaCodec = null;
     }
 
     @Override
@@ -858,5 +876,13 @@ class VideoOutputPath extends MediaOutputPath {
             mMediaCodec.setParameters(params);
         }
     }
-}
 
+    void setTransitionModeBefore(int transitionModeBefore) {
+        mTransitionModeBefore = transitionModeBefore;
+        mRequestTransitionModeBefore = true;
+    }
+
+    protected void handleSetTransitionModeBefore() {
+
+    }
+}

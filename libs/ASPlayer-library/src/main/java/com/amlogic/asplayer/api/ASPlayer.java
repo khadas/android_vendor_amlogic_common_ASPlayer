@@ -337,12 +337,14 @@ public class ASPlayer implements IASPlayer {
     /**
      * Set if need keep last frame for video display for ASPlayer instance.
      *
-     * @param blackout If blackout for last frame.
+     * @param transitionModeBefore transition mode before.
+     *
+     * @see com.amlogic.asplayer.api.TransitionSettings.TransitionModeBefore
      */
     @Override
-    public void setVideoBlackOut(boolean blackout) {
+    public int setTransitionModeBefore(int transitionModeBefore) {
         if (DEBUG) ASPlayerLog.d("%s-%d setVideoBlackOut start", TAG, mId);
-        throw new RuntimeException("Not Implementation");
+        return mPlayer.setTransitionModeBefore(transitionModeBefore);
     }
 
     /**

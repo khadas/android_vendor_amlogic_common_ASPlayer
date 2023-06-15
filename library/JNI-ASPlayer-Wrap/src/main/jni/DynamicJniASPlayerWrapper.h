@@ -37,7 +37,7 @@ typedef jni_asplayer_result (*JniASPlayer_stopFast_FUNC)(jni_asplayer_handle);
 typedef jni_asplayer_result (*JniASPlayer_setTrickMode_FUNC)(jni_asplayer_handle, jni_asplayer_video_trick_mode);
 typedef jni_asplayer_result (*JniASPlayer_setSurface_FUNC)(jni_asplayer_handle, void*);
 typedef jni_asplayer_result (*JniASPlayer_setVideoParams_FUNC)(jni_asplayer_handle, jni_asplayer_video_params *);
-typedef jni_asplayer_result (*JniASPlayer_setVideoBlackOut_FUNC)(jni_asplayer_handle, bool_t);
+typedef jni_asplayer_result (*JniASPlayer_setTransitionModeBefore_FUNC)(jni_asplayer_handle, jni_asplayer_transition_mode_before);
 typedef jni_asplayer_result (*JniASPlayer_getVideoInfo_FUNC)(jni_asplayer_handle, jni_asplayer_video_info *);
 typedef jni_asplayer_result (*JniASPlayer_startVideoDecoding_FUNC)(jni_asplayer_handle);
 typedef jni_asplayer_result (*JniASPlayer_pauseVideoDecoding_FUNC)(jni_asplayer_handle);
@@ -108,6 +108,7 @@ public:
     jni_asplayer_result startFast(float scale);
     jni_asplayer_result stopFast();
     jni_asplayer_result setTrickMode(jni_asplayer_video_trick_mode trickMode);
+    jni_asplayer_result setTransitionModeBefore(jni_asplayer_transition_mode_before mode);
     jni_asplayer_result release();
 
     void notifyPlaybackListeners(jni_asplayer_event *event);
@@ -153,7 +154,7 @@ private:
     static JniASPlayer_setTrickMode_FUNC ASPlayer_setTrickMode;
     static JniASPlayer_setSurface_FUNC ASPlayer_setSurface;
     static JniASPlayer_setVideoParams_FUNC ASPlayer_setVideoParams;
-    static JniASPlayer_setVideoBlackOut_FUNC ASPlayer_setVideoBlackOut;
+    static JniASPlayer_setTransitionModeBefore_FUNC ASPlayer_setTransitionModeBefore;
     static JniASPlayer_getVideoInfo_FUNC ASPlayer_getVideoInfo;
     static JniASPlayer_startVideoDecoding_FUNC ASPlayer_startVideoDecoding;
     static JniASPlayer_pauseVideoDecoding_FUNC ASPlayer_pauseVideoDecoding;

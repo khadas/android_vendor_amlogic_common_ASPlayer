@@ -182,6 +182,10 @@ typedef enum {
     JNI_ASPLAYER_AV_VIDEO_TRICK_MODE_IONLY = 3          // Decode and out I frame only
 } jni_asplayer_video_trick_mode;
 
+typedef enum {
+    JNI_ASPLAYER_TRANSITION_MODE_BEFORE_BLACK = 0,              // black screen
+    JNI_ASPLAYER_TRANSITION_MODE_BEFORE_LAST_IMAGE = 1          // keep last frame
+} jni_asplayer_transition_mode_before;
 
 /*JniASPlayer handle*/
 typedef size_t jni_asplayer_handle;
@@ -553,10 +557,10 @@ jni_asplayer_result  JniASPlayer_setVideoParams(jni_asplayer_handle Handle, jni_
  *@brief:        Set if need keep last frame for video display
  *               for specified JniASPlayer instance.
  *@param:        Handle     JniASPlayer handle.
- *@param:        blackout   If blackout for last frame.
+ *@param:        mode       transition mode before.
  *@return:       The JniASPlayer result.
  */
-jni_asplayer_result  JniASPlayer_setVideoBlackOut(jni_asplayer_handle Handle, bool_t blackout);
+jni_asplayer_result  JniASPlayer_setTransitionModeBefore(jni_asplayer_handle Handle, jni_asplayer_transition_mode_before mode);
 
 /**
  *@brief:        Get video basic info of specified JniASPlayer instance.

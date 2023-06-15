@@ -27,6 +27,7 @@ import com.amlogic.asplayer.api.ErrorCode;
 import com.amlogic.asplayer.api.InputBuffer;
 import com.amlogic.asplayer.api.InputFrameBuffer;
 import com.amlogic.asplayer.api.InputSourceType;
+import com.amlogic.asplayer.api.TransitionSettings;
 import com.amlogic.asplayer.api.TsPlaybackListener;
 import com.amlogic.asplayer.api.VideoFormat;
 import com.amlogic.asplayer.api.VideoParams;
@@ -547,7 +548,20 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     @Override
-    public void setVideoBlackOut(boolean blackout) {
+    public int setTransitionModeBefore(int transitionModeBefore) {
+        if (transitionModeBefore != TransitionSettings.TransitionModeBefore.BLACK
+                && transitionModeBefore != TransitionSettings.TransitionModeBefore.LAST_IMAGE) {
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        }
+
+        if (mPlayerHandler != null) {
+            mPlayerHandler.post(() -> {
+                mVideoOutputPath.setTransitionModeBefore(transitionModeBefore);
+            });
+            return ErrorCode.SUCCESS;
+        } else {
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
     }
 
     @Override

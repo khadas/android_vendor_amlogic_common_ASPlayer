@@ -445,6 +445,26 @@ jni_asplayer_result  JniASPlayer_setTrickMode(jni_asplayer_handle handle, jni_as
 }
 
 /**
+ *@brief:        Set if need keep last frame for video display
+ *               for specified JniASPlayer instance.
+ *@param:        Handle     JniASPlayer handle.
+ *@param:        mode       transition mode before.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result JniASPlayer_setTransitionModeBefore(jni_asplayer_handle handle,
+                                                        jni_asplayer_transition_mode_before mode) {
+    LOG_FUNCTION_ENTER();
+    if (handle == 0) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
+    jni_asplayer_result ret = player->setTransitionModeBefore(mode);
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+/**
  *@brief:        Release specified JniASPlayer instance.
  *@param:        handle     JniASPlayer handle.
  *@return:       The JniASPlayer result.

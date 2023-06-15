@@ -58,6 +58,7 @@ struct asplayer_t {
     jmethodID startFastMID;
     jmethodID stopFastMID;
     jmethodID setTrickModeMID;
+    jmethodID setTransitionModeBeforeMID;
     jmethodID releaseMID;
     jmethodID addPlaybackListenerMID;
     jmethodID removePlaybackListenerMID;
@@ -425,6 +426,7 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
     gASPlayerCtx.startFastMID = GetMethodIDOrDie(env, gASPlayerCls, "startFast", "(F)I");
     gASPlayerCtx.stopFastMID = GetMethodIDOrDie(env, gASPlayerCls, "stopFast", "()I");
     gASPlayerCtx.setTrickModeMID = GetMethodIDOrDie(env, gASPlayerCls, "setTrickMode", "(I)I");
+    gASPlayerCtx.setTransitionModeBeforeMID = GetMethodIDOrDie(env, gASPlayerCls, "setTransitionModeBefore", "(I)I");
     gASPlayerCtx.addPlaybackListenerMID = GetMethodIDOrDie(env, gASPlayerCls, "addPlaybackListener", "(Lcom/amlogic/asplayer/api/TsPlaybackListener;)V");
     gASPlayerCtx.removePlaybackListenerMID = GetMethodIDOrDie(env, gASPlayerCls, "removePlaybackListener", "(Lcom/amlogic/asplayer/api/TsPlaybackListener;)V");
     gASPlayerCtx.releaseMID = GetMethodIDOrDie(env, gASPlayerCls, "release", "()V");
@@ -974,6 +976,17 @@ jni_asplayer_result JniASPlayer::setTrickMode(jni_asplayer_video_trick_mode tric
     }
 
     int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setTrickModeMID, (jint)(trickMode));
+    return static_cast<jni_asplayer_result>(ret);
+}
+
+jni_asplayer_result JniASPlayer::setTransitionModeBefore(jni_asplayer_transition_mode_before mode) {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setTransitionModeBeforeMID, (jint)(mode));
     return static_cast<jni_asplayer_result>(ret);
 }
 

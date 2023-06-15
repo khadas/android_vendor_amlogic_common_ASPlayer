@@ -117,6 +117,8 @@ public:
 
     jni_asplayer_result setTrickMode(jni_asplayer_video_trick_mode trickMode);
 
+    jni_asplayer_result setTransitionModeBefore(jni_asplayer_transition_mode_before mode);
+
     void setEventCallback(event_callback callback, void *eventUserData);
 
     bool getEventCallback(event_callback *callback, void **userdata);

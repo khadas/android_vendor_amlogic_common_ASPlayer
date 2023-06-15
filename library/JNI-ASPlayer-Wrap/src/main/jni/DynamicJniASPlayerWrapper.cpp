@@ -55,7 +55,7 @@ JniASPlayer_stopFast_FUNC DynamicJniASPlayerWrapper::ASPlayer_stopFast = nullptr
 JniASPlayer_setTrickMode_FUNC DynamicJniASPlayerWrapper::ASPlayer_setTrickMode = nullptr;
 JniASPlayer_setSurface_FUNC DynamicJniASPlayerWrapper::ASPlayer_setSurface = nullptr;
 JniASPlayer_setVideoParams_FUNC DynamicJniASPlayerWrapper::ASPlayer_setVideoParams = nullptr;
-JniASPlayer_setVideoBlackOut_FUNC DynamicJniASPlayerWrapper::ASPlayer_setVideoBlackOut = nullptr;
+JniASPlayer_setTransitionModeBefore_FUNC DynamicJniASPlayerWrapper::ASPlayer_setTransitionModeBefore = nullptr;
 JniASPlayer_getVideoInfo_FUNC DynamicJniASPlayerWrapper::ASPlayer_getVideoInfo = nullptr;
 JniASPlayer_startVideoDecoding_FUNC DynamicJniASPlayerWrapper::ASPlayer_startVideoDecoding = nullptr;
 JniASPlayer_pauseVideoDecoding_FUNC DynamicJniASPlayerWrapper::ASPlayer_pauseVideoDecoding = nullptr;
@@ -216,8 +216,8 @@ void DynamicJniASPlayerWrapper::initSymbols() {
     CHECK_SYMBOL(ASPlayer_flushDvr, "ASPlayer_flushDvr");
     ASPlayer_setVideoParams = (JniASPlayer_setVideoParams_FUNC)(dlsym(handle, "JniASPlayer_setVideoParams"));
     CHECK_SYMBOL(ASPlayer_setVideoParams, "JniASPlayer_setVideoParams");
-    ASPlayer_setVideoBlackOut = (JniASPlayer_setVideoBlackOut_FUNC)(dlsym(handle, "JniASPlayer_setVideoBlackOut"));
-    CHECK_SYMBOL(ASPlayer_setVideoBlackOut, "JniASPlayer_setVideoBlackOut");
+    ASPlayer_setTransitionModeBefore = (JniASPlayer_setTransitionModeBefore_FUNC)(dlsym(handle, "JniASPlayer_setTransitionModeBefore"));
+    CHECK_SYMBOL(ASPlayer_setTransitionModeBefore, "JniASPlayer_setTransitionModeBefore");
     ASPlayer_getVideoInfo = (JniASPlayer_getVideoInfo_FUNC)(dlsym(handle, "JniASPlayer_getVideoInfo"));
     CHECK_SYMBOL(ASPlayer_getVideoInfo, "JniASPlayer_getVideoInfo");
     ASPlayer_startVideoDecoding = (JniASPlayer_startVideoDecoding_FUNC)(dlsym(handle, "JniASPlayer_startVideoDecoding"));
@@ -853,6 +853,30 @@ jni_asplayer_result DynamicJniASPlayerWrapper::setTrickMode(jni_asplayer_video_t
     }
 
     jni_asplayer_result ret = ASPlayer_setTrickMode(handle, trickMode);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result
+DynamicJniASPlayerWrapper::setTransitionModeBefore(jni_asplayer_transition_mode_before mode) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_setTransitionModeBefore == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_setTransitionModeBefore(handle, mode);
     if (ret != JNI_ASPLAYER_OK) {
         LOG_PLAYER_OP_FAILED(ret);
     }

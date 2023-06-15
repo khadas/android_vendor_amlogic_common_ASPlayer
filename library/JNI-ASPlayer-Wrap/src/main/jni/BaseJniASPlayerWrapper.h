@@ -44,6 +44,7 @@ public:
     virtual jni_asplayer_result startFast(float scale) = 0;
     virtual jni_asplayer_result stopFast() = 0;
     virtual jni_asplayer_result setTrickMode(jni_asplayer_video_trick_mode trickMode) = 0;
+    virtual jni_asplayer_result setTransitionModeBefore(jni_asplayer_transition_mode_before mode) = 0;
     virtual jni_asplayer_result release() = 0;
 
     virtual void notifyPlaybackListeners(jni_asplayer_event *event) = 0;

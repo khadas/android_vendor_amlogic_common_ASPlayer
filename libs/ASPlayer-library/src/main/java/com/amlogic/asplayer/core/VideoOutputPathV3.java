@@ -7,7 +7,7 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Surface;
 
-import com.amlogic.asplayer.api.VideoTrickMode;
+import com.amlogic.asplayer.api.TransitionSettings;
 
 import java.nio.ByteBuffer;
 
@@ -42,8 +42,15 @@ class VideoOutputPathV3 extends VideoOutputPath {
     public static final String PARAM_TRICK_MODE = "vendor.tunerhal.passthrough.trick-mode";
     public static final String PARAM_TRICK_SPEED = "vendor.tunerhal.passthrough.trick-speed";
 
+    public static final String PARAM_TRANSITION_BEFORE =
+            "vendor.tunerhal.passthrough.transition-mode-before";
+    public static final String PARAM_TRANSITION_AFTER =
+            "vendor.tunerhal.passthrough.transition-mode-after";
+
     public static final Bundle PARAMS_TRICK_NONE;
     public static final Bundle PARAMS_TRICK_BY_SEEK;
+
+    public static final Bundle PARAMS_TRANSITION_MODE_BEFORE;
 
     static {
         PARAMS_TRICK_NONE = new Bundle();
@@ -53,6 +60,10 @@ class VideoOutputPathV3 extends VideoOutputPath {
         PARAMS_TRICK_BY_SEEK = new Bundle();
         PARAMS_TRICK_BY_SEEK.putInt(PARAM_TRICK_MODE, TRICK_MODE_BY_SEEK);
         PARAMS_TRICK_BY_SEEK.putInt(PARAM_TRICK_SPEED, 0);
+
+        PARAMS_TRANSITION_MODE_BEFORE = new Bundle();
+        PARAMS_TRANSITION_MODE_BEFORE.putInt(PARAM_TRANSITION_BEFORE,
+                TransitionSettings.TransitionModeBefore.BLACK);
     }
 
     int mPlaybackMode;
@@ -175,6 +186,11 @@ class VideoOutputPathV3 extends VideoOutputPath {
             return false;
         }
 
+        if (mMediaCodec != null) {
+            ASPlayerLog.w("VideoOutputPathV3-%d release mediacodec: %s", mId, mMediaCodec);
+            releaseMediaCodec();
+        }
+
         MediaFormat format = mMediaFormat;
         if (format == null) {
             if (DEBUG) ASPlayerLog.i("VideoOutputPathV3-%d configure failed, video format is null", mId);
@@ -245,7 +261,7 @@ class VideoOutputPathV3 extends VideoOutputPath {
         } catch (Exception exception) {
             ASPlayerLog.w("VideoOutputPathV3-%d can't create mediacodec error:%s", mId, exception.getMessage());
             if (mediaCodec != null) {
-                mediaCodec.release();
+                releaseMediaCodec(mediaCodec);
             }
             mMediaCodec = null;
             handleConfigurationError(exception.toString());
@@ -313,5 +329,25 @@ class VideoOutputPathV3 extends VideoOutputPath {
         if (mAvSyncHwId >= 0) {
             format.setInteger(KEY_AV_SYNC_HW_ID, mAvSyncHwId);
         }
+    }
+
+    @Override
+    void setTransitionModeBefore(int transitionModeBefore) {
+        super.setTransitionModeBefore(transitionModeBefore);
+        ASPlayerLog.i("VideoOutputPathV3-%d setTransitionModeBefore %d", mId, transitionModeBefore);
+
+        PARAMS_TRANSITION_MODE_BEFORE.putInt(PARAM_TRANSITION_BEFORE, transitionModeBefore);
+
+        if (mMediaCodec != null) {
+            mMediaCodec.setParameters(PARAMS_TRANSITION_MODE_BEFORE);
+            mRequestTransitionModeBefore = false;
+        }
+    }
+
+    @Override
+    protected void handleSetTransitionModeBefore() {
+        super.handleSetTransitionModeBefore();
+
+        mMediaCodec.setParameters(PARAMS_TRANSITION_MODE_BEFORE);
     }
 }
