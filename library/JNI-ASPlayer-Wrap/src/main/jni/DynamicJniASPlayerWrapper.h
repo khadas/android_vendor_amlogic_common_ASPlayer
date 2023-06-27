@@ -28,6 +28,7 @@ typedef jni_asplayer_result (*JniASPlayer_release_FUNC)(jni_asplayer_handle);
 typedef jni_asplayer_result (*JniASPlayer_writeFrameData_FUNC)(jni_asplayer_handle, jni_asplayer_input_frame_buffer *, uint64_t);
 typedef jni_asplayer_result (*JniASPlayer_writeData_FUNC)(jni_asplayer_handle, jni_asplayer_input_buffer *, uint64_t);
 typedef jni_asplayer_result (*JniASPlayer_setWorkMode_FUNC)(jni_asplayer_handle, jni_asplayer_work_mode);
+typedef jni_asplayer_result (*JniASPlayer_setPIPMode_FUNC)(jni_asplayer_handle, jni_asplayer_pip_mode);
 typedef jni_asplayer_result (*JniASPlayer_getCurrentTime_FUNC)(jni_asplayer_handle, int64_t *);
 typedef jni_asplayer_result (*JniASPlayer_setSyncMode_FUNC)(jni_asplayer_handle, jni_asplayer_avsync_mode);
 typedef jni_asplayer_result (*JniASPlayer_getSyncMode_FUNC)(jni_asplayer_handle, jni_asplayer_avsync_mode *);
@@ -109,6 +110,7 @@ public:
     jni_asplayer_result stopFast();
     jni_asplayer_result setTrickMode(jni_asplayer_video_trick_mode trickMode);
     jni_asplayer_result setTransitionModeBefore(jni_asplayer_transition_mode_before mode);
+    jni_asplayer_result setPIPMode(jni_asplayer_pip_mode mode);
     jni_asplayer_result release();
 
     void notifyPlaybackListeners(jni_asplayer_event *event);
@@ -145,6 +147,7 @@ private:
     static JniASPlayer_writeFrameData_FUNC ASPlayer_writeFrameData;
     static JniASPlayer_writeData_FUNC ASPlayer_writeData;
     static JniASPlayer_setWorkMode_FUNC ASPlayer_setWorkMode;
+    static JniASPlayer_setPIPMode_FUNC ASPlayer_setPIPMode;
     static JniASPlayer_getCurrentTime_FUNC ASPlayer_getCurrentTime;
     static JniASPlayer_setSyncMode_FUNC ASPlayer_setSyncMode;
     static JniASPlayer_getSyncMode_FUNC ASPlayer_getSyncMode;

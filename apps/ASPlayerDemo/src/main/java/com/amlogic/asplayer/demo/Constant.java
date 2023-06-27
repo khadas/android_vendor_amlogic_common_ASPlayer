@@ -26,6 +26,8 @@ public class Constant {
 
     public static final String EXTRA_TUNER_HAL_VERSION = "tunerhal.version";
 
+    public static final String EXTRA_PIP_PROGRAM_BUNDLE = "pip.program.bundle";
+
     public static final int TUNER_HAL_VERSION_1_0 = 1;
     public static final int TUNER_HAL_VERSION_1_1 = 2;
 

@@ -30,7 +30,7 @@ import com.amlogic.asplayer.demo.utils.ViewUtils;
 
 public class ProgramInputSettingView extends LinearLayout {
 
-    private enum TunerHalVersion {
+    public enum TunerHalVersion {
         VERSION_1_0,
         VERSION_1_1
     }
@@ -48,6 +48,7 @@ public class ProgramInputSettingView extends LinearLayout {
 
     private TunerHalVersion mVersion = TunerHalVersion.VERSION_1_0;
 
+    private View mLayoutTunerHal;
     private RadioButton mRdoTunerVersion_1_0;
     private RadioButton mRdoTunerVersion_1_1;
 
@@ -98,6 +99,7 @@ public class ProgramInputSettingView extends LinearLayout {
     }
 
     private void initViews() {
+        mLayoutTunerHal = findViewById(R.id.layout_tuner_hal);
         mRdoTunerVersion_1_0 = findViewById(R.id.rdo_tuner_hal_1_0);
         mRdoTunerVersion_1_1 = findViewById(R.id.rdo_tuner_hal_1_1);
 
@@ -216,6 +218,44 @@ public class ProgramInputSettingView extends LinearLayout {
             }
         }
         return index;
+    }
+
+    public void setTunerHalVersion(TunerHalVersion version) {
+        if (version == TunerHalVersion.VERSION_1_1) {
+            mRdoTunerVersion_1_0.setEnabled(false);
+            mRdoTunerVersion_1_1.setEnabled(true);
+        } else {
+            mRdoTunerVersion_1_0.setEnabled(true);
+            mRdoTunerVersion_1_1.setEnabled(false);
+        }
+    }
+
+    public void showTunerHalLayout(boolean show) {
+        mLayoutTunerHal.setVisibility(show ? View.VISIBLE : View.GONE);
+    }
+
+    public void setVideoPid(int videoPid) {
+        mEditVideoPid.setText(String.valueOf(videoPid));
+    }
+
+    public void setVideoMimeType(String videoMimeType) {
+        mEditVideoMimeType.setText(videoMimeType);
+    }
+
+    public void setVideoStreamType(String videoStreamType) {
+        mVideoStreamType = videoStreamType;
+    }
+
+    public void setAudioPid(int audioPid) {
+        mEditAudioPid.setText(String.valueOf(audioPid));
+    }
+
+    public void setAudioMimeType(String audioMimeType) {
+        mEditAudioMimeType.setText(String.valueOf(audioMimeType));
+    }
+
+    public void setAudioStreamType(String audioStreamType) {
+        mAudioStreamType = audioStreamType;
     }
 
     private void selectTunerVersion(TunerHalVersion version) {

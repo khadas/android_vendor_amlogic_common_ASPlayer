@@ -17,6 +17,7 @@ import android.os.Bundle;
 
 import com.amlogic.asplayer.demo.live.LiveTvPlayerSettingActivity;
 import com.amlogic.asplayer.demo.local.LocalTvPlayerSettingActivity;
+import com.amlogic.asplayer.demo.pip.LivePIPSettingActivity;
 
 
 public class MainActivity extends Activity {
@@ -41,6 +42,9 @@ public class MainActivity extends Activity {
         });
         findViewById(R.id.btn_live_tv_player).setOnClickListener((v) -> {
             gotoActivity(LiveTvPlayerSettingActivity.class);
+        });
+        findViewById(R.id.btn_pip_live_tv_player).setOnClickListener((v) -> {
+            gotoActivity(LivePIPSettingActivity.class);
         });
     }
 

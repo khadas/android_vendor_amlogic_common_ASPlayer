@@ -55,6 +55,7 @@ public:
     jni_asplayer_result stopFast();
     jni_asplayer_result setTrickMode(jni_asplayer_video_trick_mode trickMode);
     jni_asplayer_result setTransitionModeBefore(jni_asplayer_transition_mode_before mode);
+    jni_asplayer_result setPIPMode(jni_asplayer_pip_mode mode);
     jni_asplayer_result release();
 
     void notifyPlaybackListeners(jni_asplayer_event *event);

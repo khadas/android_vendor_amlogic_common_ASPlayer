@@ -656,6 +656,16 @@ public class TvPlayer {
         }
     }
 
+    public void setPIPMode(int pipMode) {
+        if (mPlayerHandler != null) {
+            mPlayerHandler.post(() -> {
+                if (mASPlayer != null) {
+                    mASPlayer.setPIPMode(pipMode);
+                }
+            });
+        }
+    }
+
     protected void onPlaybackEvent(TsPlaybackListener.PlaybackEvent event) {
         if (event instanceof TsPlaybackListener.VideoFormatChangeEvent) {
             TsPlaybackListener.VideoFormatChangeEvent ev = (TsPlaybackListener.VideoFormatChangeEvent) event;

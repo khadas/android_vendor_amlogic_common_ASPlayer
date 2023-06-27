@@ -131,6 +131,11 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
+    public int setPIPMode(int mode) {
+        return native_setPIPMode(mode);
+    }
+
+    @Override
     public long getCurrentTime() {
         return 0;
     }
@@ -351,5 +356,6 @@ public class JniASPlayerWrapper implements IASPlayer {
     private native int native_stopFast();
     private native int native_setTrickMode(int trickMode);
     private native int native_setTransitionModeBefore(int mode);
+    private native int native_setPIPMode(int mode);
     private native void native_release();
 }

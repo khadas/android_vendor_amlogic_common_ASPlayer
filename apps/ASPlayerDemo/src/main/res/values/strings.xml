@@ -27,5 +27,7 @@
     <string name="bandwidth_label">Bandwidth: 8M</string>
     <string name="tips_no_frequency">Please input frequency</string>
 
+    <string name="pip_settings_label">PIP Settings</string>
+
     <string name="fullscreen_play_video">Play</string>
 </resources>

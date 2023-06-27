@@ -27,5 +27,7 @@
     <string name="bandwidth_label">带宽: 8M</string>
     <string name="tips_no_frequency">请输入频率</string>
 
+    <string name="pip_settings_label">PIP设置</string>
+
     <string name="fullscreen_play_video">播放</string>
 </resources>

@@ -49,6 +49,9 @@
         <activity android:name=".live.LiveTvPlayerActivity"
             android:theme="@style/Theme_FullScreen"></activity>
 
+        <activity android:name=".pip.LivePIPSettingActivity" />
+        <activity android:name=".pip.LivePIPPlayerActivity"
+            android:theme="@style/Theme_FullScreen"></activity>
     </application>
 
 </manifest>

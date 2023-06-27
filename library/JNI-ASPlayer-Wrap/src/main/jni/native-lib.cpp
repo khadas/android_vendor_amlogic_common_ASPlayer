@@ -847,6 +847,34 @@ native_set_transition_mode_before(JNIEnv *env, jobject thiz, jint jMode) {
     return result;
 }
 
+static jint
+asplayer_set_pip_mode(JNIEnv *env, jobject thiz, jint mode) {
+    LOG_FUNCTION_ENTER();
+    JNIEnv *jniEnv = AutoEnv::GetJniEnv();
+    if (jniEnv == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    BaseJniASPlayerWrapper *player = getASPlayer(jniEnv, thiz);
+    if (player == nullptr) {
+        LOG_GET_PLAYER_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jni_asplayer_result ret = player->setPIPMode(static_cast<jni_asplayer_pip_mode>(mode));
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+static jint
+native_set_pip_mode(JNIEnv *env, jobject thiz, jint pipMode) {
+    LOG_FUNCTION_ENTER();
+    jint result = asplayer_set_pip_mode(env, thiz, pipMode);
+    LOG_FUNCTION_INT_END(result);
+    return result;
+}
+
 static void
 asplayer_release(JNIEnv* env, jobject thiz) {
     LOG_FUNCTION_ENTER();
@@ -910,6 +938,7 @@ static JNINativeMethod methods[] = {
         {"native_stopFast", "()I", (void*)native_stop_fast },
         {"native_setTrickMode", "(I)I", (void*)native_set_trick_mode },
         {"native_setTransitionModeBefore", "(I)I", (void*) native_set_transition_mode_before },
+        {"native_setPIPMode", "(I)I", (void*)native_set_pip_mode },
         {"native_release", "()V", (void*)native_release },
 };
 
