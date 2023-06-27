@@ -165,6 +165,12 @@ typedef enum {
     JNI_ASPLAYER_MODE_DECODE_ONLY = 2         // Decode data but do not output
 } jni_asplayer_work_mode;
 
+/*Player PIP mode*/
+typedef enum {
+    JNI_ASPLAYER_PIP_MODE_NORMAL = 0,           // Normal mode
+    JNI_ASPLAYER_PIP_MODE_PIP = 1               // PIP mode
+} jni_asplayer_pip_mode;
+
 /*Audio stereo output mode*/
 typedef enum {
     JNI_ASPLAYER_AV_AUDIO_STEREO = 0,                   // Stereo mode
@@ -468,6 +474,14 @@ jni_asplayer_result  JniASPlayer_writeData(jni_asplayer_handle Handle, jni_aspla
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_setWorkMode (jni_asplayer_handle Handle, jni_asplayer_work_mode mode);
+
+/**
+ *@brief:        Set PIP mode to specified JniASPlayer instance.
+ *@param:        Handle     JniASPlayer handle.
+ *@param:        mode       The enum of PIP mode.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_setPIPMode (jni_asplayer_handle Handle, jni_asplayer_pip_mode mode);
 
 /*AV sync*/
 /**

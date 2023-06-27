@@ -59,6 +59,8 @@ class RendererScheduler implements Runnable {
     private boolean mFirstVideoFrameDisplayed = false;
     private boolean mFirstAudioFrameDisplayed = false;
 
+    private int mPIPMode = -1;
+
     RendererScheduler(int id,
                       Context context,
                       IASPlayer asPlayer,
@@ -130,6 +132,9 @@ class RendererScheduler implements Runnable {
         }
 
         mPlaybackTask.prepare(id, mContext, handler);
+        if (mPIPMode != -1) {
+            mPlaybackTask.setPIPMode(mPIPMode);
+        }
     }
 
     void release() {
@@ -443,6 +448,36 @@ class RendererScheduler implements Runnable {
         if (mConfig.isPtsEventEnabled()) {
             mEventNotifier.notifyAudioFrameRendered(presentationTimeUs, renderTime);
         }
+    }
+
+    void setPIPMode(int pipMode) {
+        ASPlayerLog.i("RendererScheduler-%d setPIPMode start, mode: %d", mId, pipMode);
+
+        if (pipMode == mPIPMode) {
+            return;
+        }
+
+        ASPlayerLog.i("RendererScheduler-%d setPIPMode: %d, last mode: %d", mId, pipMode, mPIPMode);
+
+        if (mHandler != null) {
+            mHandler.removeCallbacks(this);
+
+            ASPlayerLog.i("RendererScheduler-%d speed task: %s, playback task: %s", mId, mCurrentSpeedTask, mPlaybackTask);
+
+            if (mCurrentSpeedTask != null) {
+                mCurrentSpeedTask.setPIPMode(pipMode);
+            }
+            if (mPlaybackTask != null && mPlaybackTask != mCurrentSpeedTask) {
+                mPlaybackTask.setPIPMode(pipMode);
+            }
+
+            mHandler.post(this);
+        } else {
+            // not prepared
+            ASPlayerLog.i("RendererScheduler-%d setPIPMode: %d, not prepared", mId, pipMode);
+        }
+
+        mPIPMode = pipMode;
     }
 
     void flush() {

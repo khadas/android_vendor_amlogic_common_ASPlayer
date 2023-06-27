@@ -5,6 +5,7 @@ import android.media.MediaFormat;
 import android.os.Handler;
 import android.os.SystemClock;
 
+import com.amlogic.asplayer.api.PIPMode;
 import com.amlogic.asplayer.api.WorkMode;
 
 abstract class MediaOutputPath {
@@ -79,6 +80,9 @@ abstract class MediaOutputPath {
     protected MediaFormat mMediaFormat;
 
     protected MediaDescrambler mMediaDescrambler;
+
+    protected int mTargetPIPMode = PIPMode.NORMAL;
+    protected int mLastPIPMode = -1;
 
     protected int mId;
     private String mIdTag;
@@ -379,5 +383,15 @@ abstract class MediaOutputPath {
             ASPlayerLog.w("error: " + errorMessage);
             setConfigurationError(errorMessage);
         }
+    }
+
+    public void setPIPMode(int pipMode) {
+        if (pipMode == mLastPIPMode) {
+            return;
+        }
+
+        ASPlayerLog.i("MediaOutputPath-%s set pip mode: %d, last mode: %d", mIdTag, pipMode, mLastPIPMode);
+
+        mTargetPIPMode = pipMode;
     }
 }

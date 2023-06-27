@@ -119,6 +119,15 @@ public interface IASPlayer {
     public int setWorkMode(int mode);
 
     /**
+     * Set PIP mode to ASPlayer instance.
+     *
+     * @param mode {@link PIPMode}
+     *
+     * @return
+     */
+    public int setPIPMode(int mode);
+
+    /**
      * Get the playing time of ASPlayer instance.
      *
      * @return Playing time.

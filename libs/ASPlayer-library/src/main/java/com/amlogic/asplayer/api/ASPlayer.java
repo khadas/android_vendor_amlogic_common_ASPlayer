@@ -216,6 +216,22 @@ public class ASPlayer implements IASPlayer {
     }
 
     /**
+     * Set PIP mode to ASPlayer instance.
+     *
+     * @param mode {@link PIPMode}
+     *
+     * @return
+     */
+    @Override
+    public int setPIPMode(int mode) {
+        ASPlayerLog.i("%s-%d setPIPMode start, pip mode: %d", TAG, mId, mode);
+        if (mode != PIPMode.NORMAL && mode != PIPMode.PIP) {
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        }
+        return mPlayer.setPIPMode(mode);
+    }
+
+    /**
      * Get the playing time of ASPlayer instance.
      *
      * @return Playing time.

@@ -125,6 +125,8 @@ public:
 
     void release();
 
+    jni_asplayer_result setPIPMode(jni_asplayer_pip_mode mode);
+
 private:
     int setJavaASPlayerHandle(JNIEnv *env, jobject javaPlayer);
 

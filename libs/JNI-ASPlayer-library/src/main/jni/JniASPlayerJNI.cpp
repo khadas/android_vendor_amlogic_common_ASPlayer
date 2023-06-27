@@ -62,6 +62,7 @@ struct asplayer_t {
     jmethodID releaseMID;
     jmethodID addPlaybackListenerMID;
     jmethodID removePlaybackListenerMID;
+    jmethodID setPIPModeMID;
 };
 
 // InitParams
@@ -430,6 +431,7 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
     gASPlayerCtx.addPlaybackListenerMID = GetMethodIDOrDie(env, gASPlayerCls, "addPlaybackListener", "(Lcom/amlogic/asplayer/api/TsPlaybackListener;)V");
     gASPlayerCtx.removePlaybackListenerMID = GetMethodIDOrDie(env, gASPlayerCls, "removePlaybackListener", "(Lcom/amlogic/asplayer/api/TsPlaybackListener;)V");
     gASPlayerCtx.releaseMID = GetMethodIDOrDie(env, gASPlayerCls, "release", "()V");
+    gASPlayerCtx.setPIPModeMID = GetMethodIDOrDie(env, gASPlayerCls, "setPIPMode", "(I)I");
 
     // InitParams
     jclass initParamCls = env->FindClass("com/amlogic/asplayer/api/InitParams");
@@ -1034,4 +1036,16 @@ void JniASPlayer::release() {
     }
 
     mJavaPlayer = nullptr;
+}
+
+jni_asplayer_result JniASPlayer::setPIPMode(jni_asplayer_pip_mode mode) {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    int pipMode = static_cast<int>(mode);
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setPIPModeMID, pipMode);
+    return static_cast<jni_asplayer_result>(ret);
 }

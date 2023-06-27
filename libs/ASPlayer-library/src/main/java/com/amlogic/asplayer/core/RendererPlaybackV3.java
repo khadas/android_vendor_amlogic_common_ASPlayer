@@ -129,6 +129,8 @@ class RendererPlaybackV3 extends Renderer {
     private long mDoSomeWorkStartTimeMs;
     private long mNextDelayUs;
 
+    private int mPIPMode = -1;
+
     RendererPlaybackV3(RendererScheduler rendererScheduler) {
         super(rendererScheduler);
 
@@ -322,6 +324,19 @@ class RendererPlaybackV3 extends Renderer {
         }
 
         checkSynchroSubtitles();
+    }
+
+    @Override
+    void setPIPMode(int pipMode) {
+        if (pipMode == mPIPMode) {
+            return;
+        }
+
+        ASPlayerLog.i("RendererPlaybackV3-%d set pip mode: %d, last mode: %d", mId, pipMode, mPIPMode);
+        mVideoOutputPath.setPIPMode(pipMode);
+        mAudioOutputPath.setPIPMode(pipMode);
+
+        mPIPMode = pipMode;
     }
 }
 

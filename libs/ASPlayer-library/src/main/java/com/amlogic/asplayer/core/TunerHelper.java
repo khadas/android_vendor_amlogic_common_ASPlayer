@@ -40,7 +40,7 @@ public class TunerHelper {
                 Boolean result = (Boolean) sIsHigherOrEqualVersionTo.invoke(null, version);
                 return result != null ? result : false;
             } catch (Exception e) {
-                ASPlayerLog.w("isHigherOrEqualVersionTo failed, error: %s, %s",
+                ASPlayerLog.d("isHigherOrEqualVersionTo failed, error: %s, %s",
                         e.getMessage(), Log.getStackTraceString(e));
                 e.printStackTrace();
             }
@@ -53,7 +53,7 @@ public class TunerHelper {
                 ASPlayerLog.w("isHigherOrEqualVersionTo : %s", result);
                 return result != null ? result : Boolean.FALSE;
             } catch (Exception e) {
-                ASPlayerLog.w("isHigherOrEqualVersionTo failed, error: %s, %s",
+                ASPlayerLog.d("isHigherOrEqualVersionTo failed, error: %s, %s",
                         e.getMessage(), Log.getStackTraceString(e));
                 return null;
             }

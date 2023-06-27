@@ -382,6 +382,19 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     @Override
+    public int setPIPMode(int mode) {
+        if (mPlayerHandler != null && mPlayerThread != null && mPlayerThread.isAlive()) {
+            mPlayerHandler.post(() -> {
+                mRendererScheduler.setPIPMode(mode);
+            });
+        } else {
+            ASPlayerLog.e("%s-%d setPIPMode called, but playerHandler is null", TAG, mId);
+            mRendererScheduler.setPIPMode(mode);
+        }
+        return ErrorCode.SUCCESS;
+    }
+
+    @Override
     public long getCurrentTime() {
         if (DEBUG) ASPlayerLog.d("%s-%d getCurrentTime start", TAG, mId);
         return 0;

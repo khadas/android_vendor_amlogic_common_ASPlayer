@@ -36,6 +36,8 @@ class AudioOutputPath extends MediaOutputPath {
 
     protected boolean mHasAudioFormatChanged = false;
 
+    protected boolean mChangePIPMode = false;
+
     protected boolean mHasAudio = false;
 
     protected AudioFormatListener mAudioFormatListener;
@@ -337,4 +339,24 @@ class AudioOutputPath extends MediaOutputPath {
         mAudioCaps = caps;
     }
 
+    @Override
+    public void setPIPMode(int pipMode) {
+        if (pipMode == mLastPIPMode) {
+            return;
+        }
+
+        ASPlayerLog.i("AudioOutputPath-%d setPIPMode: %d, last mode: %d", mId, pipMode, mLastPIPMode);
+        super.setPIPMode(pipMode);
+        mChangePIPMode = true;
+        setConfigured(false);
+    }
+
+    protected void releaseAudioRenderer() {
+        if (mAudioCodecRenderer != null) {
+            mAudioCodecRenderer.release();
+            mAudioCodecRenderer = null;
+        }
+
+        mLastPIPMode = -1;
+    }
 }

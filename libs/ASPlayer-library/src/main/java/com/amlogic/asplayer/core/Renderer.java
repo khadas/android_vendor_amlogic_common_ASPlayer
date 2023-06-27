@@ -87,6 +87,10 @@ abstract class Renderer {
 
     abstract protected void pumpFeederData();
 
+    void setPIPMode(int pipMode) {
+
+    }
+
     protected boolean updateFeederPosition() {
         if (!mRequestedPositionSet)
             return false;

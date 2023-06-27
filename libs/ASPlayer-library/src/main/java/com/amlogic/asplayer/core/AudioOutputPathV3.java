@@ -6,6 +6,7 @@ import android.media.MediaFormat;
 import android.os.Build;
 
 
+import com.amlogic.asplayer.api.PIPMode;
 import com.amlogic.asplayer.core.encapsulation.Metadata;
 
 import static android.media.MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayback;
@@ -80,13 +81,30 @@ class AudioOutputPathV3 extends AudioOutputPath {
         String mimeType = format.getString(MediaFormat.KEY_MIME);
 
         if (mAudioCodecRenderer != null) {
-            mAudioCodecRenderer.release();
+            boolean needChangePIPMode = mChangePIPMode;
+            boolean pipModeMatch = !needChangePIPMode;
+
+            if (needChangePIPMode) {
+                ASPlayerLog.i("AudioOutputPathV3-%d configure audio render pip mode", mId);
+                pipModeMatch = mAudioCodecRenderer.setPIPMode(mTargetPIPMode);
+            }
+
+            if (pipModeMatch) {
+                mChangePIPMode = false;
+                mLastPIPMode = mTargetPIPMode;
+                return true;
+            }
+        }
+
+        if (mAudioCodecRenderer != null) {
+            releaseAudioRenderer();
             mAudioCodecRenderer = null;
         }
 
         AudioCodecRendererV3 audioCodecRenderer =
                 new AudioCodecRendererV3(mId, mClock, getHandler());
         mAudioCodecRenderer = audioCodecRenderer;
+        audioCodecRenderer.setPIPMode(mTargetPIPMode);
 
         audioCodecRenderer.setOutputBufferListener(new AudioCodecRenderer.OutputBufferListener() {
             @Override
@@ -129,6 +147,7 @@ class AudioOutputPathV3 extends AudioOutputPath {
 
         errorMessage = audioCodecRenderer.getErrorMessage();
         if (errorMessage == null) {
+            mChangePIPMode = false;
             setConfigured(true);
         }
 
@@ -145,6 +164,7 @@ class AudioOutputPathV3 extends AudioOutputPath {
         handleConfigurationError(errorMessage);
         boolean success = errorMessage == null;
         ASPlayerLog.i("AudioOutputPathV3-%d configure %s", mId, success ? "success" : "failed");
+        mLastPIPMode = mTargetPIPMode;
         return success;
     }
 
@@ -227,14 +247,18 @@ class AudioOutputPathV3 extends AudioOutputPath {
         return true;
     }
 
-    private void releaseLinearBlock(MediaCodec.LinearBlock linearBlock) {
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                linearBlock.recycle();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+    @Override
+    public void setPIPMode(int pipMode) {
+        ASPlayerLog.d("AudioOutputPathV3-%d setPIPMode, pipMode: %d", mId, pipMode);
+        int lastPipMode = mLastPIPMode;
+        super.setPIPMode(pipMode);
+
+        if (lastPipMode == PIPMode.NORMAL && pipMode == PIPMode.PIP) {
+            ASPlayerLog.d("AudioOutputPathV3-%d setPIPMode release audio render", mId);
+            releaseAudioRenderer();
+            setConfigured(false);
+        } else {
+            ASPlayerLog.d("AudioOutputPathV3-%d setPIPMode not release audio render", mId);
         }
     }
 }
-

@@ -465,6 +465,23 @@ jni_asplayer_result JniASPlayer_setTransitionModeBefore(jni_asplayer_handle hand
 }
 
 /**
+ *@brief:        Set PIP mode to specified JniASPlayer instance.
+ *@param:        Handle     JniASPlayer handle.
+ *@param:        mode       The enum of PIP mode.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_setPIPMode (jni_asplayer_handle handle, jni_asplayer_pip_mode mode) {
+    if (handle == 0) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
+    jni_asplayer_result ret = player->setPIPMode(mode);
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+/**
  *@brief:        Release specified JniASPlayer instance.
  *@param:        handle     JniASPlayer handle.
  *@return:       The JniASPlayer result.
