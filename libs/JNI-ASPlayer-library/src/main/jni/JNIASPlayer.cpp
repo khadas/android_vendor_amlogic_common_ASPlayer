@@ -500,6 +500,59 @@ jni_asplayer_result  JniASPlayer_setPIPMode (jni_asplayer_handle handle, jni_asp
 }
 
 /**
+ *@brief:        Set audio description params need by demuxer
+ *               and audio decoder to specified JniASPlayer instance.
+ *@param:        handle     JniASPlayer handle.
+ *@param:        *pParams   Params need by demuxer and audio decoder.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_setADParams(jni_asplayer_handle handle, jni_asplayer_audio_params *pParams) {
+    LOG_FUNCTION_ENTER();
+    if (handle == 0) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
+    jni_asplayer_result ret = player->setADParams(pParams);
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+/**
+ *@brief:        Enable audio description mix with master audio
+ *@param:        handle     JniASPlayer handle.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_enableADMix(jni_asplayer_handle handle) {
+    LOG_FUNCTION_ENTER();
+    if (handle == 0) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
+    jni_asplayer_result ret = player->enableADMix();
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+/**
+ *@brief:        Disable audio description mix with master audio
+ *@param:        handle     JniASPlayer handle.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_disableADMix(jni_asplayer_handle handle) {
+    LOG_FUNCTION_ENTER();
+    if (handle == 0) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
+    jni_asplayer_result ret = player->disableADMix();
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+/**
  *@brief:        Release specified JniASPlayer instance.
  *@param:        handle     JniASPlayer handle.
  *@return:       The JniASPlayer result.

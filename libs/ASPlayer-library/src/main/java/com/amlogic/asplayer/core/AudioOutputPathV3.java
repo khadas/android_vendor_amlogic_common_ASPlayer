@@ -25,7 +25,7 @@ class AudioOutputPathV3 extends AudioOutputPath {
     private Metadata.PlacementMetadata mPlacementMetadata;
     protected boolean mSecurePlayback = false;
 
-    private int mAudioSubTrackFilterId = INVALID_FILTER_ID;
+    private AudioParams mSubTrackAudioParams;
 
     AudioOutputPathV3(int id) {
         super(id);
@@ -54,8 +54,9 @@ class AudioOutputPathV3 extends AudioOutputPath {
         }
     }
 
-    public void setAudioSubTrackFilterId(int subTrackFilterId) {
-        mAudioSubTrackFilterId = subTrackFilterId;
+    void setSubTrackAudioParams(AudioParams audioParams) {
+        mSubTrackAudioParams = audioParams;
+        mNeedToConfigureSubTrack = true;
     }
 
     @Override
@@ -154,7 +155,7 @@ class AudioOutputPathV3 extends AudioOutputPath {
 
         audioCodecRenderer.configure(format, null);
 
-        mNeedToConfigureSubTrack = mAudioSubTrackFilterId != INVALID_FILTER_ID;
+        mNeedToConfigureSubTrack = mSubTrackAudioParams != null;
 
         errorMessage = audioCodecRenderer.getErrorMessage();
 
@@ -194,7 +195,7 @@ class AudioOutputPathV3 extends AudioOutputPath {
             return;
         }
 
-        if (mNeedToConfigureSubTrack) {
+        if (mEnableADMix != null && mNeedToConfigureSubTrack) {
             changeSubTrack();
         }
 
@@ -216,7 +217,7 @@ class AudioOutputPathV3 extends AudioOutputPath {
     public void release() {
         super.release();
 
-        mAudioSubTrackFilterId = INVALID_FILTER_ID;
+        mSubTrackAudioParams = null;
     }
 
     private boolean changeMainTrack(AudioParams audioParams) {
@@ -236,18 +237,23 @@ class AudioOutputPathV3 extends AudioOutputPath {
                 ((AudioCodecRendererV3) mAudioCodecRenderer).writeMetadata(mTunerMetadataMain);
             }
 
-            mNeedToConfigureSubTrack = mAudioSubTrackFilterId != INVALID_FILTER_ID;
+            mNeedToConfigureSubTrack = mSubTrackAudioParams != null;
         }
         return true;
     }
 
     private void changeSubTrack() {
+        if (mEnableADMix == null || !mEnableADMix.booleanValue()) {
+            return;
+        }
+
         if (mNeedToConfigureSubTrack && mAudioCodecRenderer instanceof AudioCodecRendererV3) {
             if (mMediaFormat == null) {
                 ASPlayerLog.i("audio format null..");
                 return;
             }
-            if (mAudioSubTrackFilterId != INVALID_FILTER_ID && !prepareMetadata(mTunerMetadataSub, mAudioSubTrackFilterId)) {
+            ASPlayerLog.i("AudioOutputPathV3-%d changeSubTrack, filterId: %d", mId, mSubTrackAudioParams.getTrackFilterId());
+            if (!prepareMetadata(mTunerMetadataSub, mSubTrackAudioParams.getTrackFilterId())) {
                 return;
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {

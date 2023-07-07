@@ -64,6 +64,9 @@ struct asplayer_t {
     jmethodID addPlaybackListenerMID;
     jmethodID removePlaybackListenerMID;
     jmethodID setPIPModeMID;
+    jmethodID setADParamsMID;
+    jmethodID enableADMixMID;
+    jmethodID disableADMixMID;
 };
 
 // InitParams
@@ -434,6 +437,9 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
     gASPlayerCtx.removePlaybackListenerMID = GetMethodIDOrDie(env, gASPlayerCls, "removePlaybackListener", "(Lcom/amlogic/asplayer/api/TsPlaybackListener;)V");
     gASPlayerCtx.releaseMID = GetMethodIDOrDie(env, gASPlayerCls, "release", "()V");
     gASPlayerCtx.setPIPModeMID = GetMethodIDOrDie(env, gASPlayerCls, "setPIPMode", "(I)I");
+    gASPlayerCtx.setADParamsMID = GetMethodIDOrDie(env, gASPlayerCls, "setADParams", "(Lcom/amlogic/asplayer/api/AudioParams;)I");
+    gASPlayerCtx.enableADMixMID = GetMethodIDOrDie(env, gASPlayerCls, "enableADMix", "()I");
+    gASPlayerCtx.disableADMixMID = GetMethodIDOrDie(env, gASPlayerCls, "disableADMix", "()I");
 
     // InitParams
     jclass initParamCls = env->FindClass("com/amlogic/asplayer/api/InitParams");
@@ -1067,5 +1073,45 @@ jni_asplayer_result JniASPlayer::setPIPMode(jni_asplayer_pip_mode mode) {
 
     int pipMode = static_cast<int>(mode);
     int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setPIPModeMID, pipMode);
+    return static_cast<jni_asplayer_result>(ret);
+}
+
+jni_asplayer_result JniASPlayer::setADParams(jni_asplayer_audio_params *params) {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jobject audioParam;
+    if (!JniASPlayerJNI::createAudioParams(env, params, &audioParam)) {
+        ALOGE("[%s/%d] failed to convert ADParams", __func__, __LINE__);
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setADParamsMID, audioParam);
+    env->DeleteLocalRef(audioParam);
+    return static_cast<jni_asplayer_result>(ret);
+}
+
+jni_asplayer_result JniASPlayer::enableADMix() {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.enableADMixMID);
+    return static_cast<jni_asplayer_result>(ret);
+}
+
+jni_asplayer_result JniASPlayer::disableADMix() {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.disableADMixMID);
     return static_cast<jni_asplayer_result>(ret);
 }

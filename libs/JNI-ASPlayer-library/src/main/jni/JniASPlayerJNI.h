@@ -129,6 +129,12 @@ public:
 
     jni_asplayer_result setPIPMode(jni_asplayer_pip_mode mode);
 
+    jni_asplayer_result setADParams(jni_asplayer_audio_params *params);
+
+    jni_asplayer_result enableADMix();
+
+    jni_asplayer_result disableADMix();
+
 private:
     int setJavaASPlayerHandle(JNIEnv *env, jobject javaPlayer);
 

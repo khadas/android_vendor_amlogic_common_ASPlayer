@@ -42,6 +42,8 @@ class AudioOutputPath extends MediaOutputPath {
 
     protected boolean mHasAudio = false;
 
+    protected Boolean mEnableADMix = null;
+
     protected AudioParams mAudioParams;
 
     protected AudioFormatListener mAudioFormatListener;
@@ -104,6 +106,14 @@ class AudioOutputPath extends MediaOutputPath {
         if (mAudioParams != null) {
             setMediaFormat(mAudioParams.getMediaFormat());
         }
+    }
+
+    void enableADMix() {
+        mEnableADMix = Boolean.TRUE;
+    }
+
+    void disableADMix() {
+        mEnableADMix = Boolean.FALSE;
     }
 
     void switchAudioTrack(AudioParams audioParams) {

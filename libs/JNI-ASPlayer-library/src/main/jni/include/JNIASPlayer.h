@@ -735,6 +735,7 @@ jni_asplayer_result  JniASPlayer_resumeAudioDecoding(jni_asplayer_handle Handle)
  */
 jni_asplayer_result  JniASPlayer_stopAudioDecoding(jni_asplayer_handle Handle);
 
+/*Audio description interface*/
 /**
  *@brief:        Set audio description params need by demuxer
  *               and audio decoder to specified JniASPlayer instance.
@@ -744,7 +745,20 @@ jni_asplayer_result  JniASPlayer_stopAudioDecoding(jni_asplayer_handle Handle);
  */
 jni_asplayer_result  JniASPlayer_setADParams(jni_asplayer_handle Handle, jni_asplayer_audio_params *pParams);
 
-/*Audio description interface*/
+/**
+ *@brief:        Enable audio description mix with master audio
+ *@param:        handle     JniASPlayer handle.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_enableADMix(jni_asplayer_handle handle);
+
+/**
+ *@brief:        Disable audio description mix with master audio
+ *@param:        handle     JniASPlayer handle.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_disableADMix(jni_asplayer_handle handle);
+
 /**
  *@brief:        Get audio description basic info of specified
  *               JniASPlayer instance.

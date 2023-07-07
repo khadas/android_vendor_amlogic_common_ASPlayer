@@ -954,27 +954,48 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     @Override
-    public int setAudioDescriptionParams(AudioParams params) {
+    public int setADParams(AudioParams params) {
         if (DEBUG) ASPlayerLog.d("%s-%d setAudioDescriptionParams start", TAG, mId);
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
-                ASPlayerLog.i("%s-%d setAudioDescriptionParams pid: %d, filterId: %d, format: %s", TAG, mId, params.getPid(), params.getTrackFilterId(), params.getMediaFormat());
+                ASPlayerLog.i("%s-%d setADParams pid: %d, filterId: %d, format: %s",
+                        TAG, mId, params.getPid(), params.getTrackFilterId(), params.getMediaFormat());
                 if (mAudioOutputPath instanceof AudioOutputPathV3) {
                     AudioOutputPathV3 outputPathV3 = (AudioOutputPathV3)mAudioOutputPath;
-                    outputPathV3.setAudioSubTrackFilterId(params.getTrackFilterId());
+                    outputPathV3.setSubTrackAudioParams(params);
                 }
             });
-            return 0;
+            return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.i("%s-%d setAudioDescriptionParams failed, playerHandler is null", TAG, mId);
-            return -1;
+            ASPlayerLog.i("%s-%d setADParams failed, playerHandler is null", TAG, mId);
+            return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
 
     @Override
-    public MediaFormat getAudioDescriptionInfo() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getAudioDescriptionInfo start", TAG, mId);
-        return null;
+    public int enableADMix() {
+        if (mPlayerHandler != null) {
+            mPlayerHandler.post(() -> {
+                mAudioOutputPath.enableADMix();
+            });
+            return ErrorCode.SUCCESS;
+        } else {
+            ASPlayerLog.i("%s-%d enableADMix failed, playerHandler is null", TAG, mId);
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+    }
+
+    @Override
+    public int disableADMix() {
+        if (mPlayerHandler != null) {
+            mPlayerHandler.post(() -> {
+                mAudioOutputPath.disableADMix();
+            });
+            return ErrorCode.SUCCESS;
+        } else {
+            ASPlayerLog.i("%s-%d disableADMix failed, playerHandler is null", TAG, mId);
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
     }
 
     @Override

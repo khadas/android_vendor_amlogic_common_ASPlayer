@@ -551,18 +551,31 @@ public class ASPlayer implements IASPlayer {
      * Set audio description params need by demuxer and audio decoder to ASPlayer instance.
      */
     @Override
-    public int setAudioDescriptionParams(AudioParams params) {
-        ASPlayerLog.i("%s-%d setAudioDescriptionParams start, params: %s", TAG, mId, params);
-        return mPlayer.setAudioDescriptionParams(params);
+    public int setADParams(AudioParams params) {
+        ASPlayerLog.i("%s-%d setADParams start, params: %s", TAG, mId, params);
+        return mPlayer.setADParams(params);
     }
 
     /**
-     * Get audio description basic info of Player instance.
+     * Enable audio description mix with master audio
+     *
+     * @return
      */
     @Override
-    public MediaFormat getAudioDescriptionInfo() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getAudioDescriptionInfo start", TAG, mId);
-        throw new RuntimeException("Not Implementation");
+    public int enableADMix() {
+        ASPlayerLog.i("%s-%d enableADMix start", TAG, mId);
+        return mPlayer.enableADMix();
+    }
+
+    /**
+     * Disable audio description mix with master audio
+     *
+     * @return
+     */
+    @Override
+    public int disableADMix() {
+        ASPlayerLog.i("%s-%d disableADMix start", TAG, mId);
+        return mPlayer.disableADMix();
     }
 
     /**

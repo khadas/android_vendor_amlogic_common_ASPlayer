@@ -322,12 +322,21 @@ public interface IASPlayer {
     /**
      * Set audio description params need by demuxer and audio decoder to ASPlayer instance.
      */
-    public int setAudioDescriptionParams(AudioParams params);
+    int setADParams(AudioParams params);
 
     /**
-     * Get audio description basic info of Player instance.
+     * Enable audio description mix with master audio
+     *
+     * @return
      */
-    public MediaFormat getAudioDescriptionInfo();
+    int enableADMix();
+
+    /**
+     * Disable audio description mix with master audio
+     *
+     * @return
+     */
+    int disableADMix();
 
     /**
      * Set subtitle pid for ASPlayer instance.
