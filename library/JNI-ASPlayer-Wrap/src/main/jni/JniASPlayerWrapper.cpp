@@ -521,6 +521,54 @@ jni_asplayer_result JniASPlayerWrapper::setPIPMode(jni_asplayer_pip_mode mode) {
     return ret;
 }
 
+jni_asplayer_result JniASPlayerWrapper::setADParams(jni_asplayer_audio_params *params) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+    jni_asplayer_result ret = JniASPlayer_setADParams(handle, params);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result JniASPlayerWrapper::enableADMix() {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+    jni_asplayer_result ret = JniASPlayer_enableADMix(handle);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result JniASPlayerWrapper::disableADMix() {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+    jni_asplayer_result ret = JniASPlayer_disableADMix(handle);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
 jni_asplayer_result JniASPlayerWrapper::release() {
     LOG_FUNCTION_ENTER();
     jni_asplayer_handle handle = mHandle;

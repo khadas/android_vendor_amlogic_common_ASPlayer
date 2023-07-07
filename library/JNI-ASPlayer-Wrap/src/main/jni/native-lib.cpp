@@ -15,7 +15,6 @@
 
 #include <JNIASPlayer.h>
 #include "common/utils/Log.h"
-#include "common/utils/AutoEnv.h"
 #include "BaseJniASPlayerWrapper.h"
 #if (USE_SYSTEM_SO == 1)
 #include "DynamicJniASPlayerWrapper.h"
@@ -861,13 +860,12 @@ native_set_trick_mode(JNIEnv *env, jobject thiz, jint jTrickMode) {
 static jint
 asplayer_set_transition_mode_before(JNIEnv *env, jobject thiz, jint jMode) {
     LOG_FUNCTION_ENTER();
-    JNIEnv *jniEnv = AutoEnv::GetJniEnv();
-    if (jniEnv == nullptr) {
+    if (env == nullptr) {
         LOG_GET_JNIENV_FAILED();
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
-    BaseJniASPlayerWrapper *player = getASPlayer(jniEnv, thiz);
+    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
     if (player == nullptr) {
         LOG_GET_PLAYER_FAILED();
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
@@ -890,13 +888,12 @@ native_set_transition_mode_before(JNIEnv *env, jobject thiz, jint jMode) {
 static jint
 asplayer_set_pip_mode(JNIEnv *env, jobject thiz, jint mode) {
     LOG_FUNCTION_ENTER();
-    JNIEnv *jniEnv = AutoEnv::GetJniEnv();
-    if (jniEnv == nullptr) {
+    if (env == nullptr) {
         LOG_GET_JNIENV_FAILED();
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
-    BaseJniASPlayerWrapper *player = getASPlayer(jniEnv, thiz);
+    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
     if (player == nullptr) {
         LOG_GET_PLAYER_FAILED();
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
@@ -912,6 +909,100 @@ native_set_pip_mode(JNIEnv *env, jobject thiz, jint pipMode) {
     LOG_FUNCTION_ENTER();
     jint result = asplayer_set_pip_mode(env, thiz, pipMode);
     LOG_FUNCTION_INT_END(result);
+    return result;
+}
+
+static jint
+asplayer_set_ad_params(JNIEnv* env, jobject thiz, jobject audioParams) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
+    if (player == nullptr) {
+        LOG_GET_PLAYER_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jni_asplayer_audio_params params;
+    if (!gASPlayerJni.convertAudioParams(env, audioParams, &params)) {
+        ALOGE("%s[%d] failed to setADParams, failed to convert ad params", __func__, __LINE__);
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jni_asplayer_result ret = player->setADParams(&params);
+
+    if (params.mimeType) {
+        delete[] params.mimeType;
+        params.mimeType = nullptr;
+    }
+
+    LOG_FUNCTION_INT_END(ret);
+
+    return ret;
+}
+
+static jint
+native_set_ad_params(JNIEnv* env, jobject thiz, jobject audioParams) {
+    LOG_FUNCTION_ENTER();
+    jint result = asplayer_set_ad_params(env, thiz, audioParams);
+    LOG_FUNCTION_INT_END(result);
+    return result;
+}
+
+static jint
+asplayer_enable_ad_mix(JNIEnv *env, jobject thiz) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
+    if (player == nullptr) {
+        LOG_GET_PLAYER_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jni_asplayer_result ret = player->enableADMix();
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+static jint
+native_enable_ad_mix(JNIEnv *env, jobject thiz) {
+    LOG_FUNCTION_ENTER();
+    jint result = asplayer_enable_ad_mix(env, thiz);
+    LOG_FUNCTION_END();
+    return result;
+}
+
+static jint
+asplayer_disable_ad_mix(JNIEnv *env, jobject thiz) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
+    if (player == nullptr) {
+        LOG_GET_PLAYER_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jni_asplayer_result ret = player->disableADMix();
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+static jint
+native_disable_ad_mix(JNIEnv *env, jobject thiz) {
+    LOG_FUNCTION_ENTER();
+    jint result = asplayer_disable_ad_mix(env, thiz);
+    LOG_FUNCTION_END();
     return result;
 }
 
@@ -980,6 +1071,9 @@ static JNINativeMethod methods[] = {
         {"native_setTrickMode", "(I)I", (void*)native_set_trick_mode },
         {"native_setTransitionModeBefore", "(I)I", (void*) native_set_transition_mode_before },
         {"native_setPIPMode", "(I)I", (void*)native_set_pip_mode },
+        {"native_setADParams", "(Lcom/amlogic/asplayer/api/AudioParams;)I", (void*)native_set_ad_params },
+        {"native_enableADMix", "()I", (void*)native_enable_ad_mix },
+        {"native_disableADMix", "()I", (void*)native_disable_ad_mix },
         {"native_release", "()V", (void*)native_release },
 };
 

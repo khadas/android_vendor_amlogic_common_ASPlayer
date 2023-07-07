@@ -59,7 +59,6 @@ typedef jni_asplayer_result (*JniASPlayer_startAudioDecoding_FUNC)(jni_asplayer_
 typedef jni_asplayer_result (*JniASPlayer_pauseAudioDecoding_FUNC)(jni_asplayer_handle);
 typedef jni_asplayer_result (*JniASPlayer_resumeAudioDecoding_FUNC)(jni_asplayer_handle);
 typedef jni_asplayer_result (*JniASPlayer_stopAudioDecoding_FUNC)(jni_asplayer_handle);
-typedef jni_asplayer_result (*JniASPlayer_setADParams_FUNC)(jni_asplayer_handle, jni_asplayer_audio_params *);
 typedef jni_asplayer_result (*JniASPlayer_getADInfo_FUNC)(jni_asplayer_handle, jni_asplayer_audio_info *);
 typedef jni_asplayer_result (*JniASPlayer_setSubPid_FUNC)(jni_asplayer_handle, uint32_t);
 typedef jni_asplayer_result (*JniASPlayer_getParams_FUNC)(jni_asplayer_handle, jni_asplayer_parameter, void*);
@@ -70,6 +69,9 @@ typedef jni_asplayer_result (*JniASPlayer_stopSub_FUNC)(jni_asplayer_handle);
 typedef jni_asplayer_result (*JniASPlayer_getFirstPts_FUNC)(jni_asplayer_handle, jni_asplayer_stream_type, uint64_t *);
 typedef jni_asplayer_result (*JniASPlayer_flush_FUNC)(jni_asplayer_handle);
 typedef jni_asplayer_result (*JniASPlayer_flushDvr_FUNC)(jni_asplayer_handle);
+typedef jni_asplayer_result (*JniASPlayer_setADParams_FUNC)(jni_asplayer_handle, jni_asplayer_audio_params *);
+typedef jni_asplayer_result (*JniASPlayer_enableADMix_FUNC)(jni_asplayer_handle);
+typedef jni_asplayer_result (*JniASPlayer_disableADMix_FUNC)(jni_asplayer_handle);
 
 class DynamicJniASPlayerWrapper;
 
@@ -113,6 +115,9 @@ public:
     jni_asplayer_result setTrickMode(jni_asplayer_video_trick_mode trickMode);
     jni_asplayer_result setTransitionModeBefore(jni_asplayer_transition_mode_before mode);
     jni_asplayer_result setPIPMode(jni_asplayer_pip_mode mode);
+    jni_asplayer_result setADParams(jni_asplayer_audio_params *params);
+    jni_asplayer_result enableADMix();
+    jni_asplayer_result disableADMix();
     jni_asplayer_result release();
 
     void notifyPlaybackListeners(jni_asplayer_event *event);
@@ -180,7 +185,6 @@ private:
     static JniASPlayer_pauseAudioDecoding_FUNC ASPlayer_pauseAudioDecoding;
     static JniASPlayer_resumeAudioDecoding_FUNC ASPlayer_resumeAudioDecoding;
     static JniASPlayer_stopAudioDecoding_FUNC ASPlayer_stopAudioDecoding;
-    static JniASPlayer_setADParams_FUNC ASPlayer_setADParams;
     static JniASPlayer_getADInfo_FUNC ASPlayer_getADInfo;
     static JniASPlayer_setSubPid_FUNC ASPlayer_setSubPid;
     static JniASPlayer_getParams_FUNC ASPlayer_getParams;
@@ -191,6 +195,9 @@ private:
     static JniASPlayer_getFirstPts_FUNC ASPlayer_getFirstPts;
     static JniASPlayer_flush_FUNC ASPlayer_flush;
     static JniASPlayer_flushDvr_FUNC ASPlayer_flushDvr;
+    static JniASPlayer_setADParams_FUNC ASPlayer_setADParams;
+    static JniASPlayer_enableADMix_FUNC ASPlayer_enableADMix;
+    static JniASPlayer_disableADMix_FUNC ASPlayer_disableADMix;
 };
 
 

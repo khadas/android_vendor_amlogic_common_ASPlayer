@@ -300,13 +300,18 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
-    public int setAudioDescriptionParams(AudioParams params) {
-        return 0;
+    public int setADParams(AudioParams params) {
+        return native_setADParams(params);
     }
 
     @Override
-    public MediaFormat getAudioDescriptionInfo() {
-        return null;
+    public int enableADMix() {
+        return native_enableADMix();
+    }
+
+    @Override
+    public int disableADMix() {
+        return native_disableADMix();
     }
 
     @Override
@@ -363,5 +368,8 @@ public class JniASPlayerWrapper implements IASPlayer {
     private native int native_setTrickMode(int trickMode);
     private native int native_setTransitionModeBefore(int mode);
     private native int native_setPIPMode(int mode);
+    private native int native_setADParams(AudioParams params);
+    private native int native_enableADMix();
+    private native int native_disableADMix();
     private native void native_release();
 }

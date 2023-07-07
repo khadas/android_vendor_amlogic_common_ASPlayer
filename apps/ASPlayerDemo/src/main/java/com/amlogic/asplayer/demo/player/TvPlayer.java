@@ -74,6 +74,7 @@ public class TvPlayer {
 
     private Filter mVideoFilter;
     private Filter mAudioFilter;
+    private Filter mSubAudioFilter;
     private TrackInfo.VideoTrackInfo mVideoTrackInfo;
     private TrackInfo.AudioTrackInfo mAudioTrackInfo;
 
@@ -422,6 +423,32 @@ public class TvPlayer {
         mAudioFilter = newAudioFilter;
     }
 
+    public void setADParams(Bundle bundle) {
+        TrackInfo.AudioTrackInfo audioTrackInfo = getAudioTrackInfoFromBundle(bundle);
+        mSubAudioFilter = openAudioFilter(audioTrackInfo.pid, audioTrackInfo.audioStreamType);
+        AudioParams audioParams = new AudioParams.Builder(audioTrackInfo.mimeType, 48000, 2)
+                .setPid(audioTrackInfo.pid)
+                .setTrackFilterId(mSubAudioFilter.getId())
+                .setAvSyncHwId(mTuner.getAvSyncHwId(mSubAudioFilter))
+                .build();
+
+        if (mASPlayer != null) {
+            mASPlayer.setADParams(audioParams);
+        }
+    }
+
+    public void enableADMix() {
+        if (mASPlayer != null) {
+            mASPlayer.enableADMix();
+        }
+    }
+
+    public void disableADMix() {
+        if (mASPlayer != null) {
+            mASPlayer.disableADMix();
+        }
+    }
+
     private void cancelTuning() {
         if (mTuner != null) {
             mTuner.cancelTuning();
@@ -587,6 +614,10 @@ public class TvPlayer {
             mASPlayer.stopAudioDecoding();
         }
         closeAudioFilter();
+        if (mSubAudioFilter != null) {
+            closeFilter(mSubAudioFilter);
+            mSubAudioFilter = null;
+        }
     }
 
     public void pauseAudioDecoding() {

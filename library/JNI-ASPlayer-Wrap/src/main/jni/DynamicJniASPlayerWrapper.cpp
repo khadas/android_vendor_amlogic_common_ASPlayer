@@ -77,7 +77,6 @@ JniASPlayer_startAudioDecoding_FUNC DynamicJniASPlayerWrapper::ASPlayer_startAud
 JniASPlayer_pauseAudioDecoding_FUNC DynamicJniASPlayerWrapper::ASPlayer_pauseAudioDecoding = nullptr;
 JniASPlayer_resumeAudioDecoding_FUNC DynamicJniASPlayerWrapper::ASPlayer_resumeAudioDecoding = nullptr;
 JniASPlayer_stopAudioDecoding_FUNC DynamicJniASPlayerWrapper::ASPlayer_stopAudioDecoding = nullptr;
-JniASPlayer_setADParams_FUNC DynamicJniASPlayerWrapper::ASPlayer_setADParams = nullptr;
 JniASPlayer_getADInfo_FUNC DynamicJniASPlayerWrapper::ASPlayer_getADInfo = nullptr;
 JniASPlayer_setSubPid_FUNC DynamicJniASPlayerWrapper::ASPlayer_setSubPid = nullptr;
 JniASPlayer_getParams_FUNC DynamicJniASPlayerWrapper::ASPlayer_getParams = nullptr;
@@ -88,6 +87,9 @@ JniASPlayer_stopSub_FUNC DynamicJniASPlayerWrapper::ASPlayer_stopSub = nullptr;
 JniASPlayer_getFirstPts_FUNC DynamicJniASPlayerWrapper::ASPlayer_getFirstPts = nullptr;
 JniASPlayer_flush_FUNC DynamicJniASPlayerWrapper::ASPlayer_flush = nullptr;
 JniASPlayer_flushDvr_FUNC DynamicJniASPlayerWrapper::ASPlayer_flushDvr = nullptr;
+JniASPlayer_setADParams_FUNC DynamicJniASPlayerWrapper::ASPlayer_setADParams = nullptr;
+JniASPlayer_enableADMix_FUNC DynamicJniASPlayerWrapper::ASPlayer_enableADMix = nullptr;
+JniASPlayer_disableADMix_FUNC DynamicJniASPlayerWrapper::ASPlayer_disableADMix = nullptr;
 
 
 static void asplayer_callback(void *user_data, jni_asplayer_event *event) {
@@ -262,8 +264,6 @@ void DynamicJniASPlayerWrapper::initSymbols() {
     CHECK_SYMBOL(ASPlayer_resumeAudioDecoding, "JniASPlayer_resumeAudioDecoding");
     ASPlayer_stopAudioDecoding = (JniASPlayer_stopAudioDecoding_FUNC)(dlsym(handle, "JniASPlayer_stopAudioDecoding"));
     CHECK_SYMBOL(ASPlayer_stopAudioDecoding, "JniASPlayer_stopAudioDecoding");
-    ASPlayer_setADParams = (JniASPlayer_setADParams_FUNC)(dlsym(handle, "JniASPlayer_setADParams"));
-    CHECK_SYMBOL(ASPlayer_setADParams, "JniASPlayer_setADParams");
     ASPlayer_getADInfo = (JniASPlayer_getADInfo_FUNC)(dlsym(handle, "JniASPlayer_getADInfo"));
     CHECK_SYMBOL(ASPlayer_getADInfo, "JniASPlayer_getADInfo");
     ASPlayer_setSubPid = (JniASPlayer_setSubPid_FUNC)(dlsym(handle, "JniASPlayer_setSubPid"));
@@ -280,6 +280,12 @@ void DynamicJniASPlayerWrapper::initSymbols() {
     CHECK_SYMBOL(ASPlayer_stopSub, "JniASPlayer_stopSub");
     ASPlayer_getFirstPts = (JniASPlayer_getFirstPts_FUNC)(dlsym(handle, "JniASPlayer_getFirstPts"));
     CHECK_SYMBOL(ASPlayer_getFirstPts, "JniASPlayer_getFirstPts");
+    ASPlayer_setADParams = (JniASPlayer_setADParams_FUNC)(dlsym(handle, "JniASPlayer_setADParams"));
+    CHECK_SYMBOL(ASPlayer_setADParams, "JniASPlayer_setADParams");
+    ASPlayer_enableADMix = (JniASPlayer_enableADMix_FUNC)(dlsym(handle, "JniASPlayer_enableADMix"));
+    CHECK_SYMBOL(ASPlayer_enableADMix, "JniASPlayer_enableADMix");
+    ASPlayer_disableADMix = (JniASPlayer_disableADMix_FUNC)(dlsym(handle, "JniASPlayer_disableADMix"));
+    CHECK_SYMBOL(ASPlayer_disableADMix, "JniASPlayer_disableADMix");
 }
 
 void DynamicJniASPlayerWrapper::closeJniASPlayerSo() {
@@ -929,6 +935,75 @@ jni_asplayer_result DynamicJniASPlayerWrapper::setPIPMode(jni_asplayer_pip_mode 
     }
 
     jni_asplayer_result ret = ASPlayer_setPIPMode(handle, mode);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result DynamicJniASPlayerWrapper::setADParams(jni_asplayer_audio_params *params) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_setADParams == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_setADParams(handle, params);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result DynamicJniASPlayerWrapper::enableADMix() {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_enableADMix == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_enableADMix(handle);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result DynamicJniASPlayerWrapper::disableADMix() {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_disableADMix == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_disableADMix(handle);
     if (ret != JNI_ASPLAYER_OK) {
         LOG_PLAYER_OP_FAILED(ret);
     }
