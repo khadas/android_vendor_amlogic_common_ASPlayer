@@ -97,6 +97,8 @@ public:
 
     jni_asplayer_result setAudioParams(jni_asplayer_audio_params *params);
 
+    jni_asplayer_result switchAudioTrack(jni_asplayer_audio_params *params);
+
     jni_asplayer_result flush();
 
     jni_asplayer_result flushDvr();

@@ -4,6 +4,8 @@ import android.media.AudioFormat;
 import android.media.MediaDescrambler;
 import android.media.MediaFormat;
 
+import com.amlogic.asplayer.api.AudioParams;
+
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
@@ -39,6 +41,8 @@ class AudioOutputPath extends MediaOutputPath {
     protected boolean mChangePIPMode = false;
 
     protected boolean mHasAudio = false;
+
+    protected AudioParams mAudioParams;
 
     protected AudioFormatListener mAudioFormatListener;
 
@@ -90,20 +94,20 @@ class AudioOutputPath extends MediaOutputPath {
         }
     }
 
-    @Override
-    void setMediaFormat(MediaFormat format) {
-        if (mMediaFormat != null) {
-            mHasAudioFormatChanged = hasAudioFormatChanged(mMediaFormat, format);
+    void setAudioParams(AudioParams audioParams) {
+        if (mAudioParams != null) {
+            mHasAudioFormatChanged = hasAudioFormatChanged(mAudioParams.getMediaFormat(),
+                    audioParams.getMediaFormat());
         }
-        super.setMediaFormat(format);
+
+        mAudioParams = audioParams;
+        if (mAudioParams != null) {
+            setMediaFormat(mAudioParams.getMediaFormat());
+        }
     }
 
-    void setHasAudio(boolean hasAudio) {
-        mHasAudio = hasAudio;
-    }
-
-    boolean hasAudio() {
-        return mHasAudio;
+    void switchAudioTrack(AudioParams audioParams) {
+        setAudioParams(audioParams);
     }
 
     boolean isPlaying() {
@@ -276,6 +280,10 @@ class AudioOutputPath extends MediaOutputPath {
         }
     }
 
+    public void flush() {
+
+    }
+
     @Override
     public void reset() {
 //        TvLog.i("AudioOutputPath-%d reset", mId);
@@ -284,6 +292,7 @@ class AudioOutputPath extends MediaOutputPath {
         if (mAudioCodecRenderer != null) mAudioCodecRenderer.release();
         mAudioCodecRenderer = null;
 
+        mAudioParams = null;
         mHasAudioFormatChanged = false;
     }
 
@@ -296,6 +305,9 @@ class AudioOutputPath extends MediaOutputPath {
 
         mMute = false;
         mHasAudio = false;
+
+        mAudioParams = null;
+        mHasAudioFormatChanged = false;
     }
 
     @Override

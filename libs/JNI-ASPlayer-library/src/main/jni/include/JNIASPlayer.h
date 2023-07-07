@@ -692,6 +692,14 @@ jni_asplayer_result  JniASPlayer_getAudioMute(jni_asplayer_handle Handle, bool_t
 jni_asplayer_result  JniASPlayer_setAudioParams(jni_asplayer_handle Handle, jni_asplayer_audio_params *pParams);
 
 /**
+ *@brief:        Switch audio track for specified JniASPlayer instance.
+ *@param:        Handle     JniASPlayer handle.
+ *@param:        *pParams   Params need by demuxer and audio decoder.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_switchAudioTrack(jni_asplayer_handle Handle, jni_asplayer_audio_params *pParams);
+
+/**
  *@brief:        Get audio basic info of specified JniASPlayer instance.
  *@param:        Handle      JniASPlayer handle.
  *@param:        *pInfo      The ptr of audio basic info struct .

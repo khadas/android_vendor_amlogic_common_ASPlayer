@@ -47,6 +47,7 @@ struct asplayer_t {
     jmethodID resumeAudioDecodingMID;
     jmethodID setVideoParamsMID;
     jmethodID setAudioParamsMID;
+    jmethodID switchAudioTrackMID;
     jmethodID flushMID;
     jmethodID flushDvrMID;
 //    jmethodID writeByteBufferMID;
@@ -416,6 +417,7 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
     gASPlayerCtx.resumeAudioDecodingMID = GetMethodIDOrDie(env, gASPlayerCls, "resumeAudioDecoding", "()I");
     gASPlayerCtx.setVideoParamsMID = GetMethodIDOrDie(env, gASPlayerCls, "setVideoParams", "(Lcom/amlogic/asplayer/api/VideoParams;)V");
     gASPlayerCtx.setAudioParamsMID = GetMethodIDOrDie(env, gASPlayerCls, "setAudioParams", "(Lcom/amlogic/asplayer/api/AudioParams;)V");
+    gASPlayerCtx.switchAudioTrackMID = GetMethodIDOrDie(env, gASPlayerCls, "switchAudioTrack", "(Lcom/amlogic/asplayer/api/AudioParams;)I");
     gASPlayerCtx.flushMID = GetMethodIDOrDie(env, gASPlayerCls, "flush", "()I");
     gASPlayerCtx.flushDvrMID = GetMethodIDOrDie(env, gASPlayerCls, "flushDvr", "()I");
 //    gASPlayerCtx.writeByteBufferMID = GetMethodIDOrDie(env, gASPlayerCls, "writeData", "(I[BJJJ)I");
@@ -845,6 +847,24 @@ jni_asplayer_result JniASPlayer::setAudioParams(jni_asplayer_audio_params *param
 
     LOG_FUNCTION_INT_END(result);
     return result;
+}
+
+jni_asplayer_result JniASPlayer::switchAudioTrack(jni_asplayer_audio_params *params) {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jobject audioParam;
+    if (!JniASPlayerJNI::createAudioParams(env, params, &audioParam)) {
+        ALOGE("[%s/%d] failed to convert AudioParams", __func__, __LINE__);
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.switchAudioTrackMID, audioParam);
+    env->DeleteLocalRef(audioParam);
+    return static_cast<jni_asplayer_result>(ret);
 }
 
 jni_asplayer_result JniASPlayer::flush() {

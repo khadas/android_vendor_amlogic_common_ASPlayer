@@ -287,6 +287,14 @@ public interface IASPlayer {
     public void setAudioParams(AudioParams params) throws NullPointerException, IllegalArgumentException, IllegalStateException;
 
     /**
+     * Switch audio track
+     *
+     * @param params
+     * @return
+     */
+    int switchAudioTrack(AudioParams params);
+
+    /**
      * Get audio basic info of ASPlayer instance.
      */
     public MediaFormat getAudioInfo();

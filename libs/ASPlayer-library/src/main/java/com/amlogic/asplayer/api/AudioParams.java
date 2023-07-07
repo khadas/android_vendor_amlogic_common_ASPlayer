@@ -138,7 +138,7 @@ public class AudioParams {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("AudioParams{");
-        sb.append(", mMimeType=").append(mMimeType);
+        sb.append("mMimeType=").append(mMimeType);
         sb.append(", mSampleRate=").append(mSampleRate);
         sb.append(", mChannelCount=").append(mChannelCount);
         sb.append(", mPid=").append(mPid);

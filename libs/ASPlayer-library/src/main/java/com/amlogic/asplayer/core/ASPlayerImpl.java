@@ -772,6 +772,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             });
         } else {
             ASPlayerLog.e("%s-%d setAudioParams failed, playerHandler is null", TAG, mId);
+            throw new IllegalStateException("ASPlayer not prepared");
         }
     }
 
@@ -781,32 +782,101 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             int pid = params.getPid();
             int filterId = params.getTrackFilterId();
             int avSyncHwId = params.getAvSyncHwId();
-            ASPlayerLog.i("%s-%d setAudioParams pid: %d, filterId: %d, avSyncHwId: %d, format: %s",
+
+            ASPlayerLog.i("%s-%d setAudioParams pid: 0x%04x, filterId: 0x%016x, avSyncHwId: 0x%x, format: %s",
                     TAG, mId, pid, filterId, avSyncHwId, mediaFormat);
 
             if (mediaFormat == null) {
-                mediaFormat = MediaFormat.createAudioFormat(params.getMimeType(), params.getSampleRate(), params.getChannelCount());
-                ASPlayerLog.i("%s-%d setAudioParams create MediaFormat, mimeType: %s, sampleRate: %d, channelCount: %d",
-                        TAG, mId, params.getMimeType(), params.getSampleRate(), params.getChannelCount());
+                params = createAudioParamsWithMediaFormat(params);
             }
-            mAudioOutputPath.setMediaFormat(mediaFormat);
 
-            if (mAudioOutputPath instanceof AudioOutputPathV3) {
-                AudioOutputPathV3 outputPathV3 = (AudioOutputPathV3)mAudioOutputPath;
-                outputPathV3.setAudioFilterId(params.getTrackFilterId());
-                outputPathV3.setAvSyncHwId(params.getAvSyncHwId());
-            }
+            mAudioOutputPath.setAudioParams(params);
 
             mRendererScheduler.onSetAudioParams(true);
         } else {
             ASPlayerLog.i("%s-%d setAudioParams params is null", TAG, mId);
-            mAudioOutputPath.setMediaFormat(null);
-            if (mAudioOutputPath instanceof AudioOutputPathV3) {
-                AudioOutputPathV3 outputPathV3 = (AudioOutputPathV3) mAudioOutputPath;
-                outputPathV3.setAudioFilterId(MediaContainerExtractor.INVALID_FILTER_ID);
-                outputPathV3.setAudioSubTrackFilterId(MediaContainerExtractor.INVALID_FILTER_ID);
-                outputPathV3.setAvSyncHwId(MediaContainerExtractor.INVALID_AV_SYNC_HW_ID);
+            mAudioOutputPath.setAudioParams(null);
+
+            mRendererScheduler.onSetAudioParams(false);
+        }
+    }
+
+    private AudioParams createAudioParamsWithMediaFormat(AudioParams audioParams) {
+        if (audioParams == null) {
+            return null;
+        }
+
+        if (audioParams.getMediaFormat() != null) {
+            return audioParams;
+        }
+
+        MediaFormat mediaFormat = MediaFormat.createAudioFormat(audioParams.getMimeType(),
+                audioParams.getSampleRate(), audioParams.getChannelCount());
+
+        ASPlayerLog.i("%s-%d create audio MediaFormat, mimeType: %s, sampleRate: %d, channelCount: %d",
+                TAG, mId, audioParams.getMimeType(), audioParams.getSampleRate(), audioParams.getChannelCount());
+
+        AudioParams newParams = new AudioParams.Builder(mediaFormat)
+                .setPid(audioParams.getPid())
+                .setTrackFilterId(audioParams.getTrackFilterId())
+                .setAvSyncHwId(audioParams.getAvSyncHwId())
+                .setSecLevel(audioParams.getSecLevel())
+                .build();
+        return newParams;
+    }
+
+    @Override
+    public int switchAudioTrack(AudioParams params) {
+        if (params == null) {
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        }
+
+        int playbackMode = mConfig.getPlaybackMode();
+        if (playbackMode == ASPlayerConfig.PLAYBACK_MODE_PASSTHROUGH) {
+            int filterId = params.getTrackFilterId();
+            int avSyncHwId = params.getAvSyncHwId();
+            if (filterId < 0) {
+                String msg = String.format("invalid filter id: %d", filterId);
+                ASPlayerLog.e("%s-%d switchAudioTrack failed, error: %s", TAG, mId, msg);
+                return ErrorCode.ERROR_INVALID_PARAMS;
+            } else if (avSyncHwId < 0) {
+                String msg = String.format("invalid avSyncHw id: %d", avSyncHwId);
+                ASPlayerLog.e("%s-%d switchAudioTrack failed, error: %s", TAG, mId, msg);
+                return ErrorCode.ERROR_INVALID_PARAMS;
             }
+        }
+
+        if (mPlayerHandler != null) {
+            mPlayerHandler.post(() -> {
+                handleSwitchAudioTrack(params);
+            });
+            return ErrorCode.SUCCESS;
+        } else {
+            ASPlayerLog.e("%s-%d switchAudioTrack failed, playerHandler is null", TAG, mId);
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+    }
+
+    private void handleSwitchAudioTrack(AudioParams params) {
+        if (params != null) {
+            MediaFormat mediaFormat = params.getMediaFormat();
+            int pid = params.getPid();
+            int filterId = params.getTrackFilterId();
+            int avSyncHwId = params.getAvSyncHwId();
+
+            ASPlayerLog.i("%s-%d switchAudioTrack pid: 0x%04x, filterId: 0x%016x, avSyncHwId: 0x%x, format: %s",
+                    TAG, mId, pid, filterId, avSyncHwId, mediaFormat);
+
+            if (mediaFormat == null) {
+                params = createAudioParamsWithMediaFormat(params);
+            }
+
+            mAudioOutputPath.switchAudioTrack(params);
+
+            mRendererScheduler.onSetAudioParams(true);
+        } else {
+            ASPlayerLog.i("%s-%d switchAudioTrack params is null", TAG, mId);
+            mAudioOutputPath.switchAudioTrack(null);
 
             mRendererScheduler.onSetAudioParams(false);
         }

@@ -492,6 +492,17 @@ public class ASPlayer implements IASPlayer {
     }
 
     /**
+     * Switch audio track
+     * @param params
+     * @return
+     */
+    @Override
+    public int switchAudioTrack(AudioParams params) {
+        ASPlayerLog.i("%s-%d switchAudioTrack start, params: %s", TAG, mId, params);
+        return mPlayer.switchAudioTrack(params);
+    }
+
+    /**
      * Get audio basic info of ASPlayer instance.
      */
     @Override

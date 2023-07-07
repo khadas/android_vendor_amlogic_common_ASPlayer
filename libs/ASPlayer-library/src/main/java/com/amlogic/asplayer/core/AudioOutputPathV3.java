@@ -6,6 +6,7 @@ import android.media.MediaFormat;
 import android.os.Build;
 
 
+import com.amlogic.asplayer.api.AudioParams;
 import com.amlogic.asplayer.api.PIPMode;
 import com.amlogic.asplayer.core.encapsulation.Metadata;
 
@@ -24,9 +25,7 @@ class AudioOutputPathV3 extends AudioOutputPath {
     private Metadata.PlacementMetadata mPlacementMetadata;
     protected boolean mSecurePlayback = false;
 
-    private int mAudioFilterId = INVALID_FILTER_ID;
     private int mAudioSubTrackFilterId = INVALID_FILTER_ID;
-    private int mAvSyncHwId = INVALID_AV_SYNC_HW_ID;
 
     AudioOutputPathV3(int id) {
         super(id);
@@ -41,16 +40,22 @@ class AudioOutputPathV3 extends AudioOutputPath {
         mPlacementMetadata.placement = Metadata.PlacementMetadata.PLACEMENT_NORMAL;
     }
 
-    public void setAudioFilterId(int audioFilterId) {
-        this.mAudioFilterId = audioFilterId;
+    @Override
+    void setAudioParams(AudioParams audioParams) {
+        super.setAudioParams(audioParams);
+    }
+
+    @Override
+    void switchAudioTrack(AudioParams audioParams) {
+        super.switchAudioTrack(audioParams);
+
+        if (audioParams != null && audioParams.getTrackFilterId() != INVALID_FILTER_ID) {
+            setTrackWithTunerMetaData(audioParams);
+        }
     }
 
     public void setAudioSubTrackFilterId(int subTrackFilterId) {
-        this.mAudioSubTrackFilterId = subTrackFilterId;
-    }
-
-    public void setAvSyncHwId(int avSyncHwId) {
-        this.mAvSyncHwId = avSyncHwId;
+        mAudioSubTrackFilterId = subTrackFilterId;
     }
 
     @Override
@@ -68,7 +73,12 @@ class AudioOutputPathV3 extends AudioOutputPath {
             return false;
         }
 
-        MediaFormat format = mMediaFormat;
+        if (mAudioParams == null) {
+            if (DEBUG) ASPlayerLog.w("AudioOutputPathV3-%d configure failed, audio params is null", mId);
+            return false;
+        }
+
+        MediaFormat format = mAudioParams.getMediaFormat();
         if (format == null) {
             if (DEBUG) ASPlayerLog.w("AudioOutputPathV3-%d configure failed, audio format is null", mId);
             return false;
@@ -131,13 +141,14 @@ class AudioOutputPathV3 extends AudioOutputPath {
         audioCodecRenderer.setTunneledPlayback(mTunneledPlayback);
         audioCodecRenderer.setAudioCaps(mAudioCaps);
         audioCodecRenderer.setVolume(mGain);
-        int filterId = mAudioFilterId;
-        ASPlayerLog.i("AudioOutputPathV3-%d track filter id: %d", mId, filterId);
+        int filterId = mAudioParams.getTrackFilterId();
+        int avSyncHwId = mAudioParams.getAvSyncHwId();
+        ASPlayerLog.i("AudioOutputPathV3-%d track filter id: 0x%016x, avSyncHwId: 0x%04x", mId, filterId, avSyncHwId);
         if (mSecurePlayback) {
             filterId |= (1 << 20);
         }
         audioCodecRenderer.setAudioFilterId(filterId);
-        audioCodecRenderer.setAvSyncHwId(mAvSyncHwId);
+        audioCodecRenderer.setAvSyncHwId(avSyncHwId);
         audioCodecRenderer.setSubAudioMixLevel(mMixLevel);
         audioCodecRenderer.writeMetadata(mPlacementMetadata);
 
@@ -146,10 +157,6 @@ class AudioOutputPathV3 extends AudioOutputPath {
         mNeedToConfigureSubTrack = mAudioSubTrackFilterId != INVALID_FILTER_ID;
 
         errorMessage = audioCodecRenderer.getErrorMessage();
-        if (errorMessage == null) {
-            mChangePIPMode = false;
-            setConfigured(true);
-        }
 
         if (errorMessage == null) {
             AudioFormat audioFormat = audioCodecRenderer.getAudioFormat();
@@ -160,12 +167,24 @@ class AudioOutputPathV3 extends AudioOutputPath {
 
         if (errorMessage != null) {
             ASPlayerLog.i("AudioOutputPathV3-%d configure failed, errorMessage: %s", mId, errorMessage);
+        } else {
+            setConfigured(true);
         }
         handleConfigurationError(errorMessage);
         boolean success = errorMessage == null;
         ASPlayerLog.i("AudioOutputPathV3-%d configure %s", mId, success ? "success" : "failed");
         mLastPIPMode = mTargetPIPMode;
+        mChangePIPMode = false;
         return success;
+    }
+
+    private void setTrackWithTunerMetaData(AudioParams audioParams) {
+        if (audioParams == null || audioParams.getTrackFilterId() == INVALID_FILTER_ID) {
+            return;
+        }
+
+        ASPlayerLog.i("AudioOutputPathV3-%d setTrackWithTunerMetaData filterId: %d", mId, audioParams.getTrackFilterId());
+        changeMainTrack(audioParams);
     }
 
     @Override
@@ -185,29 +204,35 @@ class AudioOutputPathV3 extends AudioOutputPath {
     }
 
     @Override
-    public void reset() {
-        super.reset();
+    public void flush() {
+        super.flush();
+
+        if (mAudioCodecRenderer != null) {
+            mAudioCodecRenderer.reset();
+        }
     }
 
     @Override
     public void release() {
         super.release();
 
-        mAudioFilterId = INVALID_FILTER_ID;
         mAudioSubTrackFilterId = INVALID_FILTER_ID;
-        mAvSyncHwId = INVALID_AV_SYNC_HW_ID;
     }
 
-    private boolean changeMainTrack() {
+    private boolean changeMainTrack(AudioParams audioParams) {
+        ASPlayerLog.i("AudioOutputPathV3-%d changeMainTrack start", mId);
         if (mAudioCodecRenderer instanceof AudioCodecRendererV3) {
+            mMediaFormat = audioParams.getMediaFormat();
             if (mMediaFormat == null) {
-                ASPlayerLog.i("audio format null..");
+                ASPlayerLog.i("AudioOutputPathV3-%d audio format null..", mId);
                 return false;
             }
-            if (!prepareMetadata(mTunerMetadataMain, mAudioFilterId)) {
+
+            if (!prepareMetadata(mTunerMetadataMain, audioParams.getTrackFilterId())) {
                 return false;
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                ASPlayerLog.i("AudioOutputPathV3-%d changeMainTrack start writeMetadata", mId);
                 ((AudioCodecRendererV3) mAudioCodecRenderer).writeMetadata(mTunerMetadataMain);
             }
 
@@ -238,12 +263,16 @@ class AudioOutputPathV3 extends AudioOutputPath {
             return false;
         }
 
-        tunerMetadata.filterId = filterId;
+        tunerMetadata.filterId = 0;
+        if (filterId != INVALID_FILTER_ID) {
+            tunerMetadata.filterId = filterId;
+        }
         if (tunerMetadata.filterId < 0) {
-            // retry to get the filter id
             return false;
         }
         tunerMetadata.encodingType = AudioUtils.getEncoding(mMediaFormat);
+        ASPlayerLog.i("AudioOutputPathV3-%d prepareMetadata filterId: 0x%04x, encoding: %d",
+                mId, tunerMetadata.filterId, tunerMetadata.encodingType);
         return true;
     }
 
