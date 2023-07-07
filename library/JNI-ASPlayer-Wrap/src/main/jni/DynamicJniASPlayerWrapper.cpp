@@ -71,6 +71,7 @@ JniASPlayer_getAudioStereoMode_FUNC DynamicJniASPlayerWrapper::ASPlayer_getAudio
 JniASPlayer_setAudioMute_FUNC DynamicJniASPlayerWrapper::ASPlayer_setAudioMute = nullptr;
 JniASPlayer_getAudioMute_FUNC DynamicJniASPlayerWrapper::ASPlayer_getAudioMute = nullptr;
 JniASPlayer_setAudioParams_FUNC DynamicJniASPlayerWrapper::ASPlayer_setAudioParams = nullptr;
+JniASPlayer_switchAudioTrack_FUNC DynamicJniASPlayerWrapper::ASPlayer_switchAudioTrack = nullptr;
 JniASPlayer_getAudioInfo_FUNC DynamicJniASPlayerWrapper::ASPlayer_getAudioInfo = nullptr;
 JniASPlayer_startAudioDecoding_FUNC DynamicJniASPlayerWrapper::ASPlayer_startAudioDecoding = nullptr;
 JniASPlayer_pauseAudioDecoding_FUNC DynamicJniASPlayerWrapper::ASPlayer_pauseAudioDecoding = nullptr;
@@ -249,6 +250,8 @@ void DynamicJniASPlayerWrapper::initSymbols() {
     CHECK_SYMBOL(ASPlayer_getAudioMute, "JniASPlayer_getAudioMute");
     ASPlayer_setAudioParams = (JniASPlayer_setAudioParams_FUNC)(dlsym(handle, "JniASPlayer_setAudioParams"));
     CHECK_SYMBOL(ASPlayer_setAudioParams, "JniASPlayer_setAudioParams");
+    ASPlayer_switchAudioTrack = (JniASPlayer_switchAudioTrack_FUNC)(dlsym(handle, "JniASPlayer_switchAudioTrack"));
+    CHECK_SYMBOL(ASPlayer_switchAudioTrack, "JniASPlayer_switchAudioTrack");
     ASPlayer_getAudioInfo = (JniASPlayer_getAudioInfo_FUNC)(dlsym(handle, "JniASPlayer_getAudioInfo"));
     CHECK_SYMBOL(ASPlayer_getAudioInfo, "JniASPlayer_getAudioInfo");
     ASPlayer_startAudioDecoding = (JniASPlayer_startAudioDecoding_FUNC)(dlsym(handle, "JniASPlayer_startAudioDecoding"));
@@ -627,6 +630,29 @@ jni_asplayer_result DynamicJniASPlayerWrapper::setAudioParams(jni_asplayer_audio
     }
 
     jni_asplayer_result ret = ASPlayer_setAudioParams(handle, params);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result DynamicJniASPlayerWrapper::switchAudioTrack(jni_asplayer_audio_params *params) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_switchAudioTrack == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_switchAudioTrack(handle, params);
     if (ret != JNI_ASPLAYER_OK) {
         LOG_PLAYER_OP_FAILED(ret);
     }

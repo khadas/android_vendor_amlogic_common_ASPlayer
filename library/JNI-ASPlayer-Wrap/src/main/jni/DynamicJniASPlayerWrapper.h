@@ -53,6 +53,7 @@ typedef jni_asplayer_result (*JniASPlayer_getAudioStereoMode_FUNC)(jni_asplayer_
 typedef jni_asplayer_result (*JniASPlayer_setAudioMute_FUNC)(jni_asplayer_handle, bool_t, bool_t);
 typedef jni_asplayer_result (*JniASPlayer_getAudioMute_FUNC)(jni_asplayer_handle Hadl, bool_t *, bool_t *);
 typedef jni_asplayer_result (*JniASPlayer_setAudioParams_FUNC)(jni_asplayer_handle, jni_asplayer_audio_params *);
+typedef jni_asplayer_result (*JniASPlayer_switchAudioTrack_FUNC)(jni_asplayer_handle, jni_asplayer_audio_params *);
 typedef jni_asplayer_result (*JniASPlayer_getAudioInfo_FUNC)(jni_asplayer_handle,  jni_asplayer_audio_info *);
 typedef jni_asplayer_result (*JniASPlayer_startAudioDecoding_FUNC)(jni_asplayer_handle);
 typedef jni_asplayer_result (*JniASPlayer_pauseAudioDecoding_FUNC)(jni_asplayer_handle);
@@ -99,6 +100,7 @@ public:
     jni_asplayer_result resumeAudioDecoding();
     jni_asplayer_result setVideoParams(jni_asplayer_video_params *params);
     jni_asplayer_result setAudioParams(jni_asplayer_audio_params *params);
+    jni_asplayer_result switchAudioTrack(jni_asplayer_audio_params *params);
     jni_asplayer_result flush();
     jni_asplayer_result flushDvr();
     jni_asplayer_result writeData(jni_asplayer_input_buffer *buf, uint64_t timeout_ms);
@@ -172,6 +174,7 @@ private:
     static JniASPlayer_setAudioMute_FUNC ASPlayer_setAudioMute;
     static JniASPlayer_getAudioMute_FUNC ASPlayer_getAudioMute;
     static JniASPlayer_setAudioParams_FUNC ASPlayer_setAudioParams;
+    static JniASPlayer_switchAudioTrack_FUNC ASPlayer_switchAudioTrack;
     static JniASPlayer_getAudioInfo_FUNC ASPlayer_getAudioInfo;
     static JniASPlayer_startAudioDecoding_FUNC ASPlayer_startAudioDecoding;
     static JniASPlayer_pauseAudioDecoding_FUNC ASPlayer_pauseAudioDecoding;

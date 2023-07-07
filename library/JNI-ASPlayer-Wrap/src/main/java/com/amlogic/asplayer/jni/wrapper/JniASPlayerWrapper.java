@@ -270,6 +270,11 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
+    public int switchAudioTrack(AudioParams params) {
+        return native_switchAudioTrack(params);
+    }
+
+    @Override
     public MediaFormat getAudioInfo() {
         return null;
     }
@@ -345,6 +350,7 @@ public class JniASPlayerWrapper implements IASPlayer {
     private native int native_resumeAudioDecoding();
     private native int native_setVideoParams(VideoParams params);
     private native int native_setAudioParams(AudioParams params);
+    private native int native_switchAudioTrack(AudioParams params);
     private native int native_flush();
     private native int native_flushDvr();
     private native int native_writeData(InputBuffer buffer, long timeoutMillSecond);

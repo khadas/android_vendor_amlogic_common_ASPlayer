@@ -34,6 +34,7 @@ public:
     virtual jni_asplayer_result resumeAudioDecoding() = 0;
     virtual jni_asplayer_result setVideoParams(jni_asplayer_video_params *params) = 0;
     virtual jni_asplayer_result setAudioParams(jni_asplayer_audio_params *params) = 0;
+    virtual jni_asplayer_result switchAudioTrack(jni_asplayer_audio_params *params) = 0;
     virtual jni_asplayer_result flush() = 0;
     virtual jni_asplayer_result flushDvr() = 0;
     virtual jni_asplayer_result writeData(jni_asplayer_input_buffer *buf, uint64_t timeout_ms) = 0;

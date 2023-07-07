@@ -134,41 +134,6 @@ public class LiveTvPlayerActivity extends Activity implements TsPlaybackListener
         releaseTvPlayer();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    @Override
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
-        Log.d(TAG, "onKeyUp keyCode: " + keyCode + ", " + KeyEvent.keyCodeToString(keyCode));
-        boolean handled = false;
-        switch (keyCode) {
-            case KeyEvent.KEYCODE_MEDIA_AUDIO_TRACK:
-                toggleAudioMute();
-                handled = true;
-                break;
-            default:
-                break;
-        }
-
-        if (handled) {
-            return handled;
-        }
-
-        return super.onKeyUp(keyCode, event);
-    }
-
-    private void toggleAudioMute() {
-        if (mMute) {
-            // 当前是静音状态
-            mTvPlayer.unMuteAudio();
-            mMute = false;
-            ToastUtils.showToast(getApplicationContext(), "取消静音");
-        } else {
-            // 当前是非静音状态
-            mTvPlayer.muteAudio();
-            mMute = true;
-            ToastUtils.showToast(getApplicationContext(), "静音");
-        }
-    }
-
     private void changeAudioVolume() {
         int volume = mTvPlayer.getAudioVolume();
         volume = volume % 100 + 10;
@@ -180,7 +145,7 @@ public class LiveTvPlayerActivity extends Activity implements TsPlaybackListener
         }
 
         mTvPlayer.setAudioVolume(volume);
-        ToastUtils.showToast(getApplicationContext(), "设置音量：" + volume);
+        ToastUtils.showToast(getApplicationContext(), "set volume: " + volume);
     }
 
     private class LiveTvTuneListener implements TvPlayer.TuneListener {

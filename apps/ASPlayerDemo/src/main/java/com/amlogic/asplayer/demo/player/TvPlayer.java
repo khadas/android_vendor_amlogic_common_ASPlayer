@@ -73,11 +73,9 @@ public class TvPlayer {
     private int mTunerHalVersion = Constant.TUNER_HAL_VERSION_1_0;
 
     private Filter mVideoFilter;
-    private int mVideoPid = -1;
-    private String mVideoStreamType;
     private Filter mAudioFilter;
-    private int mAudioPid = -1;
-    private String mAudioStreamType;
+    private TrackInfo.VideoTrackInfo mVideoTrackInfo;
+    private TrackInfo.AudioTrackInfo mAudioTrackInfo;
 
     public interface TuneListener {
         void execTune(Tuner tuner);
@@ -181,25 +179,23 @@ public class TvPlayer {
         mTunerHalVersion = bundle.getInt(Constant.EXTRA_TUNER_HAL_VERSION, Constant.TUNER_HAL_VERSION_1_0);
 
         if (mASPlayer != null) {
-            mVideoPid = bundle.getInt(Constant.EXTRA_VIDEO_PID, -1);
-            String videoMimeType = bundle.getString(Constant.EXTRA_VIDEO_MIME_TYPE, "");
-            if (mTunerHalVersion == Constant.TUNER_HAL_VERSION_1_1) {
-                mVideoStreamType = bundle.getString(Constant.EXTRA_VIDEO_STREAM_TYPE, "");
-            }
+            mVideoTrackInfo = getVideoTrackInfoFromBundle(bundle);
 
             startVideoFilter();
             if (mVideoFilter == null) {
                 return;
             }
 
+            String videoMimeType = mVideoTrackInfo.mimeType;
             int width = 1920;
             int height = 1080;
-            if (videoMimeType.contains("hevc")) {
+            if (mVideoTrackInfo.mimeType.contains("hevc")) {
                 width = 3840;
                 height = 2160;
             }
+
             VideoParams.Builder videoParamsBuilder = new VideoParams.Builder(videoMimeType, width, height)
-                    .setPid(mVideoPid)
+                    .setPid(mVideoTrackInfo.pid)
                     .setTrackFilterId(mVideoFilter.getId())
                     .setAvSyncHwId(mTuner.getAvSyncHwId(mVideoFilter));
             VideoParams videoParams = videoParamsBuilder.build();
@@ -209,19 +205,16 @@ public class TvPlayer {
             setVideoParams(videoParams);
             mASPlayer.startVideoDecoding();
 
-            mAudioPid = bundle.getInt(Constant.EXTRA_AUDIO_PID, -1);
-            String audioMimeType = bundle.getString(Constant.EXTRA_AUDIO_MIME_TYPE, "");
-            if (mTunerHalVersion == Constant.TUNER_HAL_VERSION_1_1) {
-                mAudioStreamType = bundle.getString(Constant.EXTRA_AUDIO_STREAM_TYPE, "");
-            }
+            mAudioTrackInfo = getAudioTrackInfoFromBundle(bundle);
 
             startAudioFilter();
             if (mAudioFilter == null) {
                 return;
             }
 
+            String audioMimeType = mAudioTrackInfo.mimeType;
             AudioParams.Builder audioParamsBuilder = new AudioParams.Builder(audioMimeType, 48000, 2)
-                    .setPid(mAudioPid)
+                    .setPid(mAudioTrackInfo.pid)
                     .setTrackFilterId(mAudioFilter.getId())
                     .setAvSyncHwId(mTuner.getAvSyncHwId(mAudioFilter));
             AudioParams audioParams = audioParamsBuilder.build();
@@ -233,6 +226,22 @@ public class TvPlayer {
         } else {
             TvLog.e("Player-%d handleStart failed, asplayer is null", mId);
         }
+    }
+
+    private static TrackInfo.VideoTrackInfo getVideoTrackInfoFromBundle(Bundle bundle) {
+        TrackInfo.VideoTrackInfo videoTrackInfo = new TrackInfo.VideoTrackInfo();
+        videoTrackInfo.pid = bundle.getInt(Constant.EXTRA_VIDEO_PID, -1);
+        videoTrackInfo.mimeType = bundle.getString(Constant.EXTRA_VIDEO_MIME_TYPE, "");
+        videoTrackInfo.videoStreamType = bundle.getString(Constant.EXTRA_VIDEO_STREAM_TYPE, "");
+        return videoTrackInfo;
+    }
+
+    private static TrackInfo.AudioTrackInfo getAudioTrackInfoFromBundle(Bundle bundle) {
+        TrackInfo.AudioTrackInfo audioTrackInfo = new TrackInfo.AudioTrackInfo();
+        audioTrackInfo.pid = bundle.getInt(Constant.EXTRA_AUDIO_PID, -1);
+        audioTrackInfo.mimeType = bundle.getString(Constant.EXTRA_AUDIO_MIME_TYPE, "");
+        audioTrackInfo.audioStreamType = bundle.getString(Constant.EXTRA_AUDIO_STREAM_TYPE, "");
+        return audioTrackInfo;
     }
 
     private void setVideoParams(VideoParams videoParams) {
@@ -301,7 +310,7 @@ public class TvPlayer {
 
         AvSettings.Builder builder = AvSettings.builder(Filter.TYPE_TS, false)
                 .setPassthrough(true);
-        if (Build.VERSION.SDK_INT >= 32 && mTunerHalVersion == Constant.TUNER_HAL_VERSION_1_1) {
+        if (Build.VERSION.SDK_INT >= 31 && mTunerHalVersion == Constant.TUNER_HAL_VERSION_1_1) {
             // Android S
             TunerHelper.setVideoStreamType(builder, videoStreamType);
         }
@@ -311,6 +320,7 @@ public class TvPlayer {
                 .setSettings(settings)
                 .build();
         filter.configure(filterConfiguration);
+        filter.start();
         return filter;
     }
 
@@ -334,7 +344,7 @@ public class TvPlayer {
 
         AvSettings.Builder builder = AvSettings.builder(Filter.TYPE_TS, true)
                 .setPassthrough(true);
-        if (Build.VERSION.SDK_INT >= 32 && mTunerHalVersion == Constant.TUNER_HAL_VERSION_1_1) {
+        if (Build.VERSION.SDK_INT >= 31 && mTunerHalVersion == Constant.TUNER_HAL_VERSION_1_1) {
             // Android S
             TunerHelper.setAudioStreamType(builder, audioStreamType);
         }
@@ -344,6 +354,7 @@ public class TvPlayer {
                 .setSettings(settings)
                 .build();
         filter.configure(filterConfiguration);
+        filter.start();
         return filter;
     }
 
@@ -352,11 +363,8 @@ public class TvPlayer {
             closeVideoFilter();
         }
 
-        if (mVideoPid > 0) {
-            mVideoFilter = openVideoFilter(mVideoPid, mVideoStreamType);
-            if (mVideoFilter != null) {
-                mVideoFilter.start();
-            }
+        if (mVideoTrackInfo.pid > 0) {
+            mVideoFilter = openVideoFilter(mVideoTrackInfo.pid, mVideoTrackInfo.videoStreamType);
         }
     }
 
@@ -365,11 +373,8 @@ public class TvPlayer {
             closeAudioFilter();
         }
 
-        if (mAudioPid > 0) {
-            mAudioFilter = openAudioFilter(mAudioPid, mAudioStreamType);
-            if (mAudioFilter != null) {
-                mAudioFilter.start();
-            }
+        if (mAudioTrackInfo.pid > 0) {
+            mAudioFilter = openAudioFilter(mAudioTrackInfo.pid, mAudioTrackInfo.audioStreamType);
         }
     }
 
@@ -398,6 +403,23 @@ public class TvPlayer {
                 tr.printStackTrace();
             }
         }
+    }
+
+    public void switchAudioTrack(Bundle bundle) {
+        TrackInfo.AudioTrackInfo audioTrackInfo = getAudioTrackInfoFromBundle(bundle);
+        Filter newAudioFilter = openAudioFilter(audioTrackInfo.pid, audioTrackInfo.audioStreamType);
+        AudioParams audioParams = new AudioParams.Builder(audioTrackInfo.mimeType, 48000, 2)
+                .setPid(audioTrackInfo.pid)
+                .setTrackFilterId(newAudioFilter.getId())
+                .setAvSyncHwId(mTuner.getAvSyncHwId(newAudioFilter))
+                .build();
+
+        if (mASPlayer != null) {
+            mASPlayer.switchAudioTrack(audioParams);
+        }
+
+        closeAudioFilter();
+        mAudioFilter = newAudioFilter;
     }
 
     private void cancelTuning() {

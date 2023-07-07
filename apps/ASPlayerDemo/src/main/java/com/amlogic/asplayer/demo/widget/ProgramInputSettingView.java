@@ -178,8 +178,10 @@ public class ProgramInputSettingView extends LinearLayout {
             if (isTunerHal1_1) {
                 mRdoTunerVersion_1_0.setEnabled(false);
                 mRdoTunerVersion_1_1.setEnabled(true);
+                mRdoTunerVersion_1_1.setChecked(true);
             } else {
                 mRdoTunerVersion_1_0.setEnabled(true);
+                mRdoTunerVersion_1_0.setChecked(true);
                 mRdoTunerVersion_1_1.setEnabled(false);
             }
         } else {
@@ -222,11 +224,11 @@ public class ProgramInputSettingView extends LinearLayout {
 
     public void setTunerHalVersion(TunerHalVersion version) {
         if (version == TunerHalVersion.VERSION_1_1) {
-            mRdoTunerVersion_1_0.setEnabled(false);
-            mRdoTunerVersion_1_1.setEnabled(true);
+            mRdoTunerVersion_1_0.setChecked(false);
+            mRdoTunerVersion_1_1.setChecked(true);
         } else {
-            mRdoTunerVersion_1_0.setEnabled(true);
-            mRdoTunerVersion_1_1.setEnabled(false);
+            mRdoTunerVersion_1_0.setChecked(true);
+            mRdoTunerVersion_1_1.setChecked(false);
         }
     }
 
@@ -244,6 +246,10 @@ public class ProgramInputSettingView extends LinearLayout {
 
     public void setVideoStreamType(String videoStreamType) {
         mVideoStreamType = videoStreamType;
+        int videoStreamTypeIndex = findStreamTypeIndex(mVideoStreamTypes, mVideoStreamType);
+        if (videoStreamTypeIndex >= 0) {
+            mSpinnerVideoStreamType.setSelection(videoStreamTypeIndex);
+        }
     }
 
     public void setAudioPid(int audioPid) {
@@ -256,6 +262,10 @@ public class ProgramInputSettingView extends LinearLayout {
 
     public void setAudioStreamType(String audioStreamType) {
         mAudioStreamType = audioStreamType;
+        int audioStreamTypeIndex = findStreamTypeIndex(mAudioStreamTypes, mAudioStreamType);
+        if (audioStreamTypeIndex >= 0) {
+            mSpinnerAudioStreamType.setSelection(audioStreamTypeIndex);
+        }
     }
 
     private void selectTunerVersion(TunerHalVersion version) {

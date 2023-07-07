@@ -534,6 +534,46 @@ native_set_audio_params(JNIEnv* env, jobject thiz, jobject audioParams) {
 }
 
 static jint
+asplayer_switch_audio_track(JNIEnv* env, jobject thiz, jobject audioParams) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
+    if (player == nullptr) {
+        LOG_GET_PLAYER_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jni_asplayer_audio_params params;
+    if (!gASPlayerJni.convertAudioParams(env, audioParams, &params)) {
+        ALOGE("[%s/%d] failed to switch audio track, failed to convert audio params", __func__, __LINE__);
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jni_asplayer_result ret = player->switchAudioTrack(&params);
+
+    if (params.mimeType) {
+        delete[] params.mimeType;
+        params.mimeType = nullptr;
+    }
+
+    LOG_FUNCTION_INT_END(ret);
+
+    return ret;
+}
+
+static jint
+native_switch_audio_track(JNIEnv* env, jobject thiz, jobject audioParams) {
+    LOG_FUNCTION_ENTER();
+    jint result = asplayer_switch_audio_track(env, thiz, audioParams);
+    LOG_FUNCTION_INT_END(result);
+    return result;
+}
+
+static jint
 asplayer_flush(JNIEnv* env, jobject thiz) {
     LOG_FUNCTION_ENTER();
     if (env == nullptr) {
@@ -927,6 +967,7 @@ static JNINativeMethod methods[] = {
         {"native_resumeAudioDecoding", "()I", (void*)native_resume_audio_decoding },
         {"native_setVideoParams", "(Lcom/amlogic/asplayer/api/VideoParams;)I", (void*)native_set_video_params },
         {"native_setAudioParams", "(Lcom/amlogic/asplayer/api/AudioParams;)I", (void*)native_set_audio_params },
+        {"native_switchAudioTrack", "(Lcom/amlogic/asplayer/api/AudioParams;)I", (void*)native_switch_audio_track },
         {"native_flush", "()I", (void*)native_flush },
         {"native_flushDvr", "()I", (void*)native_flush_dvr },
         {"native_writeData", "(Lcom/amlogic/asplayer/api/InputBuffer;J)I", (void*)native_write_data },

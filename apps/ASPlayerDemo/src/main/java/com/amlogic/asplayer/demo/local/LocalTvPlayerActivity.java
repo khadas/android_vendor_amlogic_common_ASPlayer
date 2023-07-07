@@ -198,15 +198,13 @@ public class LocalTvPlayerActivity extends Activity implements TsPlaybackListene
 
     private void toggleAudioMute() {
         if (mMute) {
-            // 当前是静音状态
             mDvrPlayer.unMuteAudio();
             mMute = false;
-            ToastUtils.showToast(getApplicationContext(), "取消静音");
+            ToastUtils.showToast(getApplicationContext(), "unMute");
         } else {
-            // 当前是非静音状态
             mDvrPlayer.muteAudio();
             mMute = true;
-            ToastUtils.showToast(getApplicationContext(), "静音");
+            ToastUtils.showToast(getApplicationContext(), "mute");
         }
     }
 
@@ -221,6 +219,6 @@ public class LocalTvPlayerActivity extends Activity implements TsPlaybackListene
         }
 
         mDvrPlayer.setAudioVolume(volume);
-        ToastUtils.showToast(getApplicationContext(), "设置音量：" + volume);
+        ToastUtils.showToast(getApplicationContext(), "set volume: " + volume);
     }
 }
