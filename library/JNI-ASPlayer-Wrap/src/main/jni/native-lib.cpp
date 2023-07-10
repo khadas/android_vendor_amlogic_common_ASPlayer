@@ -886,6 +886,60 @@ native_set_transition_mode_before(JNIEnv *env, jobject thiz, jint jMode) {
 }
 
 static jint
+asplayer_set_work_mode(JNIEnv *env, jobject thiz, jint mode) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
+    if (player == nullptr) {
+        LOG_GET_PLAYER_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jni_asplayer_result ret = player->setWorkMode(static_cast<jni_asplayer_work_mode>(mode));
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+static jint
+native_set_work_mode(JNIEnv *env, jobject thiz, jint workMode) {
+    LOG_FUNCTION_ENTER();
+    jint result = asplayer_set_work_mode(env, thiz, workMode);
+    LOG_FUNCTION_END();
+    return result;
+}
+
+static jint
+asplayer_reset_work_mode(JNIEnv *env, jobject thiz) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
+    if (player == nullptr) {
+        LOG_GET_PLAYER_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jni_asplayer_result ret = player->resetWorkMode();
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+static jint
+native_reset_work_mode(JNIEnv *env, jobject thiz) {
+    LOG_FUNCTION_ENTER();
+    jint result = asplayer_reset_work_mode(env, thiz);
+    LOG_FUNCTION_END();
+    return result;
+}
+
+static jint
 asplayer_set_pip_mode(JNIEnv *env, jobject thiz, jint mode) {
     LOG_FUNCTION_ENTER();
     if (env == nullptr) {
@@ -1070,6 +1124,8 @@ static JNINativeMethod methods[] = {
         {"native_stopFast", "()I", (void*)native_stop_fast },
         {"native_setTrickMode", "(I)I", (void*)native_set_trick_mode },
         {"native_setTransitionModeBefore", "(I)I", (void*) native_set_transition_mode_before },
+        {"native_setWorkMode", "(I)I", (void*)native_set_work_mode },
+        {"native_resetWorkMode", "()I", (void*)native_reset_work_mode },
         {"native_setPIPMode", "(I)I", (void*)native_set_pip_mode },
         {"native_setADParams", "(Lcom/amlogic/asplayer/api/AudioParams;)I", (void*)native_set_ad_params },
         {"native_enableADMix", "()I", (void*)native_enable_ad_mix },

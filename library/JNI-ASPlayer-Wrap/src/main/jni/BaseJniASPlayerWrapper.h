@@ -46,6 +46,8 @@ public:
     virtual jni_asplayer_result stopFast() = 0;
     virtual jni_asplayer_result setTrickMode(jni_asplayer_video_trick_mode trickMode) = 0;
     virtual jni_asplayer_result setTransitionModeBefore(jni_asplayer_transition_mode_before mode) = 0;
+    virtual jni_asplayer_result setWorkMode(jni_asplayer_work_mode mode) = 0;
+    virtual jni_asplayer_result resetWorkMode() = 0;
     virtual jni_asplayer_result setPIPMode(jni_asplayer_pip_mode mode) = 0;
     virtual jni_asplayer_result setADParams(jni_asplayer_audio_params *params) = 0;
     virtual jni_asplayer_result enableADMix() = 0;

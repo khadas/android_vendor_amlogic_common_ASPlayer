@@ -46,6 +46,7 @@ JniASPlayer_release_FUNC DynamicJniASPlayerWrapper::ASPlayer_release = nullptr;
 JniASPlayer_writeFrameData_FUNC DynamicJniASPlayerWrapper::ASPlayer_writeFrameData = nullptr;
 JniASPlayer_writeData_FUNC DynamicJniASPlayerWrapper::ASPlayer_writeData = nullptr;
 JniASPlayer_setWorkMode_FUNC DynamicJniASPlayerWrapper::ASPlayer_setWorkMode = nullptr;
+JniASPlayer_resetWorkMode_FUNC DynamicJniASPlayerWrapper::ASPlayer_resetWorkMode = nullptr;
 JniASPlayer_setPIPMode_FUNC DynamicJniASPlayerWrapper::ASPlayer_setPIPMode = nullptr;
 JniASPlayer_getCurrentTime_FUNC DynamicJniASPlayerWrapper::ASPlayer_getCurrentTime = nullptr;
 JniASPlayer_setSyncMode_FUNC DynamicJniASPlayerWrapper::ASPlayer_setSyncMode = nullptr;
@@ -200,6 +201,8 @@ void DynamicJniASPlayerWrapper::initSymbols() {
     CHECK_SYMBOL(ASPlayer_writeData, "JniASPlayer_writeData");
     ASPlayer_setWorkMode = (JniASPlayer_setWorkMode_FUNC)(dlsym(handle, "JniASPlayer_setWorkMode"));
     CHECK_SYMBOL(ASPlayer_setWorkMode, "JniASPlayer_setWorkMode");
+    ASPlayer_resetWorkMode = (JniASPlayer_resetWorkMode_FUNC)(dlsym(handle, "JniASPlayer_resetWorkMode"));
+    CHECK_SYMBOL(ASPlayer_resetWorkMode, "JniASPlayer_resetWorkMode");
     ASPlayer_setPIPMode = (JniASPlayer_setPIPMode_FUNC)(dlsym(handle, "JniASPlayer_setPIPMode"));
     CHECK_SYMBOL(ASPlayer_setPIPMode, "JniASPlayer_setPIPMode");
     ASPlayer_getCurrentTime = (JniASPlayer_getCurrentTime_FUNC)(dlsym(handle, "JniASPlayer_getCurrentTime"));
@@ -912,6 +915,52 @@ DynamicJniASPlayerWrapper::setTransitionModeBefore(jni_asplayer_transition_mode_
     }
 
     jni_asplayer_result ret = ASPlayer_setTransitionModeBefore(handle, mode);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result DynamicJniASPlayerWrapper::setWorkMode(jni_asplayer_work_mode mode) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_setWorkMode == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_setWorkMode(handle, mode);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result DynamicJniASPlayerWrapper::resetWorkMode() {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_resetWorkMode == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_resetWorkMode(handle);
     if (ret != JNI_ASPLAYER_OK) {
         LOG_PLAYER_OP_FAILED(ret);
     }

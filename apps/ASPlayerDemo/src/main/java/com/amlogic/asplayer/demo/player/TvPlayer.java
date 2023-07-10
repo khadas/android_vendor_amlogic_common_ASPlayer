@@ -719,6 +719,26 @@ public class TvPlayer {
         }
     }
 
+    public void resetWorkMode() {
+        if (mPlayerHandler != null) {
+            mPlayerHandler.post(() -> {
+                if (mASPlayer != null) {
+                    mASPlayer.resetWorkMode();
+                }
+            });
+        }
+    }
+
+    public void setWorkMode(int workMode) {
+        if (mPlayerHandler != null) {
+            mPlayerHandler.post(() -> {
+               if (mASPlayer != null) {
+                   mASPlayer.setWorkMode(workMode);
+               }
+            });
+        }
+    }
+
     protected void onPlaybackEvent(TsPlaybackListener.PlaybackEvent event) {
         if (event instanceof TsPlaybackListener.VideoFormatChangeEvent) {
             TsPlaybackListener.VideoFormatChangeEvent ev = (TsPlaybackListener.VideoFormatChangeEvent) event;

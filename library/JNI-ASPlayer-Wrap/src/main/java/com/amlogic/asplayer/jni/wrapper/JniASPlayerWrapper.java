@@ -127,7 +127,12 @@ public class JniASPlayerWrapper implements IASPlayer {
 
     @Override
     public int setWorkMode(int mode) {
-        return 0;
+        return native_setWorkMode(mode);
+    }
+
+    @Override
+    public int resetWorkMode() {
+        return native_resetWorkMode();
     }
 
     @Override
@@ -367,6 +372,8 @@ public class JniASPlayerWrapper implements IASPlayer {
     private native int native_stopFast();
     private native int native_setTrickMode(int trickMode);
     private native int native_setTransitionModeBefore(int mode);
+    private native int native_setWorkMode(int mode);
+    private native int native_resetWorkMode();
     private native int native_setPIPMode(int mode);
     private native int native_setADParams(AudioParams params);
     private native int native_enableADMix();
