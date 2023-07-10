@@ -21,6 +21,7 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Process;
 import android.view.Surface;
+import android.view.SurfaceControl;
 
 import com.amlogic.asplayer.api.AudioParams;
 import com.amlogic.asplayer.api.ErrorCode;
@@ -32,6 +33,7 @@ import com.amlogic.asplayer.api.TsPlaybackListener;
 import com.amlogic.asplayer.api.VideoFormat;
 import com.amlogic.asplayer.api.VideoParams;
 import com.amlogic.asplayer.api.IASPlayer;
+import com.amlogic.asplayer.api.WorkMode;
 
 import java.util.Locale;
 
@@ -60,6 +62,9 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     private RendererScheduler mRendererScheduler;
     private TsPlayback mTsPlayback;
+
+    private SurfaceControl mFccDummySurfaceControl;
+    private Surface mFccDummySurface;
 
     private EventNotifier mEventNotifier;
 
@@ -249,6 +254,8 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         mAudioOutputPath = null;
 
         mTuner = null;
+        mFccDummySurfaceControl = null;
+        mFccDummySurface = null;
     }
 
     private void handleRelease() {
@@ -377,8 +384,62 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     @Override
     public int setWorkMode(int mode) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setWorkMode start", TAG, mId);
-        return 0;
+        if (DEBUG) ASPlayerLog.d("%s-%d setWorkMode start, work mode: %d", TAG, mId, mode);
+
+        if (mPlayerHandler != null && mPlayerThread != null && mPlayerThread.isAlive()) {
+//            ConditionVariable lock = new ConditionVariable();
+            mPlayerHandler.postAtFrontOfQueue(() -> {
+                if (mode == WorkMode.CACHING_ONLY) {
+                    initFccDummySurface();
+                }
+                mRendererScheduler.setWorkMode(mode);
+//                lock.open();
+            });
+//            lock.block();
+        } else {
+            mRendererScheduler.setWorkMode(mode);
+            ASPlayerLog.w("%s-%d setWorkMode called, but playerHandler is null", TAG, mId);
+        }
+        setThreadPriority(mode);
+        return ErrorCode.SUCCESS;
+    }
+
+    @Override
+    public int resetWorkMode() {
+        if (mPlayerHandler != null && mPlayerThread != null && mPlayerThread.isAlive()) {
+            ConditionVariable lock = new ConditionVariable();
+            mPlayerHandler.post(() -> {
+                mVideoOutputPath.resetWorkMode();
+                lock.open();
+            });
+            lock.block();
+            return ErrorCode.SUCCESS;
+        } else {
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+    }
+
+    private void initFccDummySurface() {
+        if (mFccDummySurface == null) {
+            createFccDummySurfaceBySurfaceControl();
+        }
+        mVideoOutputPath.setDummySurface(mFccDummySurface);
+    }
+
+    private void setThreadPriority(int workMode) {
+        if (mPlayerThread == null) {
+            return;
+        }
+
+        mPlayerThread.setPriority(workMode == WorkMode.NORMAL ? Thread.MAX_PRIORITY : Thread.NORM_PRIORITY);
+    }
+
+    private void createFccDummySurfaceBySurfaceControl() {
+        mFccDummySurfaceControl = new SurfaceControl.Builder()
+                .setName(String.format("asp-dum-%d", mId))
+                .setBufferSize(960, 540)
+                .build();
+        mFccDummySurface = new Surface(mFccDummySurfaceControl);
     }
 
     @Override
@@ -481,9 +542,10 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     public int setSurface(Surface surface) {
         if (mPlayerHandler != null && mPlayerThread != null && mPlayerThread.isAlive()) {
             ConditionVariable lock = new ConditionVariable();
-
             mPlayerHandler.postAtFrontOfQueue(() -> {
+                ASPlayerLog.i("%s-%d [KPI-FCC] setSurface start", TAG, mId);
                 mVideoOutputPath.setSurface(surface);
+                ASPlayerLog.i("%s-%d [KPI-FCC] setSurface done", TAG, mId);
                 lock.open();
             });
             lock.block();

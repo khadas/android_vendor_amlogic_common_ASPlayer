@@ -704,4 +704,8 @@ class RendererPlayback extends Renderer {
 
         checkSynchroSubtitles();
     }
+
+    @Override
+    void setWorkMode(int workMode) {
+    }
 }

@@ -73,4 +73,8 @@ class RendererTrickBySeekV3 extends Renderer {
 
         return delayUs;
     }
+
+    @Override
+    void setWorkMode(int workMode) {
+    }
 }

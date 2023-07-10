@@ -48,6 +48,9 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     private final List<Metadata> mMetadata = new ArrayList<>();
     private String mErrorMessage;
 
+    private int mLastWorkMode = -1;
+    private int mTargetWorkMode = mLastWorkMode;
+
     private int mLastPIPMode = -1;
     private int mTargetPIPMode = mLastPIPMode;
 
@@ -170,7 +173,9 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
         AudioUtils.releaseAudioTrack(mAudioTrack);
         mAudioTrack = null;
 
+        int workMode = mTargetWorkMode;
         int pipMode = mTargetPIPMode;
+
         ASPlayerLog.i("AudioCodecRendererV3-%d source format:%s", mId, format);
         try {
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
@@ -205,7 +210,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
             ASPlayerLog.i("AudioCodecRendererV3-%d configure AudioTrack, pipMode: %d", mId, pipMode);
 
-            if (pipMode == PIPMode.NORMAL) {
+            if (workMode == WorkMode.NORMAL && pipMode == PIPMode.NORMAL) {
                 ASPlayerLog.i("AudioCodecRendererV3-%d set volume %f", mId, mGain);
                 mAudioTrack.setVolume(mGain);
                 if (mClock.getSpeed() == 0) {
@@ -215,7 +220,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
                     ASPlayerLog.i("AudioCodecRendererV3-%d AudioTrack.play", mId);
                     mAudioTrack.play();
                 }
-            } else if (pipMode == PIPMode.PIP) {
+            } else if (workMode == WorkMode.CACHING_ONLY || pipMode == PIPMode.PIP) {
                 ASPlayerLog.i("AudioCodecRendererV3-%d set volume 0", mId);
                 mAudioTrack.setVolume(0.f);
                 ASPlayerLog.i("AudioCodecRendererV3-%d AudioTrack.stop", mId);
@@ -226,12 +231,13 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
                 mAudioTrack.setAudioDescriptionMixLeveldB(mMixLevel);
             }
 
-            if (pipMode == PIPMode.NORMAL) {
+            if (workMode == WorkMode.NORMAL && pipMode == PIPMode.NORMAL) {
                 startDecoderThread();
             }
 
             mAudioFormat = audioFormat;
 
+            mLastWorkMode = workMode;
             mLastPIPMode = pipMode;
         } catch (Exception exception) {
             ASPlayerLog.w("AudioCodecRendererV3-%d Failed to configure AudioTrack: %s", mId, exception.getMessage());
@@ -476,6 +482,39 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     @Override
     public boolean isPlaying() {
         return mAudioTrack != null && mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING;
+    }
+
+    @Override
+    public boolean setWorkMode(int workMode) {
+        mTargetWorkMode = workMode;
+
+        ASPlayerLog.i("AudioCodecRendererV3-%d setWorkMode: %d, last mode: %d, audio track: %s", mId, workMode, mLastWorkMode, mAudioTrack);
+
+        boolean success = switchWorkMode(mTargetWorkMode);
+        if (success) {
+            mLastWorkMode = mTargetWorkMode;
+        }
+        ASPlayerLog.i("AudioCodecRendererV3-%d setWorkMode to %d result: %s", mId, workMode, success ? "success" : "failed");
+        return success;
+    }
+
+    private boolean switchWorkMode(int workMode) {
+        ASPlayerLog.i("AudioCodecRendererV3-%d switchWorkMode: %d, last mode: %d, audio track: %s", mId, workMode, mLastWorkMode, mAudioTrack);
+
+        if (mLastWorkMode == workMode) {
+            return true;
+        } else if (mAudioTrack == null) {
+            return false;
+        }
+
+        boolean success = false;
+        if (workMode == WorkMode.CACHING_ONLY) {
+            success = switchAudioTrackMode(true);
+        } else if (workMode == WorkMode.NORMAL) {
+            success = switchAudioTrackMode(false);
+        }
+
+        return success;
     }
 
     private boolean switchAudioTrackMode(boolean cache) {

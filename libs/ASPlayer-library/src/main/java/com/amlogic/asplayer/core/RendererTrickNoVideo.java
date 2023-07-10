@@ -53,4 +53,7 @@ class RendererTrickNoVideo extends Renderer {
         return delayUs;
     }
 
+    @Override
+    void setWorkMode(int workMode) {
+    }
 }

@@ -66,4 +66,8 @@ class RendererTrickSmoothV3 extends Renderer {
         mVideoOutputPath.checkErrors();
         return delayUs;
     }
+
+    @Override
+    void setWorkMode(int workMode) {
+    }
 }

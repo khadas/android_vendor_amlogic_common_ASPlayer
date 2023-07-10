@@ -13,7 +13,6 @@ import java.util.Collections;
 import java.util.Comparator;
 
 class RendererPlaybackV3 extends Renderer {
-    private static final long MAX_AUDIO_SUBTITLE_DELTA_US = 100000;
 
     private static final boolean DEBUG = false;
 
@@ -129,6 +128,7 @@ class RendererPlaybackV3 extends Renderer {
     private long mDoSomeWorkStartTimeMs;
     private long mNextDelayUs;
 
+    private int mWorkMode = -1;
     private int mPIPMode = -1;
 
     RendererPlaybackV3(RendererScheduler rendererScheduler) {
@@ -324,6 +324,25 @@ class RendererPlaybackV3 extends Renderer {
         }
 
         checkSynchroSubtitles();
+    }
+
+    @Override
+    void setWorkMode(int workMode) {
+        if (workMode == mWorkMode) {
+            return;
+        }
+
+        ASPlayerLog.i("RendererPlaybackV3-%d set work mode: %d, last mode: %d", mId, workMode, mWorkMode);
+
+        mVideoOutputPath.setWorkMode(workMode);
+        mAudioOutputPath.setWorkMode(workMode);
+
+        if (workMode == WorkMode.CACHING_ONLY) {
+            mDoSomeWorkStartTimeMs = 0;
+            mNextDelayUs = 0;
+        }
+
+        mWorkMode = workMode;
     }
 
     @Override

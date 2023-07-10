@@ -127,6 +127,10 @@ public:
 
     void release();
 
+    jni_asplayer_result setWorkMode(jni_asplayer_work_mode mode);
+
+    jni_asplayer_result resetWorkMode();
+
     jni_asplayer_result setPIPMode(jni_asplayer_pip_mode mode);
 
     jni_asplayer_result setADParams(jni_asplayer_audio_params *params);

@@ -160,9 +160,9 @@ typedef enum {
 
 /*Player working mode*/
 typedef enum {
-    JNI_ASPLAYER_MODE_NORMAL = 0,             // Normal mode
-    JNI_ASPLAYER_MODE_CACHING_ONLY = 1,       // Only caching data, do not decode. Used in FCC
-    JNI_ASPLAYER_MODE_DECODE_ONLY = 2         // Decode data but do not output
+    JNI_ASPLAYER_WORK_MODE_NORMAL = 0,             // Normal mode
+    JNI_ASPLAYER_WORK_MODE_CACHING_ONLY = 1,       // Only caching data, do not decode. Used in FCC
+    JNI_ASPLAYER_WORK_MODE_DECODE_ONLY = 2         // Decode data but do not output
 } jni_asplayer_work_mode;
 
 /*Player PIP mode*/
@@ -474,6 +474,13 @@ jni_asplayer_result  JniASPlayer_writeData(jni_asplayer_handle Handle, jni_aspla
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_setWorkMode (jni_asplayer_handle Handle, jni_asplayer_work_mode mode);
+
+/**
+ *@brief:        Reset work mode to specified JniASPlayer instance.
+ *@param:        Handle     JniASPlayer handle.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_resetWorkMode (jni_asplayer_handle Handle);
 
 /**
  *@brief:        Set PIP mode to specified JniASPlayer instance.

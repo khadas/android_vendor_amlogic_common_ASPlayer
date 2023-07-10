@@ -5,6 +5,7 @@ import android.media.MediaDescrambler;
 import android.media.MediaFormat;
 
 import com.amlogic.asplayer.api.AudioParams;
+import com.amlogic.asplayer.api.WorkMode;
 
 import java.nio.ByteBuffer;
 import java.util.Objects;
@@ -19,7 +20,7 @@ class AudioOutputPath extends MediaOutputPath {
     protected AudioCodecRenderer mAudioCodecRenderer;
 
     //
-    protected int mAudioSessionId;
+    protected int mAudioSessionId = Constant.INVALID_AUDIO_SESSION_ID;
     protected boolean mTunneledPlayback;
 
     //
@@ -38,6 +39,7 @@ class AudioOutputPath extends MediaOutputPath {
 
     protected boolean mHasAudioFormatChanged = false;
 
+    protected boolean mChangedWorkMode = false;
     protected boolean mChangePIPMode = false;
 
     protected boolean mHasAudio = false;
@@ -362,6 +364,22 @@ class AudioOutputPath extends MediaOutputPath {
     }
 
     @Override
+    public void setWorkMode(int workMode) {
+        if (workMode == mLastWorkMode) {
+            return;
+        }
+
+        ASPlayerLog.i("AudioOutputPath-%d setWorkMode: %d, last mode:%d", mId, workMode, mLastWorkMode);
+        if (workMode == WorkMode.CACHING_ONLY) {
+            handleConfigurationError(null);
+        }
+
+        super.setWorkMode(workMode);
+        mChangedWorkMode = true;
+        setConfigured(false);
+    }
+
+    @Override
     public void setPIPMode(int pipMode) {
         if (pipMode == mLastPIPMode) {
             return;
@@ -379,6 +397,7 @@ class AudioOutputPath extends MediaOutputPath {
             mAudioCodecRenderer = null;
         }
 
+        mLastWorkMode = -1;
         mLastPIPMode = -1;
     }
 }

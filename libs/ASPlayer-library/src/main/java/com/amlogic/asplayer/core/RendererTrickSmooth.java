@@ -76,4 +76,8 @@ class RendererTrickSmooth extends Renderer {
 
         return delayUs;
     }
+
+    @Override
+    void setWorkMode(int workMode) {
+    }
 }

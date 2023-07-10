@@ -63,6 +63,8 @@ struct asplayer_t {
     jmethodID releaseMID;
     jmethodID addPlaybackListenerMID;
     jmethodID removePlaybackListenerMID;
+    jmethodID setWorkModeMID;
+    jmethodID resetWorkModeMID;
     jmethodID setPIPModeMID;
     jmethodID setADParamsMID;
     jmethodID enableADMixMID;
@@ -436,6 +438,8 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
     gASPlayerCtx.addPlaybackListenerMID = GetMethodIDOrDie(env, gASPlayerCls, "addPlaybackListener", "(Lcom/amlogic/asplayer/api/TsPlaybackListener;)V");
     gASPlayerCtx.removePlaybackListenerMID = GetMethodIDOrDie(env, gASPlayerCls, "removePlaybackListener", "(Lcom/amlogic/asplayer/api/TsPlaybackListener;)V");
     gASPlayerCtx.releaseMID = GetMethodIDOrDie(env, gASPlayerCls, "release", "()V");
+    gASPlayerCtx.setWorkModeMID = GetMethodIDOrDie(env, gASPlayerCls, "setWorkMode", "(I)I");
+    gASPlayerCtx.resetWorkModeMID = GetMethodIDOrDie(env, gASPlayerCls, "resetWorkMode", "()I");
     gASPlayerCtx.setPIPModeMID = GetMethodIDOrDie(env, gASPlayerCls, "setPIPMode", "(I)I");
     gASPlayerCtx.setADParamsMID = GetMethodIDOrDie(env, gASPlayerCls, "setADParams", "(Lcom/amlogic/asplayer/api/AudioParams;)I");
     gASPlayerCtx.enableADMixMID = GetMethodIDOrDie(env, gASPlayerCls, "enableADMix", "()I");
@@ -1062,6 +1066,29 @@ void JniASPlayer::release() {
     }
 
     mJavaPlayer = nullptr;
+}
+
+jni_asplayer_result JniASPlayer::setWorkMode(jni_asplayer_work_mode mode) {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    int workMode = static_cast<int>(mode);
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setWorkModeMID, workMode);
+    return static_cast<jni_asplayer_result>(ret);
+}
+
+jni_asplayer_result JniASPlayer::resetWorkMode() {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.resetWorkModeMID);
+    return static_cast<jni_asplayer_result>(ret);
 }
 
 jni_asplayer_result JniASPlayer::setPIPMode(jni_asplayer_pip_mode mode) {

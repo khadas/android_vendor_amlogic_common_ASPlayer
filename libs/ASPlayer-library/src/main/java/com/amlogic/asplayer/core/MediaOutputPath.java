@@ -81,6 +81,9 @@ abstract class MediaOutputPath {
 
     protected MediaDescrambler mMediaDescrambler;
 
+    protected int mTargetWorkMode = WorkMode.NORMAL;
+    protected int mLastWorkMode = -1;
+
     protected int mTargetPIPMode = PIPMode.NORMAL;
     protected int mLastPIPMode = -1;
 
@@ -139,7 +142,6 @@ abstract class MediaOutputPath {
     }
 
     boolean isConfigured() {
-//        TvLog.i("MediaOutputPath-%s isConfigured: %b", mIdTag, mConfigurationState == CONFIGURATION_FROM_PES);
         return mConfigurationState == CONFIGURATION_FROM_PES;
     }
 
@@ -148,7 +150,6 @@ abstract class MediaOutputPath {
     }
 
     void setConfigured(boolean configured) {
-//        TvLog.i("MediaOutputPath-%s configured: %b", mIdTag, configured);
         if (configured)
             mConfigurationState = CONFIGURATION_FROM_PES;
         else
@@ -383,6 +384,23 @@ abstract class MediaOutputPath {
             ASPlayerLog.w("error: " + errorMessage);
             setConfigurationError(errorMessage);
         }
+    }
+
+    public void setWorkMode(int workMode) {
+        if (workMode == mLastWorkMode) {
+            return;
+        }
+
+        ASPlayerLog.i("MediaOutputPath-%s set work mode: %d, last mode: %d", mIdTag, workMode, mLastWorkMode);
+
+        if (workMode == WorkMode.CACHING_ONLY) {
+            mTimestampKeeper.clear();
+            mError = null;
+            mAtLeastOneBufferPushed = false;
+            mPesQueueFullWhenMs = 0;
+        }
+
+        mTargetWorkMode = workMode;
     }
 
     public void setPIPMode(int pipMode) {

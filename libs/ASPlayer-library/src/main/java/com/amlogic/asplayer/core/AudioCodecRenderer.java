@@ -216,6 +216,8 @@ interface AudioCodecRenderer {
      */
     boolean isPlaying();
 
+    boolean setWorkMode(int workMode);
+
     boolean setPIPMode(int pipMode);
 
     void pause();

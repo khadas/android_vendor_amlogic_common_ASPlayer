@@ -110,13 +110,22 @@ public interface IASPlayer {
     public int flushDvr();
 
     /**
-     * Set work mode to ASPlayer instance.
+     * Set work mode of ASPlayer instance.
      *
      * @see WorkMode
      *
-     * @param mode
+     * @param mode {@link WorkMode}
      */
-    public int setWorkMode(int mode);
+    int setWorkMode(int mode);
+
+    /**
+     * Reset work mode of ASPlayer instance.
+     *
+     * {@note: Not really reset all work mode state, just reset for FCC}
+     *
+     * @return
+     */
+    int resetWorkMode();
 
     /**
      * Set PIP mode to ASPlayer instance.

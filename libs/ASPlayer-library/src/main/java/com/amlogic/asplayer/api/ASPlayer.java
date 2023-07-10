@@ -199,20 +199,33 @@ public class ASPlayer implements IASPlayer {
     }
 
     /**
-     * Set work mode to ASPlayer instance.
+     * Set work mode of ASPlayer instance.
      *
      * @see WorkMode
      *
-     * @param mode
+     * @param mode {@link WorkMode}
      */
     @Override
     public int setWorkMode(int mode) {
-        ASPlayerLog.i("%s-%d setWorkMode start", TAG, mId);
+        ASPlayerLog.i("%s-%d setWorkMode start, work mode: %d", TAG, mId, mode);
         if (mode != WorkMode.NORMAL && mode != WorkMode.CACHING_ONLY && mode != WorkMode.DECODE_ONLY) {
-            return -1;
+            return ErrorCode.ERROR_INVALID_PARAMS;
         }
 
         return mPlayer.setWorkMode(mode);
+    }
+
+    /**
+     * Reset work mode of ASPlayer instance.
+     *
+     * {@note: Not really reset all work mode state, just reset for FCC}
+     *
+     * @return
+     */
+    @Override
+    public int resetWorkMode() {
+        ASPlayerLog.i("%s-%d resetWorkMode start", TAG, mId);
+        return mPlayer.resetWorkMode();
     }
 
     /**

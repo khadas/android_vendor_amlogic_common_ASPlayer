@@ -87,6 +87,8 @@ abstract class Renderer {
 
     abstract protected void pumpFeederData();
 
+    abstract void setWorkMode(int workMode);
+
     void setPIPMode(int pipMode) {
 
     }

@@ -8,6 +8,7 @@ import android.text.TextUtils;
 import android.view.Surface;
 
 import com.amlogic.asplayer.api.TransitionSettings;
+import com.amlogic.asplayer.api.WorkMode;
 
 import java.nio.ByteBuffer;
 
@@ -80,21 +81,22 @@ class VideoOutputPathV3 extends VideoOutputPath {
             }
 
             if (VideoMediaFormatEvent.isEventData(presentationTimeUs)) {
-//                TvLog.i("VideoOutputPathV3-%d media format event: %d", mId, presentationTimeUs);
+//                ASPlayerLog.i("VideoOutputPathV3-%d media format event: %d", mId, presentationTimeUs);
                 handleMediaFormatEvent(presentationTimeUs);
                 return;
             }
 
-//            if (DEBUG) TvLog.i("VideoOutputPathV3-%d pts: %d", mId, presentationTimeUs);
+//            if (DEBUG) ASPlayerLog.i("VideoOutputPathV3-%d pts: %d", mId, presentationTimeUs);
             if (mPlaybackMode != ASPlayerConfig.PLAYBACK_MODE_PASSTHROUGH) {
                 if (mTimestampKeeper.isEmpty()) {
                     return;
                 }
                 mTimestampKeeper.removeTimestamp(presentationTimeUs);
             }
-//            ASPlayerLog.i("VideoOutputPathV3-%d onFrameRendered pts: %d, nanoTime: %d",
-//                    mId, presentationTimeUs, nanoTime);
             notifyFrameDisplayed(presentationTimeUs, nanoTime / 1000);
+            if (!mFirstFrameDisplayed) {
+                ASPlayerLog.i("VideoOutputPathV3-%d [KPI-FCC] onFrameRendered", mId);
+            }
             mLastRenderedTimeUs = presentationTimeUs;
             mFirstFrameDisplayed = true;
         }
@@ -181,9 +183,17 @@ class VideoOutputPathV3 extends VideoOutputPath {
         if (waitForConfigurationRetry()) {
             return false;
         }
-        if (mSurface == null) {
-            ASPlayerLog.i("VideoOutputPathV3-%d surface is null", mId);
+        if (mSurface == null && mTargetWorkMode == WorkMode.NORMAL) {
+            ASPlayerLog.i("VideoOutputPath-%d configure failed, surface is null, normal mode", mId);
             return false;
+        } else if (mDummySurface == null && mTargetWorkMode == WorkMode.CACHING_ONLY) {
+            ASPlayerLog.i("VideoOutputPath-%d configure failed, dummy surface is null, cache mode", mId);
+            return false;
+        }
+
+        if (mMediaCodec != null && mChangeWorkMode && switchMediaCodecWorkMode()) {
+            setConfigured(true);
+            return true;
         }
 
         if (mMediaCodec != null) {
@@ -237,27 +247,57 @@ class VideoOutputPathV3 extends VideoOutputPath {
             mediaCodec.setCallback(mMediaCodecCallback, getHandler());
 
             Surface surface = mSurface;
-            format.setInteger(FccWorkMode.MEDIA_FORMAT_KEY_FCC_WORKMODE, FccWorkMode.MEDIA_FORMAT_FCC_WORKMODE_NORMAL);
-
-            ASPlayerLog.i("VideoOutputPathV3-%d mime_type:%s, codec:%s, format:%s", mId, mMimeType, mediaCodec.getName(), format);
-
-            if (mPlaybackMode == ASPlayerConfig.PLAYBACK_MODE_ES_SECURE) {
-                ASPlayerLog.i("VideoOutputPathV3-%d media codec configure PLAYBACK_MODE_ES_SECURE, surface: %s", mId, surface);
-                mediaCodec.configure(format, surface, null,
-                        MediaCodec.CONFIGURE_FLAG_USE_BLOCK_MODEL);
-            } else {
-                ASPlayerLog.i("VideoOutputPathV3-%d media codec configure normal, surface: %s", mId, surface);
-                mediaCodec.configure(format, surface, null, 0);
+            if (mTargetWorkMode == WorkMode.NORMAL) {
+                format.setInteger(FccWorkMode.MEDIA_FORMAT_KEY_FCC_WORKMODE, FccWorkMode.MEDIA_FORMAT_FCC_WORKMODE_NORMAL);
+                surface = mSurface;
+            } else if (mTargetWorkMode == WorkMode.CACHING_ONLY) {
+                format.setInteger(FccWorkMode.MEDIA_FORMAT_KEY_FCC_WORKMODE, FccWorkMode.MEDIA_FORMAT_FCC_WORKMODE_CACHE);
+                surface = mDummySurface;
             }
 
-            ASPlayerLog.i("VideoOutputPathV3-%d media codec start, mediacodec: %s", mId, mediaCodec);
+            String surfaceTag = (mDummySurface != null && surface == mDummySurface) ? "dummy surface" : "normal surface";
+
+            ASPlayerLog.i("VideoOutputPath-%d codec:%s, mime_type:%s, format:%s",
+                    mId, mediaCodec.getName(), mMimeType, format);
+
+            long beginTime = System.nanoTime();
+            long startTime = beginTime;
+            if (mPlaybackMode == ASPlayerConfig.PLAYBACK_MODE_ES_SECURE) {
+                ASPlayerLog.i("VideoOutputPath-%d mediacodec configure PLAYBACK_MODE_ES_SECURE, surface: %s, mediacodec: %s",
+                        mId, surface, mediaCodec);
+                startTime = System.nanoTime();
+                mediaCodec.configure(format, surface, null,
+                        MediaCodec.CONFIGURE_FLAG_USE_BLOCK_MODEL);
+                ASPlayerLog.i("VideoOutputPath-%d configure mediacodec %s, workMode: %d, surface: %s, cost: %d ms",
+                        mId, mediaCodec, mTargetWorkMode, surfaceTag, getCostTime(startTime));
+            } else {
+                ASPlayerLog.i("VideoOutputPath-%d mediacodec configure before, normal, surface: %s, format: %s",
+                        mId, surfaceTag, format);
+                startTime = System.nanoTime();
+                mediaCodec.configure(format, surface, null, 0);
+                ASPlayerLog.i("VideoOutputPath-%d [KPI-FCC] configure end mediacodec %s, " +
+                                "workMode: %d, surface: %s, cost: %d ms",
+                        mId, mediaCodec, mTargetWorkMode, surfaceTag, getCostTime(startTime));
+            }
+
+            ASPlayerLog.i("VideoOutputPath-%d [KPI-FCC] configure mediacodec start before, mediacodec: %s",
+                    mId, mediaCodec);
+            startTime = System.nanoTime();
             mediaCodec.start();
+            long endTime = System.nanoTime();
+            ASPlayerLog.i("VideoOutputPath-%d [KPI-FCC] configure mediacodec start end, workMode: %d, cost: %d ms",
+                    mId, mTargetWorkMode, getCostTime(startTime, endTime));
+            ASPlayerLog.i("VideoOutputPath-%d [KPI-FCC] configure mediacodec totalTime: %d ms, mediacodec: %s",
+                    mId, getCostTime(beginTime, endTime), mediaCodec);
             mMediaCodec = mediaCodec;
-            ASPlayerLog.i("VideoOutputPathV3-%d codec configured: %s", mId, mMediaCodec);
+            mMediaCodecStarted = true;
 
             mFirstFrameDisplayed = false;
             setConfigured(true);
+            mLastWorkMode = mTargetWorkMode;
+            ASPlayerLog.i("VideoOutputPath-%d change last WorkMode to %d", mId, mLastWorkMode);
             configured = true;
+            setRequestChangeWorkMode(false);
         } catch (Exception exception) {
             ASPlayerLog.w("VideoOutputPathV3-%d can't create mediacodec error:%s", mId, exception.getMessage());
             if (mediaCodec != null) {
@@ -287,7 +327,6 @@ class VideoOutputPathV3 extends VideoOutputPath {
 
     @Override
     protected void pushInputBuffer() {
-//        if (DEBUG) ASPlayerLog.i("VideoOutputPathV3-%d push input buffer", mId);
         if (!isConfigured() && !configure()) {
             if (DEBUG) ASPlayerLog.i("VideoOutputPathV3-%d not configured", mId);
             return;
@@ -349,5 +388,19 @@ class VideoOutputPathV3 extends VideoOutputPath {
         super.handleSetTransitionModeBefore();
 
         mMediaCodec.setParameters(PARAMS_TRANSITION_MODE_BEFORE);
+    }
+
+    @Override
+    public void setWorkMode(int workMode) {
+        if (workMode == mLastWorkMode) {
+            return;
+        }
+
+        ASPlayerLog.i("VideoOutputPath-%d setWorkMode: %d, last mode: %d", mId, workMode, mLastWorkMode);
+        if (workMode == WorkMode.CACHING_ONLY) {
+            mLastRenderedTimeUs = 0;
+        }
+
+        super.setWorkMode(workMode);
     }
 }

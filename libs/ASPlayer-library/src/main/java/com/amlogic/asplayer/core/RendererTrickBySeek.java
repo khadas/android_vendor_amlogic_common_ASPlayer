@@ -187,4 +187,8 @@ class RendererTrickBySeek extends Renderer {
     private void armNextRequestedPosition() {
         mPendingNextPositionTimeMs = SystemClock.elapsedRealtime() + DELAY_FOR_FLUSH_MS;
     }
+
+    @Override
+    void setWorkMode(int workMode) {
+    }
 }

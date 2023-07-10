@@ -1,18 +1,17 @@
 package com.amlogic.asplayer.core;
 
-import android.media.AudioFormat;
-import android.media.MediaCodec;
-import android.media.MediaFormat;
-import android.os.Build;
-
-
-import com.amlogic.asplayer.api.AudioParams;
-import com.amlogic.asplayer.api.PIPMode;
-import com.amlogic.asplayer.core.encapsulation.Metadata;
-
 import static android.media.MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayback;
 import static com.amlogic.asplayer.core.MediaContainerExtractor.INVALID_AV_SYNC_HW_ID;
 import static com.amlogic.asplayer.core.MediaContainerExtractor.INVALID_FILTER_ID;
+
+import android.media.AudioFormat;
+import android.media.MediaFormat;
+import android.os.Build;
+
+import com.amlogic.asplayer.api.AudioParams;
+import com.amlogic.asplayer.api.PIPMode;
+import com.amlogic.asplayer.api.WorkMode;
+import com.amlogic.asplayer.core.encapsulation.Metadata;
 
 
 class AudioOutputPathV3 extends AudioOutputPath {
@@ -38,6 +37,11 @@ class AudioOutputPathV3 extends AudioOutputPath {
         mPlacementMetadata =
                 new Metadata.PlacementMetadata(Metadata.PlacementMetadata.PLACEMENT_NORMAL);
         mPlacementMetadata.placement = Metadata.PlacementMetadata.PLACEMENT_NORMAL;
+    }
+
+    @Override
+    public String getName() {
+        return "AudioOutputPathV3";
     }
 
     @Override
@@ -92,17 +96,26 @@ class AudioOutputPathV3 extends AudioOutputPath {
         String mimeType = format.getString(MediaFormat.KEY_MIME);
 
         if (mAudioCodecRenderer != null) {
+            boolean needChangeWorkMode = mChangedWorkMode;
+            boolean workModeMatch = !needChangeWorkMode;
             boolean needChangePIPMode = mChangePIPMode;
             boolean pipModeMatch = !needChangePIPMode;
 
+            if (needChangeWorkMode) {
+                ASPlayerLog.i("AudioOutputPathV3-%d configure audio render work mode", mId);
+                workModeMatch = mAudioCodecRenderer.setWorkMode(mTargetWorkMode);
+            }
             if (needChangePIPMode) {
                 ASPlayerLog.i("AudioOutputPathV3-%d configure audio render pip mode", mId);
                 pipModeMatch = mAudioCodecRenderer.setPIPMode(mTargetPIPMode);
             }
 
-            if (pipModeMatch) {
+            if (workModeMatch && pipModeMatch) {
+                mChangedWorkMode = false;
+                mLastWorkMode = mTargetWorkMode;
                 mChangePIPMode = false;
                 mLastPIPMode = mTargetPIPMode;
+                setConfigured(true);
                 return true;
             }
         }
@@ -115,6 +128,7 @@ class AudioOutputPathV3 extends AudioOutputPath {
         AudioCodecRendererV3 audioCodecRenderer =
                 new AudioCodecRendererV3(mId, mClock, getHandler());
         mAudioCodecRenderer = audioCodecRenderer;
+        audioCodecRenderer.setWorkMode(mTargetWorkMode);
         audioCodecRenderer.setPIPMode(mTargetPIPMode);
 
         audioCodecRenderer.setOutputBufferListener(new AudioCodecRenderer.OutputBufferListener() {
@@ -174,7 +188,9 @@ class AudioOutputPathV3 extends AudioOutputPath {
         handleConfigurationError(errorMessage);
         boolean success = errorMessage == null;
         ASPlayerLog.i("AudioOutputPathV3-%d configure %s", mId, success ? "success" : "failed");
+        mLastWorkMode = mTargetWorkMode;
         mLastPIPMode = mTargetPIPMode;
+        mChangedWorkMode = false;
         mChangePIPMode = false;
         return success;
     }
@@ -280,6 +296,22 @@ class AudioOutputPathV3 extends AudioOutputPath {
         ASPlayerLog.i("AudioOutputPathV3-%d prepareMetadata filterId: 0x%04x, encoding: %d",
                 mId, tunerMetadata.filterId, tunerMetadata.encodingType);
         return true;
+    }
+
+    @Override
+    public void setWorkMode(int workMode) {
+        ASPlayerLog.d("AudioOutputPathV3-%d setWorkMode, workMode: %d", mId, workMode);
+        int lastWorkMode = mLastWorkMode;
+        super.setWorkMode(workMode);
+
+        if (lastWorkMode == WorkMode.NORMAL && workMode == WorkMode.CACHING_ONLY) {
+            ASPlayerLog.d("AudioOutputPathV3-%d setWorkMode release audio render", mId);
+            releaseAudioRenderer();
+
+            setConfigured(false);
+        } else {
+            ASPlayerLog.d("AudioOutputPathV3-%d setWorkMode not release audio render", mId);
+        }
     }
 
     @Override

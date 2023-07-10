@@ -59,6 +59,7 @@ class RendererScheduler implements Runnable {
     private boolean mFirstVideoFrameDisplayed = false;
     private boolean mFirstAudioFrameDisplayed = false;
 
+    private int mWorkMode = -1;
     private int mPIPMode = -1;
 
     RendererScheduler(int id,
@@ -132,6 +133,9 @@ class RendererScheduler implements Runnable {
         }
 
         mPlaybackTask.prepare(id, mContext, handler);
+        if (mWorkMode != -1) {
+            mPlaybackTask.setWorkMode(mWorkMode);
+        }
         if (mPIPMode != -1) {
             mPlaybackTask.setPIPMode(mPIPMode);
         }
@@ -448,6 +452,34 @@ class RendererScheduler implements Runnable {
         if (mConfig.isPtsEventEnabled()) {
             mEventNotifier.notifyAudioFrameRendered(presentationTimeUs, renderTime);
         }
+    }
+
+    void setWorkMode(int workMode) {
+        if (workMode == mWorkMode) {
+            return;
+        }
+
+        ASPlayerLog.i("RendererScheduler-%d setWorkMode: %d, last mode: %d", mId, workMode, mWorkMode);
+
+        if (mHandler != null) {
+            mHandler.removeCallbacks(this);
+
+            ASPlayerLog.i("RendererScheduler-%d speed task: %s, playback task: %s", mId, mCurrentSpeedTask, mPlaybackTask);
+
+            if (mCurrentSpeedTask != null) {
+                mCurrentSpeedTask.setWorkMode(workMode);
+            }
+            if (mPlaybackTask != null && mPlaybackTask != mCurrentSpeedTask) {
+                mPlaybackTask.setWorkMode(workMode);
+            }
+
+            mHandler.post(this);
+        } else {
+            // not prepared
+            ASPlayerLog.i("RendererScheduler-%d setWorkMode: %d, not prepared", mId, workMode);
+        }
+
+        mWorkMode = workMode;
     }
 
     void setPIPMode(int pipMode) {
