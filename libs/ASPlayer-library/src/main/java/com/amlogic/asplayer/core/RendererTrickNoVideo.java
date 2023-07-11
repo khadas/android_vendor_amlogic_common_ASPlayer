@@ -7,11 +7,13 @@ import android.os.SystemClock;
 
 class RendererTrickNoVideo extends Renderer {
 
-    private final int mId;
-
     RendererTrickNoVideo(int id, RendererScheduler rendererScheduler) {
-        super(rendererScheduler);
-        mId = id;
+        super(id, rendererScheduler);
+    }
+
+    @Override
+    protected String getName() {
+        return "RendererTrickNoVideo";
     }
 
     void setPositionUs(long positionUs) {
@@ -20,7 +22,7 @@ class RendererTrickNoVideo extends Renderer {
 
     @Override
     void setSpeed(Renderer previousRenderer, double speed) {
-        ASPlayerLog.i("speed:%f", speed);
+        ASPlayerLog.i("%s speed: %f", getTag(), speed);
         super.setSpeed(previousRenderer, speed);
 
         mRequestedPositionSet = true;

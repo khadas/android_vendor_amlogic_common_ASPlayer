@@ -88,11 +88,10 @@ abstract class MediaOutputPath {
     protected int mLastPIPMode = -1;
 
     protected int mId;
-    private String mIdTag;
+    protected int mInstanceId = Constant.INVALID_INSTANCE_ID;
 
-    MediaOutputPath(int id, String idTag) {
+    MediaOutputPath(int id) {
         mId = id;
-        mIdTag = idTag;
         mClock = new MediaClock();
         mTimestampKeeper = new TimestampKeeper(getName());
     }
@@ -100,6 +99,10 @@ abstract class MediaOutputPath {
     abstract String getName();
 
     abstract String getCodecName();
+
+    void setInstanceId(int syncId) {
+        mInstanceId = syncId;
+    }
 
     void setHandler(Handler handler) {
         mHandler = handler;
@@ -232,7 +235,7 @@ abstract class MediaOutputPath {
     }
 
     public void release() {
-        ASPlayerLog.i("MediaOutputPath-%s release", mIdTag);
+        ASPlayerLog.i("%s release", getTag());
         reset();
         mInputBufferQueue = null;
 
@@ -302,8 +305,8 @@ abstract class MediaOutputPath {
                     originTimestampUs = nextOutputTimestamp;
                 }
 
-                ASPlayerLog.i("MediaOutputPath-%s SYNCHRO %s - input:%d ms, output:%d, margin:%d ms, next:%d ms, origin:%d ms, last:%d ms",
-                        mIdTag, getName(),
+                ASPlayerLog.i("%s SYNCHRO - input:%d ms, output:%d, margin:%d ms, next:%d ms, origin:%d ms, last:%d ms",
+                        getTag(),
                         (lastOutputTimestampUs - nextOutputTimestamp) / 1000,
                         getNbOutputBuffers(),
                         marginUs / 1000,
@@ -313,7 +316,7 @@ abstract class MediaOutputPath {
                 setSynchroOn(originTimestampUs);
                 break;
             case MediaOutputPath.RENDER_FREE_RUN:
-                ASPlayerLog.i("MediaOutputPath-%s FREE RUN %s", mIdTag, getName());
+                ASPlayerLog.i("%s FREE RUN", getTag());
                 setFreeRunMode();
                 break;
             default:
@@ -374,14 +377,14 @@ abstract class MediaOutputPath {
             mConfigureErrorCount = 0;
             mLastConfigureErrorTime = 0;
         } else if (mConfigureErrorCount < MAX_COUNT_CONFIGURE_RETRY) {
-            ASPlayerLog.w("configuration failed, retry..: " + mConfigureErrorCount);
+            ASPlayerLog.w("%s configuration failed, retry..: %d", getTag(), mConfigureErrorCount);
             mConfigureErrorCount++;
             mLastConfigureErrorTime = SystemClock.elapsedRealtime();
         } else {
-            ASPlayerLog.w("configuration failed: tried: " + mConfigureErrorCount);
+            ASPlayerLog.w("%s configuration failed: tried: %d", getTag(), mConfigureErrorCount);
             mConfigureErrorCount = 0;
             mLastConfigureErrorTime = 0;
-            ASPlayerLog.w("error: " + errorMessage);
+            ASPlayerLog.w("%s error: %s", getTag(), errorMessage);
             setConfigurationError(errorMessage);
         }
     }
@@ -391,7 +394,7 @@ abstract class MediaOutputPath {
             return;
         }
 
-        ASPlayerLog.i("MediaOutputPath-%s set work mode: %d, last mode: %d", mIdTag, workMode, mLastWorkMode);
+        ASPlayerLog.i("%s-Media set work mode: %d, last mode: %d", getTag(), workMode, mLastWorkMode);
 
         if (workMode == WorkMode.CACHING_ONLY) {
             mTimestampKeeper.clear();
@@ -408,8 +411,12 @@ abstract class MediaOutputPath {
             return;
         }
 
-        ASPlayerLog.i("MediaOutputPath-%s set pip mode: %d, last mode: %d", mIdTag, pipMode, mLastPIPMode);
+        ASPlayerLog.i("%s-Media set pip mode: %d, last mode: %d", getTag(), pipMode, mLastPIPMode);
 
         mTargetPIPMode = pipMode;
+    }
+
+    protected String getTag() {
+        return String.format("[No-%d]-[%d]%s", mInstanceId, mId, getName());
     }
 }

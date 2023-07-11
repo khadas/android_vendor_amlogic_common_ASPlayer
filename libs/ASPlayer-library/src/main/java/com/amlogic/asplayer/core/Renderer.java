@@ -37,15 +37,30 @@ abstract class Renderer {
     // speed
     protected double mSpeed;
 
-    Renderer(RendererScheduler rendererScheduler) {
+    private int mId;
+    protected int mInstanceId = Constant.INVALID_INSTANCE_ID;
+
+    Renderer(int id, RendererScheduler rendererScheduler) {
+        mId = id;
         mPlayer = rendererScheduler.getASPlayer();
         mVideoOutputPath = rendererScheduler.getVideoOutputPath();
         mAudioOutputPath = rendererScheduler.getAudioOutputPath();
         mPositionHandler = rendererScheduler.getPositionHandler();
     }
 
-    void prepare(int id, Context context, Handler handler) {}
+    protected String getTag() {
+        return String.format("[No-%d]-[%d]%s", mInstanceId, mId, getName());
+    }
+
+    protected abstract String getName();
+
+    void prepare(Context context, Handler handler) {}
+
     void release() {}
+
+    void setInstanceId(int instanceId) {
+        mInstanceId = instanceId;
+    }
 
     void startVideo() {
         mVideoStarted = true;

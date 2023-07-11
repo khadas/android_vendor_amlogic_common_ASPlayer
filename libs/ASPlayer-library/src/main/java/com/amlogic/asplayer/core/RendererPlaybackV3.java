@@ -55,7 +55,7 @@ class RendererPlaybackV3 extends Renderer {
             }
             long timeMsDuration = SystemClock.elapsedRealtime() - timeMsStart;
             if (timeMsDuration > EXECUTION_TIMEOUT) {
-                ASPlayerLog.w("RendererPlaybackV3-%d long execution time (%d) detected for %s", mId, timeMsDuration, this);
+                ASPlayerLog.w("%s long execution time (%d) detected for %s", getTag(), timeMsDuration, this);
             }
             return delayUs;
         }
@@ -109,8 +109,6 @@ class RendererPlaybackV3 extends Renderer {
         }
     }
 
-    private int mId;
-
     // audio caps, to reconfigure pipeline if needed
     private AudioCaps mAudioCaps;
 
@@ -131,8 +129,8 @@ class RendererPlaybackV3 extends Renderer {
     private int mWorkMode = -1;
     private int mPIPMode = -1;
 
-    RendererPlaybackV3(RendererScheduler rendererScheduler) {
-        super(rendererScheduler);
+    RendererPlaybackV3(int id, RendererScheduler rendererScheduler) {
+        super(id, rendererScheduler);
 
         PlaybackTask checkSynchroModeTask = new CheckSynchroModeTask();
         mFeedingTask = new FeedingTask();
@@ -166,7 +164,13 @@ class RendererPlaybackV3 extends Renderer {
     }
 
     @Override
+    protected String getName() {
+        return "RendererPlaybackV3";
+    }
+
+    @Override
     void startVideo() {
+        ASPlayerLog.d("%s startVideo", getTag());
         super.startVideo();
         if (!mTasks.contains(mVideoInputBuffersTask)) {
             mTasks.add(mVideoInputBuffersTask);
@@ -175,6 +179,7 @@ class RendererPlaybackV3 extends Renderer {
 
     @Override
     void stopVideo() {
+        ASPlayerLog.d("%s stopVideo", getTag());
         super.stopVideo();
         if (mTasks.contains(mVideoInputBuffersTask)) {
             mTasks.remove(mVideoInputBuffersTask);
@@ -183,6 +188,7 @@ class RendererPlaybackV3 extends Renderer {
 
     @Override
     void startAudio() {
+        ASPlayerLog.d("%s startAudio", getTag());
         super.startAudio();
         if (!mTasks.contains(mAudioInputBuffersTask)) {
             mTasks.add(mAudioInputBuffersTask);
@@ -191,6 +197,7 @@ class RendererPlaybackV3 extends Renderer {
 
     @Override
     void stopAudio() {
+        ASPlayerLog.d("%s stopAudio", getTag());
         super.stopAudio();
         if (mTasks.contains(mAudioInputBuffersTask)) {
             mTasks.remove(mAudioInputBuffersTask);
@@ -198,8 +205,8 @@ class RendererPlaybackV3 extends Renderer {
     }
 
     @Override
-    void prepare(int id, Context context, Handler handler) {
-        mId = id;
+    void prepare(Context context, Handler handler) {
+        super.prepare(context, handler);
         mAudioCaps = new AudioCaps(context, handler);
         mAudioCaps.setListener(RendererPlaybackV3.this::onAudioCapabilitiesChanged);
         mAudioOutputPath.setCaps(mAudioCaps);
@@ -214,7 +221,7 @@ class RendererPlaybackV3 extends Renderer {
 
     @Override
     void setSpeed(Renderer previousRenderer, double speed) {
-        ASPlayerLog.i("RendererPlaybackV3-%d speed:%f", mId, speed);
+        ASPlayerLog.i("%s speed:%f", getTag(), speed);
         super.setSpeed(previousRenderer, speed);
 
         // reset tunneled mode
@@ -246,9 +253,9 @@ class RendererPlaybackV3 extends Renderer {
                 "RESET_REASON_RENDERER_CHANGED",
         };
         if (reason >= 1 && reason <= reasons.length)
-            ASPlayerLog.i("RendererPlaybackV3-%d %s", mId, reasons[reason - 1]);
+            ASPlayerLog.i("%s reset, reason: %s", getTag(), reasons[reason - 1]);
         else
-            ASPlayerLog.i("RendererPlaybackV3-%d unexpected reason:%d", mId, reason);
+            ASPlayerLog.i("%s unexpected reason:%d", getTag(), reason);
 
         switch (reason) {
             case Renderer.RESET_REASON_NEW_POSITION:
@@ -263,7 +270,7 @@ class RendererPlaybackV3 extends Renderer {
                 mPositionHandler.unsetOrigin();
                 break;
             case Renderer.RESET_REASON_DECODERS_BLOCKED:
-                ASPlayerLog.i("RendererPlaybackV3-%d release VideoOutputPath", mId);
+                ASPlayerLog.i("%s release VideoOutputPath", getTag());
                 mVideoOutputPath.reset();
                 mAudioOutputPath.reset();
                 break;
@@ -294,7 +301,7 @@ class RendererPlaybackV3 extends Renderer {
         // execute task
         long delayUs;
         for (PlaybackTask task : mTasks) {
-            if (DEBUG) ASPlayerLog.i("RendererPlaybackV3-%d execute task: %s", mId, task);
+            if (DEBUG) ASPlayerLog.i("%s execute task: %s", getTag(), task);
             delayUs = task.execute();
             mNextDelayUs = Math.min(delayUs, mNextDelayUs);
         }
@@ -305,7 +312,7 @@ class RendererPlaybackV3 extends Renderer {
     }
 
     private void onAudioCapabilitiesChanged(AudioCaps audioCapabilities) {
-        ASPlayerLog.i("RendererPlaybackV3-%d output audio caps have changed to %s", mId, audioCapabilities);
+        ASPlayerLog.i("%s output audio caps have changed to %s", getTag(), audioCapabilities);
     }
 
     private void checkSynchroSubtitles() {
@@ -332,7 +339,7 @@ class RendererPlaybackV3 extends Renderer {
             return;
         }
 
-        ASPlayerLog.i("RendererPlaybackV3-%d set work mode: %d, last mode: %d", mId, workMode, mWorkMode);
+        ASPlayerLog.i("%s set work mode: %d, last mode: %d", getTag(), workMode, mWorkMode);
 
         mVideoOutputPath.setWorkMode(workMode);
         mAudioOutputPath.setWorkMode(workMode);
@@ -351,11 +358,10 @@ class RendererPlaybackV3 extends Renderer {
             return;
         }
 
-        ASPlayerLog.i("RendererPlaybackV3-%d set pip mode: %d, last mode: %d", mId, pipMode, mPIPMode);
+        ASPlayerLog.i("%s set pip mode: %d, last mode: %d", getTag(), pipMode, mPIPMode);
         mVideoOutputPath.setPIPMode(pipMode);
         mAudioOutputPath.setPIPMode(pipMode);
 
         mPIPMode = pipMode;
     }
 }
-

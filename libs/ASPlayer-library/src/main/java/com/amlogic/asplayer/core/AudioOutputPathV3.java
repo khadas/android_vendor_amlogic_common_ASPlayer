@@ -66,30 +66,31 @@ class AudioOutputPathV3 extends AudioOutputPath {
     @Override
     public boolean configure() {
         if (hasConfigurationError()) {
-            ASPlayerLog.w("AudioOutputPathV3-%d has configuration error", mId);
+            ASPlayerLog.w("%s has configuration error", getTag());
             return false;
         }
         if (isConfigured()) {
-            ASPlayerLog.w("AudioOutputPathV3-%d already configured", mId);
+            ASPlayerLog.w("%s already configured", getTag());
             return false;
         }
         if (waitForConfigurationRetry()) {
-            ASPlayerLog.i("AudioOutputPathV3-%d wait for configuration retry", mId);
+            ASPlayerLog.i("%s wait for configuration retry", getTag());
             return false;
         }
 
         if (mAudioParams == null) {
-            if (DEBUG) ASPlayerLog.w("AudioOutputPathV3-%d configure failed, audio params is null", mId);
+            if (DEBUG) ASPlayerLog.w("%s configure failed, audio params is null", getTag());
             return false;
         }
 
         MediaFormat format = mAudioParams.getMediaFormat();
         if (format == null) {
-            if (DEBUG) ASPlayerLog.w("AudioOutputPathV3-%d configure failed, audio format is null", mId);
+            if (DEBUG) ASPlayerLog.w("%s configure failed, audio format is null", getTag());
             return false;
         }
 
-        ASPlayerLog.i("AudioOutputPathV3-%d configure, audio renderer: %s", mId, mAudioCodecRenderer);
+        ASPlayerLog.i("%s configure, audio renderer: %s, mChangedWorkMode: %b, mChangePIPMode: %b",
+                getTag(), mAudioCodecRenderer, mChangedWorkMode, mChangePIPMode);
 
         String errorMessage;
 
@@ -102,11 +103,11 @@ class AudioOutputPathV3 extends AudioOutputPath {
             boolean pipModeMatch = !needChangePIPMode;
 
             if (needChangeWorkMode) {
-                ASPlayerLog.i("AudioOutputPathV3-%d configure audio render work mode", mId);
+                ASPlayerLog.i("%s configure audio render work mode", getTag());
                 workModeMatch = mAudioCodecRenderer.setWorkMode(mTargetWorkMode);
             }
             if (needChangePIPMode) {
-                ASPlayerLog.i("AudioOutputPathV3-%d configure audio render pip mode", mId);
+                ASPlayerLog.i("%s configure audio render pip mode", getTag());
                 pipModeMatch = mAudioCodecRenderer.setPIPMode(mTargetPIPMode);
             }
 
@@ -128,13 +129,14 @@ class AudioOutputPathV3 extends AudioOutputPath {
         AudioCodecRendererV3 audioCodecRenderer =
                 new AudioCodecRendererV3(mId, mClock, getHandler());
         mAudioCodecRenderer = audioCodecRenderer;
+        mAudioCodecRenderer.setInstanceId(mInstanceId);
         audioCodecRenderer.setWorkMode(mTargetWorkMode);
         audioCodecRenderer.setPIPMode(mTargetPIPMode);
 
         audioCodecRenderer.setOutputBufferListener(new AudioCodecRenderer.OutputBufferListener() {
             @Override
             public void onRender(long presentationTimeUs, long renderTime) {
-//                ASPlayerLog.i("AudioOutputPathV3-%d onRender", mId);
+//                ASPlayerLog.i("%s onRender", getTag());
                 notifyFrameDisplayed(presentationTimeUs, renderTime);
                 mTimestampKeeper.removeTimestamp(presentationTimeUs);
             }
@@ -145,7 +147,7 @@ class AudioOutputPathV3 extends AudioOutputPath {
             }
         });
 
-        ASPlayerLog.i("AudioOutputPathV3-%d source:%s, tunneled:%b", mId, mimeType, mTunneledPlayback);
+        ASPlayerLog.i("%s source:%s, tunneled:%b", getTag(), mimeType, mTunneledPlayback);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             mSecurePlayback = format.containsFeature(FEATURE_SecurePlayback) &&
                     format.getFeatureEnabled(FEATURE_SecurePlayback);
@@ -158,7 +160,7 @@ class AudioOutputPathV3 extends AudioOutputPath {
         audioCodecRenderer.setVolume(mGain);
         int filterId = mAudioParams.getTrackFilterId();
         int avSyncHwId = mAudioParams.getAvSyncHwId();
-        ASPlayerLog.i("AudioOutputPathV3-%d track filter id: 0x%016x, avSyncHwId: 0x%04x", mId, filterId, avSyncHwId);
+        ASPlayerLog.i("%s track filter id: 0x%016x, avSyncHwId: 0x%04x", getTag(), filterId, avSyncHwId);
         if (mSecurePlayback) {
             filterId |= (1 << 20);
         }
@@ -181,13 +183,13 @@ class AudioOutputPathV3 extends AudioOutputPath {
         }
 
         if (errorMessage != null) {
-            ASPlayerLog.i("AudioOutputPathV3-%d configure failed, errorMessage: %s", mId, errorMessage);
+            ASPlayerLog.i("%s configure failed, errorMessage: %s", getTag(), errorMessage);
         } else {
             setConfigured(true);
         }
         handleConfigurationError(errorMessage);
         boolean success = errorMessage == null;
-        ASPlayerLog.i("AudioOutputPathV3-%d configure %s", mId, success ? "success" : "failed");
+        ASPlayerLog.i("%s configure %s", getTag(), success ? "success" : "failed");
         mLastWorkMode = mTargetWorkMode;
         mLastPIPMode = mTargetPIPMode;
         mChangedWorkMode = false;
@@ -200,14 +202,14 @@ class AudioOutputPathV3 extends AudioOutputPath {
             return;
         }
 
-        ASPlayerLog.i("AudioOutputPathV3-%d setTrackWithTunerMetaData filterId: %d", mId, audioParams.getTrackFilterId());
+        ASPlayerLog.i("%s setTrackWithTunerMetaData filterId: %d", getTag(), audioParams.getTrackFilterId());
         changeMainTrack(audioParams);
     }
 
     @Override
     protected void pushInputBuffer() {
         if (!isConfigured() && !configure()) {
-            if (DEBUG) ASPlayerLog.i("AudioOutputPathV3-%d push input buffer failed, configure failed", mId);
+            if (DEBUG) ASPlayerLog.i("%s push input buffer failed, configure failed", getTag());
             return;
         }
 
@@ -237,11 +239,11 @@ class AudioOutputPathV3 extends AudioOutputPath {
     }
 
     private boolean changeMainTrack(AudioParams audioParams) {
-        ASPlayerLog.i("AudioOutputPathV3-%d changeMainTrack start", mId);
+        ASPlayerLog.i("%s changeMainTrack start", getTag());
         if (mAudioCodecRenderer instanceof AudioCodecRendererV3) {
             mMediaFormat = audioParams.getMediaFormat();
             if (mMediaFormat == null) {
-                ASPlayerLog.i("AudioOutputPathV3-%d audio format null..", mId);
+                ASPlayerLog.i("%s audio format null..", getTag());
                 return false;
             }
 
@@ -249,7 +251,7 @@ class AudioOutputPathV3 extends AudioOutputPath {
                 return false;
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                ASPlayerLog.i("AudioOutputPathV3-%d changeMainTrack start writeMetadata", mId);
+                ASPlayerLog.i("%s changeMainTrack start writeMetadata", getTag());
                 ((AudioCodecRendererV3) mAudioCodecRenderer).writeMetadata(mTunerMetadataMain);
             }
 
@@ -265,10 +267,10 @@ class AudioOutputPathV3 extends AudioOutputPath {
 
         if (mNeedToConfigureSubTrack && mAudioCodecRenderer instanceof AudioCodecRendererV3) {
             if (mMediaFormat == null) {
-                ASPlayerLog.i("audio format null..");
+                ASPlayerLog.i("%s audio format null..", getTag());
                 return;
             }
-            ASPlayerLog.i("AudioOutputPathV3-%d changeSubTrack, filterId: %d", mId, mSubTrackAudioParams.getTrackFilterId());
+            ASPlayerLog.i("%s changeSubTrack, filterId: %d", getTag(), mSubTrackAudioParams.getTrackFilterId());
             if (!prepareMetadata(mTunerMetadataSub, mSubTrackAudioParams.getTrackFilterId())) {
                 return;
             }
@@ -281,7 +283,7 @@ class AudioOutputPathV3 extends AudioOutputPath {
 
     private boolean prepareMetadata(Metadata.TunerMetadata tunerMetadata, int filterId) {
         if (mMediaFormat == null) {
-            ASPlayerLog.i("audio format null..");
+            ASPlayerLog.i("%s audio format null..", getTag());
             return false;
         }
 
@@ -293,39 +295,39 @@ class AudioOutputPathV3 extends AudioOutputPath {
             return false;
         }
         tunerMetadata.encodingType = AudioUtils.getEncoding(mMediaFormat);
-        ASPlayerLog.i("AudioOutputPathV3-%d prepareMetadata filterId: 0x%04x, encoding: %d",
-                mId, tunerMetadata.filterId, tunerMetadata.encodingType);
+        ASPlayerLog.i("%s prepareMetadata filterId: 0x%04x, encoding: %d",
+                getTag(), tunerMetadata.filterId, tunerMetadata.encodingType);
         return true;
     }
 
     @Override
     public void setWorkMode(int workMode) {
-        ASPlayerLog.d("AudioOutputPathV3-%d setWorkMode, workMode: %d", mId, workMode);
+        ASPlayerLog.d("%s setWorkMode, workMode: %d", getTag(), workMode);
         int lastWorkMode = mLastWorkMode;
         super.setWorkMode(workMode);
 
         if (lastWorkMode == WorkMode.NORMAL && workMode == WorkMode.CACHING_ONLY) {
-            ASPlayerLog.d("AudioOutputPathV3-%d setWorkMode release audio render", mId);
+            ASPlayerLog.d("%s setWorkMode release audio render", getTag());
             releaseAudioRenderer();
 
             setConfigured(false);
         } else {
-            ASPlayerLog.d("AudioOutputPathV3-%d setWorkMode not release audio render", mId);
+            ASPlayerLog.d("%s setWorkMode not release audio render", getTag());
         }
     }
 
     @Override
     public void setPIPMode(int pipMode) {
-        ASPlayerLog.d("AudioOutputPathV3-%d setPIPMode, pipMode: %d", mId, pipMode);
+        ASPlayerLog.d("%s setPIPMode, pipMode: %d", getTag(), pipMode);
         int lastPipMode = mLastPIPMode;
         super.setPIPMode(pipMode);
 
         if (lastPipMode == PIPMode.NORMAL && pipMode == PIPMode.PIP) {
-            ASPlayerLog.d("AudioOutputPathV3-%d setPIPMode release audio render", mId);
+            ASPlayerLog.d("%s setPIPMode release audio render", getTag());
             releaseAudioRenderer();
             setConfigured(false);
         } else {
-            ASPlayerLog.d("AudioOutputPathV3-%d setPIPMode not release audio render", mId);
+            ASPlayerLog.d("%s setPIPMode not release audio render", getTag());
         }
     }
 }

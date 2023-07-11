@@ -31,6 +31,7 @@ public class TsPlayback {
     private DvrPlayback mDvrPlayback;
 
     private int mId;
+    private int mInstanceId = Constant.INVALID_INSTANCE_ID;
 
     public TsPlayback(int id, Tuner tuner, long bufferSize) {
         mId = id;
@@ -45,12 +46,20 @@ public class TsPlayback {
             public void onPlaybackStatusChanged(int status) {
                 if (mLastStatus != status ||
                         SystemClock.elapsedRealtime() - mLastStatusLog > LOG_DURATION) {
-                    ASPlayerLog.i("TsPlayback-%d onPlaybackStatusChanged, status: %d", mId, status);
+                    ASPlayerLog.i("%s onPlaybackStatusChanged, status: %d", getTag(), status);
                     mLastStatusLog = SystemClock.elapsedRealtime();
                 }
                 mLastStatus = status;
             }
         });
+    }
+
+    protected void setInstanceId(int instanceId) {
+        mInstanceId = instanceId;
+    }
+
+    private String getTag() {
+        return String.format("[No-%d]-[%d]TsPlayback", mInstanceId, mId);
     }
 
     public int attachFilter(Filter filter) {
@@ -68,53 +77,53 @@ public class TsPlayback {
     }
 
     public int configure(DvrSettings dvrSettings) {
-        ASPlayerLog.i("%s-%d configure called", TAG, mId);
+        ASPlayerLog.i("%s configure called", getTag());
         if (mDvrPlayback != null) {
             return mDvrPlayback.configure(dvrSettings);
         } else {
-            ASPlayerLog.e("%s-%d configure failed DvrPlayback is null", TAG, mId);
+            ASPlayerLog.e("%s configure failed DvrPlayback is null", getTag());
         }
         return -1;
     }
 
     public int start() {
-        ASPlayerLog.i("%s-%d start called", TAG, mId);
+        ASPlayerLog.i("%s start called", getTag());
         if (mDvrPlayback != null) {
             return mDvrPlayback.start();
         } else {
-            ASPlayerLog.e("%s-%d start failed DvrPlayback is null", TAG, mId);
+            ASPlayerLog.e("%s start failed DvrPlayback is null", getTag());
         }
         return -1;
     }
 
     public int stop() {
-        ASPlayerLog.i("%s-%d stop called", TAG, mId);
+        ASPlayerLog.i("%s stop called", getTag());
         if (mDvrPlayback != null) {
             return mDvrPlayback.stop();
         } else {
-            ASPlayerLog.e("%s-%d stop failed DvrPlayback is null", TAG, mId);
+            ASPlayerLog.e("%s stop failed DvrPlayback is null", getTag());
         }
         return -1;
     }
 
     public int flush() {
-        ASPlayerLog.i("%s-%d flush called", TAG, mId);
+        ASPlayerLog.i("%s flush called", getTag());
         if (mDvrPlayback != null) {
             return mDvrPlayback.flush();
         } else {
-            ASPlayerLog.e("%s-%d flush failed DvrPlayback is null", TAG, mId);
+            ASPlayerLog.e("%s flush failed DvrPlayback is null", getTag());
         }
         return -1;
     }
 
     private void close() {
-        ASPlayerLog.i("%s-%d close called", TAG, mId);
+        ASPlayerLog.i("%s close called", getTag());
         if (mDvrPlayback != null) {
             mDvrPlayback.stop();
             mDvrPlayback.flush();
             mDvrPlayback.close();
             mDvrPlayback = null;
-            ASPlayerLog.i("%s-%d close DvrPlayback", TAG, mId);
+            ASPlayerLog.i("%s close DvrPlayback", getTag());
         }
 
         mTuner = null;
@@ -136,7 +145,7 @@ public class TsPlayback {
         if (mDvrPlayback != null) {
             return mDvrPlayback.read(size);
         } else {
-            ASPlayerLog.e("%s-%d write failed DvrPlayback is null, size: %d", TAG, mId, size);
+            ASPlayerLog.e("%s write failed DvrPlayback is null, size: %d", getTag(), size);
         }
         return -1;
     }
@@ -144,10 +153,10 @@ public class TsPlayback {
     public long write(byte[] bytes, long offset, long size) {
         if (mDvrPlayback != null) {
             long ret = mDvrPlayback.read(bytes, offset, size);
-//            ASPlayerLog.i("TsPlayback-%d write %d bytes, total size: %d", mId, ret, size);
+//            ASPlayerLog.i("%s write %d bytes, total size: %d", getTag(), ret, size);
             return ret;
         } else {
-            ASPlayerLog.e("%s-%d write failed DvrPlayback is null, size: %d", TAG, mId, size);
+            ASPlayerLog.e("%s write failed DvrPlayback is null, size: %d", getTag(), size);
         }
         return -1;
     }

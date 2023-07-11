@@ -81,12 +81,12 @@ class VideoOutputPathV3 extends VideoOutputPath {
             }
 
             if (VideoMediaFormatEvent.isEventData(presentationTimeUs)) {
-//                ASPlayerLog.i("VideoOutputPathV3-%d media format event: %d", mId, presentationTimeUs);
+//                ASPlayerLog.i("%s media format event: %d", getTag(), presentationTimeUs);
                 handleMediaFormatEvent(presentationTimeUs);
                 return;
             }
 
-//            if (DEBUG) ASPlayerLog.i("VideoOutputPathV3-%d pts: %d", mId, presentationTimeUs);
+//            if (DEBUG) ASPlayerLog.i("%s onFrameRendered pts: %d", getTag(), presentationTimeUs);
             if (mPlaybackMode != ASPlayerConfig.PLAYBACK_MODE_PASSTHROUGH) {
                 if (mTimestampKeeper.isEmpty()) {
                     return;
@@ -95,7 +95,7 @@ class VideoOutputPathV3 extends VideoOutputPath {
             }
             notifyFrameDisplayed(presentationTimeUs, nanoTime / 1000);
             if (!mFirstFrameDisplayed) {
-                ASPlayerLog.i("VideoOutputPathV3-%d [KPI-FCC] onFrameRendered", mId);
+                ASPlayerLog.i("%s [KPI-FCC] onFrameRendered", getTag());
             }
             mLastRenderedTimeUs = presentationTimeUs;
             mFirstFrameDisplayed = true;
@@ -106,7 +106,7 @@ class VideoOutputPathV3 extends VideoOutputPath {
             buffer.putLong(eventData);
             if (DEBUG) {
                 for (int i = 0; i < Long.BYTES; i++) {
-                    ASPlayerLog.i("VideoOutputPathV3-%d [%d] %02x", mId, i, buffer.array()[i]);
+                    ASPlayerLog.i("%s [%d] %02x", getTag(), i, buffer.array()[i]);
                 }
             }
 
@@ -175,19 +175,19 @@ class VideoOutputPathV3 extends VideoOutputPath {
 
     @Override
     public boolean configure() {
-        if (DEBUG) ASPlayerLog.i("VideoOutputPathV3-%d configure", mId);
+        if (DEBUG) ASPlayerLog.i("%s configure", getTag());
         if (isConfigured()) {
-            ASPlayerLog.w("VideoOutputPathV3-%d mediacodec is not null as it should be", mId);
+            ASPlayerLog.w("%s mediacodec is not null as it should be", getTag());
             return false;
         }
         if (waitForConfigurationRetry()) {
             return false;
         }
         if (mSurface == null && mTargetWorkMode == WorkMode.NORMAL) {
-            ASPlayerLog.i("VideoOutputPath-%d configure failed, surface is null, normal mode", mId);
+            ASPlayerLog.i("%s configure failed, surface is null, normal mode", getTag());
             return false;
         } else if (mDummySurface == null && mTargetWorkMode == WorkMode.CACHING_ONLY) {
-            ASPlayerLog.i("VideoOutputPath-%d configure failed, dummy surface is null, cache mode", mId);
+            ASPlayerLog.i("%s configure failed, dummy surface is null, cache mode", getTag());
             return false;
         }
 
@@ -197,13 +197,13 @@ class VideoOutputPathV3 extends VideoOutputPath {
         }
 
         if (mMediaCodec != null) {
-            ASPlayerLog.w("VideoOutputPathV3-%d release mediacodec: %s", mId, mMediaCodec);
+            ASPlayerLog.w("%s release mediacodec: %s", getTag(), mMediaCodec);
             releaseMediaCodec();
         }
 
         MediaFormat format = mMediaFormat;
         if (format == null) {
-            if (DEBUG) ASPlayerLog.i("VideoOutputPathV3-%d configure failed, video format is null", mId);
+            if (DEBUG) ASPlayerLog.i("%s configure failed, video format is null", getTag());
             return false;
         }
 
@@ -212,7 +212,7 @@ class VideoOutputPathV3 extends VideoOutputPath {
                 format.getFeatureEnabled(FEATURE_SecurePlayback);
 
         if (TextUtils.isEmpty(mMimeType)) {
-            if (DEBUG) ASPlayerLog.i("VideoOutputPathV3-%d configure failed, mimeType is null", mId);
+            if (DEBUG) ASPlayerLog.i("%s configure failed, mimeType is null", getTag());
             return false;
         }
 
@@ -230,7 +230,7 @@ class VideoOutputPathV3 extends VideoOutputPath {
             }
 
             if (mTunneledPlayback) {
-                ASPlayerLog.i("VideoOutputPathV3-%d mTunneledPlayback", mId);
+                ASPlayerLog.i("%s mTunneledPlayback", getTag());
                 // get video size from input
                 mVideoWidth = format.getInteger(MediaFormat.KEY_WIDTH);
                 mVideoHeight = format.getInteger(MediaFormat.KEY_HEIGHT);
@@ -240,7 +240,8 @@ class VideoOutputPathV3 extends VideoOutputPath {
 
                 onSetVideoFormat(format);
 
-                ASPlayerLog.i("VideoOutputPathV3-%d video filter id: %d, avSyncHwId: %d", mId, mTrackFilterId, mAvSyncHwId);
+                ASPlayerLog.i("%s video filter id: 0x%016x, avSyncHwId: 0x%x",
+                        getTag(), mTrackFilterId, mAvSyncHwId);
 
                 mediaCodec.setOnFrameRenderedListener(mMediaCodecOnFrameCallback, getHandler());
             }
@@ -257,49 +258,47 @@ class VideoOutputPathV3 extends VideoOutputPath {
 
             String surfaceTag = (mDummySurface != null && surface == mDummySurface) ? "dummy surface" : "normal surface";
 
-            ASPlayerLog.i("VideoOutputPath-%d codec:%s, mime_type:%s, format:%s",
-                    mId, mediaCodec.getName(), mMimeType, format);
+            ASPlayerLog.i("%s codec:%s, mime_type:%s, format:%s",
+                    getTag(), mediaCodec.getName(), mMimeType, format);
 
             long beginTime = System.nanoTime();
             long startTime = beginTime;
             if (mPlaybackMode == ASPlayerConfig.PLAYBACK_MODE_ES_SECURE) {
-                ASPlayerLog.i("VideoOutputPath-%d mediacodec configure PLAYBACK_MODE_ES_SECURE, surface: %s, mediacodec: %s",
-                        mId, surface, mediaCodec);
+                ASPlayerLog.i("%s mediacodec configure PLAYBACK_MODE_ES_SECURE, surface: %s, mediacodec: %s",
+                        getTag(), surface, mediaCodec);
                 startTime = System.nanoTime();
                 mediaCodec.configure(format, surface, null,
                         MediaCodec.CONFIGURE_FLAG_USE_BLOCK_MODEL);
-                ASPlayerLog.i("VideoOutputPath-%d configure mediacodec %s, workMode: %d, surface: %s, cost: %d ms",
-                        mId, mediaCodec, mTargetWorkMode, surfaceTag, getCostTime(startTime));
+                ASPlayerLog.i("%s configure mediacodec %s, workMode: %d, surface: %s, cost: %d ms",
+                        getTag(), mediaCodec, mTargetWorkMode, surfaceTag, getCostTime(startTime));
             } else {
-                ASPlayerLog.i("VideoOutputPath-%d mediacodec configure before, normal, surface: %s, format: %s",
-                        mId, surfaceTag, format);
+                ASPlayerLog.i("%s mediacodec configure before, normal, surface: %s, format: %s",
+                        getTag(), surfaceTag, format);
                 startTime = System.nanoTime();
                 mediaCodec.configure(format, surface, null, 0);
-                ASPlayerLog.i("VideoOutputPath-%d [KPI-FCC] configure end mediacodec %s, " +
-                                "workMode: %d, surface: %s, cost: %d ms",
-                        mId, mediaCodec, mTargetWorkMode, surfaceTag, getCostTime(startTime));
+                ASPlayerLog.i("%s [KPI-FCC] configure end mediacodec %s, workMode: %d, surface: %s, cost: %d ms",
+                        getTag(), mediaCodec, mTargetWorkMode, surfaceTag, getCostTime(startTime));
             }
 
-            ASPlayerLog.i("VideoOutputPath-%d [KPI-FCC] configure mediacodec start before, mediacodec: %s",
-                    mId, mediaCodec);
+            ASPlayerLog.i("%s [KPI-FCC] configure mediacodec start before, mediacodec: %s", getTag(), mediaCodec);
             startTime = System.nanoTime();
             mediaCodec.start();
             long endTime = System.nanoTime();
-            ASPlayerLog.i("VideoOutputPath-%d [KPI-FCC] configure mediacodec start end, workMode: %d, cost: %d ms",
-                    mId, mTargetWorkMode, getCostTime(startTime, endTime));
-            ASPlayerLog.i("VideoOutputPath-%d [KPI-FCC] configure mediacodec totalTime: %d ms, mediacodec: %s",
-                    mId, getCostTime(beginTime, endTime), mediaCodec);
+            ASPlayerLog.i("%s [KPI-FCC] configure mediacodec start end, workMode: %d, cost: %d ms",
+                    getTag(), mTargetWorkMode, getCostTime(startTime, endTime));
+            ASPlayerLog.i("%s [KPI-FCC] configure mediacodec totalTime: %d ms, mediacodec: %s",
+                    getTag(), getCostTime(beginTime, endTime), mediaCodec);
             mMediaCodec = mediaCodec;
             mMediaCodecStarted = true;
 
             mFirstFrameDisplayed = false;
             setConfigured(true);
             mLastWorkMode = mTargetWorkMode;
-            ASPlayerLog.i("VideoOutputPath-%d change last WorkMode to %d", mId, mLastWorkMode);
+            ASPlayerLog.i("%s change last WorkMode to %d", getTag(), mLastWorkMode);
             configured = true;
             setRequestChangeWorkMode(false);
         } catch (Exception exception) {
-            ASPlayerLog.w("VideoOutputPathV3-%d can't create mediacodec error:%s", mId, exception.getMessage());
+            ASPlayerLog.w("%s can't create mediacodec error:%s", getTag(), exception.getMessage());
             if (mediaCodec != null) {
                 releaseMediaCodec(mediaCodec);
             }
@@ -328,7 +327,7 @@ class VideoOutputPathV3 extends VideoOutputPath {
     @Override
     protected void pushInputBuffer() {
         if (!isConfigured() && !configure()) {
-            if (DEBUG) ASPlayerLog.i("VideoOutputPathV3-%d not configured", mId);
+            if (DEBUG) ASPlayerLog.i("%s not configured", getTag());
             return;
         }
 
@@ -360,7 +359,7 @@ class VideoOutputPathV3 extends VideoOutputPath {
                 | EVENT_FLAGS_FRAME_RATES
         );
 
-        ASPlayerLog.i("VideoOutputPathV3-%d track filter id: %d, avSyncHwId: %d", mId, mTrackFilterId, mAvSyncHwId);
+        ASPlayerLog.i("%s track filter id: 0x%016x, avSyncHwId: 0x%x", getTag(), mTrackFilterId, mAvSyncHwId);
         if (mTrackFilterId >= 0) {
             format.setInteger(KEY_VIDEO_FILTER_ID, mTrackFilterId);
         }
@@ -373,7 +372,7 @@ class VideoOutputPathV3 extends VideoOutputPath {
     @Override
     void setTransitionModeBefore(int transitionModeBefore) {
         super.setTransitionModeBefore(transitionModeBefore);
-        ASPlayerLog.i("VideoOutputPathV3-%d setTransitionModeBefore %d", mId, transitionModeBefore);
+        ASPlayerLog.i("%s setTransitionModeBefore %d", getTag(), transitionModeBefore);
 
         PARAMS_TRANSITION_MODE_BEFORE.putInt(PARAM_TRANSITION_BEFORE, transitionModeBefore);
 
@@ -396,7 +395,7 @@ class VideoOutputPathV3 extends VideoOutputPath {
             return;
         }
 
-        ASPlayerLog.i("VideoOutputPath-%d setWorkMode: %d, last mode: %d", mId, workMode, mLastWorkMode);
+        ASPlayerLog.i("%s setWorkMode: %d, last mode: %d", getTag(), workMode, mLastWorkMode);
         if (workMode == WorkMode.CACHING_ONLY) {
             mLastRenderedTimeUs = 0;
         }

@@ -19,11 +19,13 @@ class RendererTrickBySeek extends Renderer {
 
     private long mPendingNextPositionTimeMs;
 
-    private final int mId;
-
     RendererTrickBySeek(int id, RendererScheduler rendererScheduler) {
-        super(rendererScheduler);
-        mId = id;
+        super(id, rendererScheduler);
+    }
+
+    @Override
+    protected String getName() {
+        return "RendererTrickBySeek";
     }
 
     void setPositionUs(long positionUs) {
@@ -41,7 +43,7 @@ class RendererTrickBySeek extends Renderer {
 
     @Override
     void setSpeed(Renderer previousRenderer, double speed) {
-        ASPlayerLog.i("RendererTrickBySeek-%d speed:%f", mId, speed);
+        ASPlayerLog.i("%s speed:%f", getTag(), speed);
         super.setSpeed(previousRenderer, speed);
 
         // set current origin
@@ -75,7 +77,7 @@ class RendererTrickBySeek extends Renderer {
     }
 
     private void freezeToPosition(long position) {
-        ASPlayerLog.i("position:%d", position);
+        ASPlayerLog.i("%s position: %d", getTag(), position);
 
         // set current origin
         mOriginPositionUs = position;

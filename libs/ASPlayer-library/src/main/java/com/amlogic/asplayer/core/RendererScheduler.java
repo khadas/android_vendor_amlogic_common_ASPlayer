@@ -32,6 +32,7 @@ class RendererScheduler implements Runnable {
 
     // for identification
     private int mId;
+    private int mInstanceId = Constant.INVALID_INSTANCE_ID;
 
     private Handler mHandler;
 
@@ -87,18 +88,26 @@ class RendererScheduler implements Runnable {
         int playbackMode = mConfig.getPlaybackMode();
 
         if (playbackMode == ASPlayerConfig.PLAYBACK_MODE_PASSTHROUGH) {
-            ASPlayerLog.i("playback mode passthrough");
-            mPlaybackTask = new RendererPlaybackV3(this);
+            ASPlayerLog.i("%s playback mode passthrough", getTag());
+            mPlaybackTask = new RendererPlaybackV3(mId, this);
             mSmoothSpeedTask = new RendererTrickSmoothV3(mId, this);
             mSpeedBySeekTask = new RendererTrickBySeekV3(mId, this);
         } else {
-            ASPlayerLog.i("playback mode normal mode");
-            mPlaybackTask = new RendererPlayback(this);
+            ASPlayerLog.i("%s playback mode normal mode", getTag());
+            mPlaybackTask = new RendererPlayback(mId, this);
             mSmoothSpeedTask = new RendererTrickSmooth(mId, this);
             mSpeedBySeekTask = new RendererTrickBySeek(mId, this);
         }
 
         mNoVideoSpeedTask = new RendererTrickNoVideo(mId, this);
+    }
+
+    void setInstanceId(int instanceId) {
+        mInstanceId = instanceId;
+        mPlaybackTask.setInstanceId(instanceId);
+        mSmoothSpeedTask.setInstanceId(instanceId);
+        mSpeedBySeekTask.setInstanceId(instanceId);
+        mNoVideoSpeedTask.setInstanceId(instanceId);
     }
 
     IASPlayer getASPlayer() {
@@ -117,8 +126,7 @@ class RendererScheduler implements Runnable {
         return mPositionHandler;
     }
 
-    void prepare(int id, Handler handler) {
-        mId = id;
+    void prepare(Handler handler) {
         mHandler = handler;
         mAudioOutputPath.setHandler(handler);
         mVideoOutputPath.setHandler(handler);
@@ -132,7 +140,7 @@ class RendererScheduler implements Runnable {
             mAudioOutputPath.setAudioSessionId(audioSessionId);
         }
 
-        mPlaybackTask.prepare(id, mContext, handler);
+        mPlaybackTask.prepare(mContext, handler);
         if (mWorkMode != -1) {
             mPlaybackTask.setWorkMode(mWorkMode);
         }
@@ -172,7 +180,7 @@ class RendererScheduler implements Runnable {
     }
 
     private void selectRendererTask() {
-        ASPlayerLog.i("RendererScheduler-%d speed: %f", mId, mSpeed);
+        ASPlayerLog.i("%s speed: %f", getTag(), mSpeed);
 
         boolean isNormalPlaySpeed = Math.abs(mSpeed - 1) < SPEED_DIFF_THRESHOLD;
         boolean isPauseSpeed = Math.abs(mSpeed) < SPEED_DIFF_THRESHOLD;
@@ -186,7 +194,7 @@ class RendererScheduler implements Runnable {
             selectedSpeedTask = mNoVideoSpeedTask;
         } else {
             int trickMode = mVideoOutputPath.getTrickMode();
-            ASPlayerLog.i("RendererScheduler-%d trick mode: %d", mId, trickMode);
+            ASPlayerLog.i("%s trick mode: %d", getTag(), trickMode);
             switch (trickMode) {
                 case VideoTrickMode.TRICK_MODE_SMOOTH:
                     selectedSpeedTask = mSmoothSpeedTask;
@@ -206,7 +214,7 @@ class RendererScheduler implements Runnable {
     }
 
     private void setSpeedTask(Renderer speedTask) {
-        ASPlayerLog.i("RendererScheduler-%d setSpeedTask: %s", mId, speedTask);
+        ASPlayerLog.i("%s setSpeedTask: %s", getTag(), speedTask);
         Renderer previousRenderer = mCurrentSpeedTask;
         mCurrentSpeedTask = speedTask;
         if (previousRenderer != null && previousRenderer != mCurrentSpeedTask) {
@@ -218,7 +226,7 @@ class RendererScheduler implements Runnable {
     }
 
     public void run() {
-        if (DEBUG) ASPlayerLog.i("RendererScheduler-%d run current speed task: %s", mId, mCurrentSpeedTask);
+        if (DEBUG) ASPlayerLog.i("%s run current speed task: %s", getTag(), mCurrentSpeedTask);
         try {
             long to = SystemClock.elapsedRealtime();
             long delayUs = 10000;
@@ -229,13 +237,13 @@ class RendererScheduler implements Runnable {
             long t1 = SystemClock.elapsedRealtime();
             long marginUs = (40 - (t1 - to)) * 1000;
             delayUs = Math.max(0, Math.min(delayUs, marginUs));
-            if (DEBUG) ASPlayerLog.i("RendererScheduler-%d render scheduler post run delay", mId);
+            if (DEBUG) ASPlayerLog.i("%s render scheduler post run delay", getTag());
             if (mHandler != null) {
                 mHandler.postDelayed(this, delayUs / 1000);
             }
         } catch (MediaCodec.CodecException codecException) {
-            ASPlayerLog.w("RendererScheduler-%d emergency stop, codec exception : diagnostic:%s, code:%d, recoverable:%b, transient:%b, error:%s",
-                    mId,
+            ASPlayerLog.w("%s emergency stop, codec exception : diagnostic:%s, code:%d, recoverable:%b, transient:%b, error:%s",
+                    getTag(),
                     codecException.getDiagnosticInfo(),
                     codecException.getErrorCode(),
                     codecException.isRecoverable(),
@@ -243,8 +251,8 @@ class RendererScheduler implements Runnable {
                     codecException.getMessage());
             stop();
         } catch (Exception exception) {
-            ASPlayerLog.w("RendererScheduler-%d emergency stop, unexpected critical error: %s", mId, exception.getMessage(), exception);
-            Log.d(TAG, String.format("RendererScheduler-%d emergency stop, unexpected critical error", mId), exception);
+            ASPlayerLog.w("%s emergency stop, unexpected critical error: %s, %s", getTag(),
+                    exception.getMessage(), Log.getStackTraceString(exception));
             stop();
         }
     }
@@ -257,34 +265,34 @@ class RendererScheduler implements Runnable {
     }
 
     void startVideoDecoding() {
-        ASPlayerLog.i("RendererScheduler-%d startVideoDecoding start", mId);
+        ASPlayerLog.i("%s startVideoDecoding start", getTag());
         mVideoStarted = true;
         mFirstVideoFrameDisplayed = false;
         stopRendererTask();
         if (mCurrentSpeedTask != null) {
-            ASPlayerLog.i("RendererScheduler-%d currentSpeedTask: %s", mId, mCurrentSpeedTask);
+            ASPlayerLog.i("%s currentSpeedTask: %s", getTag(), mCurrentSpeedTask);
             mCurrentSpeedTask.startVideo();
         }
         startRendererTaskIfNeed();
-        ASPlayerLog.i("RendererScheduler-%d startVideoDecoding end", mId);
+        ASPlayerLog.i("%s startVideoDecoding end", getTag());
     }
 
     private void stopRendererTask() {
-        ASPlayerLog.d("RendererScheduler-%d stopRendererTask", mId);
+        ASPlayerLog.d("%s stopRendererTask", getTag());
         mHandler.removeCallbacks(this);
     }
 
     private void startRendererTaskIfNeed() {
         if (canStartRendererTask()) {
             mHandler.removeCallbacks(this);
-            ASPlayerLog.d("RendererScheduler-%d need startRendererTask", mId);
+            ASPlayerLog.d("%s need startRendererTask", getTag());
             mHandler.post(this);
         }
     }
 
     private void stopRendererTaskIfNeed() {
         if (!canStartRendererTask()) {
-            ASPlayerLog.d("RendererScheduler-%d need stopRendererTask", mId);
+            ASPlayerLog.d("%s need stopRendererTask", getTag());
             mHandler.removeCallbacks(this);
         }
     }
@@ -297,7 +305,7 @@ class RendererScheduler implements Runnable {
     }
 
     void stopVideoDecoding() {
-        ASPlayerLog.i("RendererScheduler-%d stopVideoDecoding start", mId);
+        ASPlayerLog.i("%s stopVideoDecoding start", getTag());
         mVideoStarted = false;
         mFirstVideoFrameDisplayed = false;
         if (mCurrentSpeedTask != null) {
@@ -305,10 +313,10 @@ class RendererScheduler implements Runnable {
         }
         stopRendererSchedulerIfNeed();
 
-        ASPlayerLog.i("RendererScheduler-%d reset VideoOutputPath", mId);
+        ASPlayerLog.i("%s reset VideoOutputPath", getTag());
         mVideoOutputPath.reset();
 
-        ASPlayerLog.i("RendererScheduler-%d stopVideoDecoding end", mId);
+        ASPlayerLog.i("%s stopVideoDecoding end", getTag());
     }
 
     private void stopRendererSchedulerIfNeed() {
@@ -346,7 +354,7 @@ class RendererScheduler implements Runnable {
     }
 
     void startAudioDecoding() {
-        ASPlayerLog.i("RendererScheduler-%d startAudioDecoding start", mId);
+        ASPlayerLog.i("%s startAudioDecoding start", getTag());
         mAudioStarted = true;
         mFirstAudioFrameDisplayed = false;
         stopRendererTask();
@@ -354,11 +362,11 @@ class RendererScheduler implements Runnable {
             mCurrentSpeedTask.startAudio();
         }
         startRendererTaskIfNeed();
-        ASPlayerLog.i("RendererScheduler-%d startAudioDecoding end", mId);
+        ASPlayerLog.i("%s startAudioDecoding end", getTag());
     }
 
     void stopAudioDecoding() {
-        ASPlayerLog.i("RendererScheduler-%d stopAudioDecoding start", mId);
+        ASPlayerLog.i("%s stopAudioDecoding start", getTag());
         mAudioStarted = false;
         mFirstAudioFrameDisplayed = false;
         if (mCurrentSpeedTask != null) {
@@ -366,7 +374,7 @@ class RendererScheduler implements Runnable {
         }
         stopRendererSchedulerIfNeed();
         mAudioOutputPath.reset();
-        ASPlayerLog.i("RendererScheduler-%d stopAudioDecoding end", mId);
+        ASPlayerLog.i("%s stopAudioDecoding end", getTag());
     }
 
     void pauseAudioDecoding() {
@@ -399,7 +407,7 @@ class RendererScheduler implements Runnable {
     }
 
     void stop() {
-        ASPlayerLog.i("RendererScheduler-%d stop", mId);
+        ASPlayerLog.i("%s stop", getTag());
         if (mHandler != null) {
             mHandler.removeCallbacks(this);
         }
@@ -432,7 +440,7 @@ class RendererScheduler implements Runnable {
 
     private void onVideoFrame(long presentationTimeUs, long renderTime) {
         if (!mFirstVideoFrameDisplayed) {
-            ASPlayerLog.i("RendererScheduler-%d first video frame", mId);
+            ASPlayerLog.i("%s first video frame", getTag());
             mEventNotifier.notifyRenderFirstVideoFrame(renderTime);
             mFirstVideoFrameDisplayed = true;
         }
@@ -444,7 +452,7 @@ class RendererScheduler implements Runnable {
 
     private void onAudioFrame(long presentationTimeUs, long renderTime) {
         if (!mFirstAudioFrameDisplayed) {
-            ASPlayerLog.i("RendererScheduler-%d first audio frame", mId);
+            ASPlayerLog.i("%s first audio frame", getTag());
             mEventNotifier.notifyRenderFirstAudioFrame(renderTime);
             mFirstAudioFrameDisplayed = true;
         }
@@ -459,12 +467,12 @@ class RendererScheduler implements Runnable {
             return;
         }
 
-        ASPlayerLog.i("RendererScheduler-%d setWorkMode: %d, last mode: %d", mId, workMode, mWorkMode);
+        ASPlayerLog.i("%s setWorkMode: %d, last mode: %d", getTag(), workMode, mWorkMode);
 
         if (mHandler != null) {
             mHandler.removeCallbacks(this);
 
-            ASPlayerLog.i("RendererScheduler-%d speed task: %s, playback task: %s", mId, mCurrentSpeedTask, mPlaybackTask);
+            ASPlayerLog.i("%s speed task: %s, playback task: %s", getTag(), mCurrentSpeedTask, mPlaybackTask);
 
             if (mCurrentSpeedTask != null) {
                 mCurrentSpeedTask.setWorkMode(workMode);
@@ -476,25 +484,25 @@ class RendererScheduler implements Runnable {
             mHandler.post(this);
         } else {
             // not prepared
-            ASPlayerLog.i("RendererScheduler-%d setWorkMode: %d, not prepared", mId, workMode);
+            ASPlayerLog.i("%s setWorkMode: %d, not prepared", getTag(), workMode);
         }
 
         mWorkMode = workMode;
     }
 
     void setPIPMode(int pipMode) {
-        ASPlayerLog.i("RendererScheduler-%d setPIPMode start, mode: %d", mId, pipMode);
+        ASPlayerLog.i("%s setPIPMode start, mode: %d", getTag(), pipMode);
 
         if (pipMode == mPIPMode) {
             return;
         }
 
-        ASPlayerLog.i("RendererScheduler-%d setPIPMode: %d, last mode: %d", mId, pipMode, mPIPMode);
+        ASPlayerLog.i("%s setPIPMode: %d, last mode: %d", getTag(), pipMode, mPIPMode);
 
         if (mHandler != null) {
             mHandler.removeCallbacks(this);
 
-            ASPlayerLog.i("RendererScheduler-%d speed task: %s, playback task: %s", mId, mCurrentSpeedTask, mPlaybackTask);
+            ASPlayerLog.i("%s speed task: %s, playback task: %s", getTag(), mCurrentSpeedTask, mPlaybackTask);
 
             if (mCurrentSpeedTask != null) {
                 mCurrentSpeedTask.setPIPMode(pipMode);
@@ -506,14 +514,14 @@ class RendererScheduler implements Runnable {
             mHandler.post(this);
         } else {
             // not prepared
-            ASPlayerLog.i("RendererScheduler-%d setPIPMode: %d, not prepared", mId, pipMode);
+            ASPlayerLog.i("%s setPIPMode: %d, not prepared", getTag(), pipMode);
         }
 
         mPIPMode = pipMode;
     }
 
     void flush() {
-        ASPlayerLog.i("RendererScheduler-%d flush start", mId);
+        ASPlayerLog.i("%s flush start", getTag());
 
         mAudioOutputPath.reset();
         mVideoOutputPath.flush();
@@ -525,5 +533,9 @@ class RendererScheduler implements Runnable {
 
     void setTrickMode(int trickMode) {
         mVideoOutputPath.setTrickMode(trickMode);
+    }
+
+    private String getTag() {
+        return String.format("[No-%d]-[%d]RendererScheduler", mInstanceId, mId);
     }
 }

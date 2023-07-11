@@ -50,6 +50,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
     private int mLastWorkMode = -1;
     private int mTargetWorkMode = mLastWorkMode;
+    private int mInstanceId = Constant.INVALID_INSTANCE_ID;
 
     private int mLastPIPMode = -1;
     private int mTargetPIPMode = mLastPIPMode;
@@ -68,6 +69,11 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     }
 
     @Override
+    public void setInstanceId(int instanceId) {
+        mInstanceId = instanceId;
+    }
+
+    @Override
     public void setOutputBufferListener(OutputBufferListener listener) {
         mOutputBufferListener = listener;
     }
@@ -83,12 +89,12 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     }
 
     public void setAudioFilterId(int filterId) {
-        ASPlayerLog.i("AudioCodecRendererV3-%d set audio filter id: %d", mId, filterId);
+        ASPlayerLog.i("%s set audio filter id: 0x%016x", getTag(), filterId);
         mAudioFilterId = filterId;
     }
 
     public void writeMetadata(Metadata metadata) {
-        ASPlayerLog.i("AudioCodecRendererV3-%d metadata: %s", mId, metadata);
+        ASPlayerLog.i("%s metadata: %s", getTag(), metadata);
         synchronized (mMetadata) {
             mMetadata.removeIf(item -> item.getClass().equals(metadata.getClass()));
             mMetadata.add(metadata);
@@ -150,9 +156,9 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     if (AudioTrack.isDirectPlaybackSupported(audioFormat, audioAttributes)) {
-                        ASPlayerLog.d("AudioCodecRendererV3-%d audio format, encoding: %d, samplerate: %d, channelMask: %d",
-                                mId, encoding, sampleRate, channel);
-                        ASPlayerLog.d("AudioCodecRendererV3-%d select audio format: %s", mId, audioFormat);
+                        ASPlayerLog.d("%s audio format, encoding: %d, samplerate: %d, channelMask: %d",
+                                getTag(), encoding, sampleRate, channel);
+                        ASPlayerLog.d("%s select audio format: %s", getTag(), audioFormat);
                         return audioFormat;
                     }
                 }
@@ -168,7 +174,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
     @Override
     public void configure(MediaFormat format, MediaDescrambler descrambler) {
-        ASPlayerLog.i("AudioCodecRendererV3-%d configure", mId);
+        ASPlayerLog.i("%s configure", getTag());
         releaseDecoderThread();
         AudioUtils.releaseAudioTrack(mAudioTrack);
         mAudioTrack = null;
@@ -176,7 +182,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
         int workMode = mTargetWorkMode;
         int pipMode = mTargetPIPMode;
 
-        ASPlayerLog.i("AudioCodecRendererV3-%d source format:%s", mId, format);
+        ASPlayerLog.i("%s source format:%s", getTag(), format);
         try {
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_MEDIA)
@@ -189,41 +195,41 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
                     builder.setOffloadedPlayback(true);
             }
 
-            ASPlayerLog.i("AudioCodecRendererV3-%d audio filter idt:%d, av sync id: %d", mId, mAudioFilterId, mAvSyncHwId);
+            ASPlayerLog.i("%s audio filter id: 0x%016x, avSyncId: 0x%x", getTag(), mAudioFilterId, mAvSyncHwId);
             TunerHelper.AudioTrack.setTunerConfiguration(builder, mAudioFilterId, mAvSyncHwId);
 
             AudioFormat audioFormat = null;
             if (TunerHelper.TunerVersionChecker
                     .isHigherOrEqualVersionTo(TunerHelper.TunerVersionChecker.TUNER_VERSION_1_1)) {
-                ASPlayerLog.i("AudioCodecRendererV3-%d tuner version >= 1.1", mId);
+                ASPlayerLog.i("%s tuner version >= 1.1", getTag());
                 audioFormat = getAudioFormat(audioAttributes, AudioFormat.ENCODING_DEFAULT);
             } else {
-                ASPlayerLog.i("AudioCodecRendererV3-%d get tuner version failed, or tuner version < 1.1", mId);
+                ASPlayerLog.i("%s get tuner version failed, or tuner version < 1.1", getTag());
                 audioFormat = getAudioFormat(audioAttributes, AudioUtils.getEncoding(format));
             }
             builder.setAudioFormat(audioFormat);
 
             mAudioTrack = builder.build();
-            ASPlayerLog.i("AudioCodecRendererV3-%d create AudioTrack success: %s", mId, mAudioTrack);
+            ASPlayerLog.i("%s create AudioTrack success: %s", getTag(), mAudioTrack);
 
             prepareAudioTrack();
 
-            ASPlayerLog.i("AudioCodecRendererV3-%d configure AudioTrack, pipMode: %d", mId, pipMode);
+            ASPlayerLog.i("%s configure AudioTrack, workMode: %d, pipMode: %d", getTag(), workMode, pipMode);
 
             if (workMode == WorkMode.NORMAL && pipMode == PIPMode.NORMAL) {
-                ASPlayerLog.i("AudioCodecRendererV3-%d set volume %f", mId, mGain);
+                ASPlayerLog.i("%s set volume %f", getTag(), mGain);
                 mAudioTrack.setVolume(mGain);
                 if (mClock.getSpeed() == 0) {
-                    ASPlayerLog.i("AudioCodecRendererV3-%d AudioTrack.pause", mId);
+                    ASPlayerLog.i("%s AudioTrack.pause", getTag());
                     mAudioTrack.pause();
                 } else {
-                    ASPlayerLog.i("AudioCodecRendererV3-%d AudioTrack.play", mId);
+                    ASPlayerLog.i("%s AudioTrack.play", getTag());
                     mAudioTrack.play();
                 }
             } else if (workMode == WorkMode.CACHING_ONLY || pipMode == PIPMode.PIP) {
-                ASPlayerLog.i("AudioCodecRendererV3-%d set volume 0", mId);
+                ASPlayerLog.i("%s set volume 0", getTag());
                 mAudioTrack.setVolume(0.f);
-                ASPlayerLog.i("AudioCodecRendererV3-%d AudioTrack.stop", mId);
+                ASPlayerLog.i("%s AudioTrack.stop", getTag());
                 mAudioTrack.stop();
             }
 
@@ -240,7 +246,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
             mLastWorkMode = workMode;
             mLastPIPMode = pipMode;
         } catch (Exception exception) {
-            ASPlayerLog.w("AudioCodecRendererV3-%d Failed to configure AudioTrack: %s", mId, exception.getMessage());
+            ASPlayerLog.w("%s Failed to configure AudioTrack: %s", getTag(), exception.getMessage());
             mErrorMessage = exception.toString();
             releaseDecoderThread();
             AudioUtils.releaseAudioTrack(mAudioTrack);
@@ -272,16 +278,16 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
             expectedToWrite = mMetadataPacket.remaining();
             written = mAudioTrack.write(mMetadataPacket, expectedToWrite,
                     AudioTrack.WRITE_NON_BLOCKING);
-            ASPlayerLog.i("AudioCodecRendererV3-%d meta expected: %d, meta written: %d",
-                            mId, expectedToWrite, written);
+            ASPlayerLog.i("%s meta expected: %d, meta written: %d",
+                            getTag(), expectedToWrite, written);
         } else {
             expectedToWrite = mEmptyPacket.remaining();
             written = mAudioTrack.write(mEmptyPacket, expectedToWrite,
                     AudioTrack.WRITE_NON_BLOCKING);
             if (expectedToWrite != AUDIO_BUFFER_SIZE ||
                     expectedToWrite != written && written > 0) {
-                ASPlayerLog.i("AudioCodecRendererV3-%d expected: %d, written: %d",
-                                mId, expectedToWrite, written);
+                ASPlayerLog.i("%s expected: %d, written: %d",
+                                getTag(), expectedToWrite, written);
             }
         }
 
@@ -301,7 +307,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
         @Override
         public void run() {
             super.run();
-            ASPlayerLog.i("AudioCodecRendererV3-%d DecoderThread started.", mId);
+            ASPlayerLog.i("%s DecoderThread started.", getTag());
 
             long mLastRenderNotificationTime = 0;
 
@@ -327,12 +333,12 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
                     }
                 }
             }
-            ASPlayerLog.i("AudioCodecRendererV3-%d DecoderThread exiting..", mId);
+            ASPlayerLog.i("%s DecoderThread exiting..", getTag());
         }
     }
 
     private void startDecoderThread() {
-        ASPlayerLog.i("AudioCodecRendererV3-%d start decoder thread", mId);
+        ASPlayerLog.i("%s start decoder thread", getTag());
         if (mDecoderThread != null) {
             releaseDecoderThread();
         }
@@ -342,7 +348,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
     private void releaseDecoderThread() {
         if (mDecoderThread != null) {
-            ASPlayerLog.i("AudioCodecRendererV3-%d release decoder thread", mId);
+            ASPlayerLog.i("%s release decoder thread", getTag());
             mDecoderThread.interrupt();
             try {
                 mDecoderThread.join();
@@ -359,13 +365,15 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
         if (mAudioTrack == null)
             return;
         if (speed != 0 && speed != 1) {
-            ASPlayerLog.w("AudioCodecRendererV3-%d unexpected speed %f, should be 0 or 1", mId, speed);
+            ASPlayerLog.w("%s unexpected speed %f, should be 0 or 1", getTag(), speed);
             return;
         }
         mClock.setSpeed(speed);
         if (speed == 0) {
+            ASPlayerLog.w("%s AudioTrack.pause", getTag());
             mAudioTrack.pause();
         } else {
+            ASPlayerLog.w("%s AudioTrack.play", getTag());
             mAudioTrack.play();
         }
     }
@@ -390,7 +398,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
     @Override
     public void release() {
-//        TvLog.i("AudioCodecRendererV3-%d release", mId);
+        ASPlayerLog.i("%s release", getTag());
         releaseDecoderThread();
 
         AudioUtils.releaseAudioTrack(mAudioTrack);
@@ -419,7 +427,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     @Override
     public void checkErrors() {
         if (mErrorMessage != null) {
-            ASPlayerLog.w("AudioCodecRendererV3-%d error %s, reset ", mId, mErrorMessage);
+            ASPlayerLog.w("%s error %s, reset ", getTag(), mErrorMessage);
             release();
         }
     }
@@ -488,18 +496,18 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     public boolean setWorkMode(int workMode) {
         mTargetWorkMode = workMode;
 
-        ASPlayerLog.i("AudioCodecRendererV3-%d setWorkMode: %d, last mode: %d, audio track: %s", mId, workMode, mLastWorkMode, mAudioTrack);
+        ASPlayerLog.i("%s setWorkMode: %d, last mode: %d, audio track: %s", getTag(), workMode, mLastWorkMode, mAudioTrack);
 
         boolean success = switchWorkMode(mTargetWorkMode);
         if (success) {
             mLastWorkMode = mTargetWorkMode;
         }
-        ASPlayerLog.i("AudioCodecRendererV3-%d setWorkMode to %d result: %s", mId, workMode, success ? "success" : "failed");
+        ASPlayerLog.i("%s setWorkMode to %d result: %s", getTag(), workMode, success ? "success" : "failed");
         return success;
     }
 
     private boolean switchWorkMode(int workMode) {
-        ASPlayerLog.i("AudioCodecRendererV3-%d switchWorkMode: %d, last mode: %d, audio track: %s", mId, workMode, mLastWorkMode, mAudioTrack);
+        ASPlayerLog.i("%s switchWorkMode: %d, last mode: %d, audio track: %s", getTag(), workMode, mLastWorkMode, mAudioTrack);
 
         if (mLastWorkMode == workMode) {
             return true;
@@ -518,19 +526,19 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     }
 
     private boolean switchAudioTrackMode(boolean cache) {
-        ASPlayerLog.i("AudioCodecRendererV3-%d switchAudioTrackMode type: %s", mId, cache ? "cache" : "normal");
+        ASPlayerLog.i("%s switchAudioTrackMode type: %s", getTag(), cache ? "cache" : "normal");
         if (cache) {
-            ASPlayerLog.w("AudioCodecRendererV3-%d AudioTrack.setVolume(0)", mId);
+            ASPlayerLog.w("%s AudioTrack.setVolume(0)", getTag());
             mAudioTrack.setVolume(0.f);
-            ASPlayerLog.w("AudioCodecRendererV3-%d AudioTrack.stop", mId);
+            ASPlayerLog.w("%s AudioTrack.stop", getTag());
             mAudioTrack.stop();
             mErrorMessage = null;
 
             releaseDecoderThread();
         } else {
-            ASPlayerLog.w("AudioCodecRendererV3-%d AudioTrack.setVolume: %.2f", mId, mGain);
+            ASPlayerLog.w("%s AudioTrack.setVolume: %.2f", getTag(), mGain);
             mAudioTrack.setVolume(mGain);
-            ASPlayerLog.w("AudioCodecRendererV3-%d AudioTrack.play", mId);
+            ASPlayerLog.w("%s AudioTrack.play", getTag());
             mAudioTrack.play();
             mErrorMessage = null;
 
@@ -542,12 +550,12 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     @Override
     public boolean setPIPMode(int pipMode) {
         mTargetPIPMode = pipMode;
-        ASPlayerLog.i("AudioCodecRendererV3-%d setPIPMode: %d, last pip mode: %d", mId, pipMode, mLastPIPMode);
+        ASPlayerLog.i("%s setPIPMode: %d, last pip mode: %d", getTag(), pipMode, mLastPIPMode);
         boolean success = switchPipMode(mTargetPIPMode);
         if (success) {
             mLastPIPMode = mTargetPIPMode;
         }
-        ASPlayerLog.i("AudioCodecRendererV3-%d setPIPMode to %d result: %s", mId, pipMode, success ? "success" : "failed");
+        ASPlayerLog.i("%s setPIPMode to %d result: %s", getTag(), pipMode, success ? "success" : "failed");
         return success;
     }
 
@@ -566,5 +574,9 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
         }
 
         return success;
+    }
+
+    private String getTag() {
+        return String.format("[No-%d]-[%d]AudioCodecRendererV3", mInstanceId, mId);
     }
 }

@@ -5,16 +5,18 @@ class RendererTrickSmooth extends Renderer {
 
     private static final int END_OF_STREAM_MARGIN_US = 1000000;
 
-    private final int mId;
-
     RendererTrickSmooth(int id, RendererScheduler rendererScheduler) {
-        super(rendererScheduler);
-        mId = id;
+        super(id, rendererScheduler);
+    }
+
+    @Override
+    protected String getName() {
+        return "RendererTrickSmooth";
     }
 
     @Override
     void setSpeed(Renderer previousRenderer, double speed) {
-        ASPlayerLog.i("RendererTrickSmooth-%d speed:%f->%f", mId, mSpeed, speed);
+        ASPlayerLog.i("%s speed:%f->%f", getTag(), mSpeed, speed);
         super.setSpeed(previousRenderer, speed);
 
         // stop audio

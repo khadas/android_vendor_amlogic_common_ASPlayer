@@ -16,16 +16,18 @@ import static com.amlogic.asplayer.core.VideoOutputPathV3.PARAMS_TRICK_NONE;
 class RendererTrickBySeekV3 extends Renderer {
     private static final String TAG = "RendererTrickBySeekV3";
 
-    private final int mId;
-
     RendererTrickBySeekV3(int id, RendererScheduler rendererScheduler) {
-        super(rendererScheduler);
-        mId = id;
+        super(id, rendererScheduler);
+    }
+
+    @Override
+    protected String getName() {
+        return "RendererTrickBySeekV3";
     }
 
     @Override
     void setSpeed(Renderer previousRenderer, double speed) {
-        ASPlayerLog.i("RendererTrickBySeekV3-%d setSpeed: %f", mId, speed);
+        ASPlayerLog.i("%s setSpeed: %f", getTag(), speed);
         super.setSpeed(previousRenderer, speed);
 
         mRequestedPositionSet = true;

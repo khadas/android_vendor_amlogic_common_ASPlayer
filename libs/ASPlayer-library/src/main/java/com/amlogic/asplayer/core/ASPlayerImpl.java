@@ -84,7 +84,14 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     private VideoSizeInfo mVideoSizeInfo;
 
-    private int mId;
+    private final int mId;
+    private int mInstanceId = Constant.INVALID_INSTANCE_ID;
+
+    public interface OnGetInstanceIdListener {
+        void onGetInstanceId(int instanceId);
+    }
+
+    private OnGetInstanceIdListener mOnGetInstanceIdListener;
 
     public ASPlayerImpl(int id, Context context, Tuner tuner, ASPlayerConfig config, Looper looper) {
         mId = id;
@@ -98,7 +105,8 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         mVideoOutputPath.setDataListener(this::onFirstMediaData);
         mAudioOutputPath.setDataListener(this::onFirstMediaData);
 
-        mRendererScheduler = new RendererScheduler(mId, context, this, mConfig, mVideoOutputPath, mAudioOutputPath, mEventNotifier);
+        mRendererScheduler = new RendererScheduler(mId, context, this, mConfig,
+                mVideoOutputPath, mAudioOutputPath, mEventNotifier);
     }
 
     @Override
@@ -111,10 +119,14 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         mEventNotifier.mPlaybackListeners.remove(listener);
     }
 
+    public void setOnGetInstanceIdListener(OnGetInstanceIdListener listener) {
+        mOnGetInstanceIdListener = listener;
+    }
+
     @Override
     public int prepare() {
         if (mPlayerThread != null) {
-            ASPlayerLog.w("Player-%d already prepared", mId);
+            ASPlayerLog.w("%s already prepared", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
 
@@ -134,7 +146,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     private void handlePrepare() {
         mRendererScheduler.setVideoFormatListener(this);
         mRendererScheduler.setAudioFormatListener(this);
-        mRendererScheduler.prepare(mId, mPlayerHandler);
+        mRendererScheduler.prepare(mPlayerHandler);
     }
 
     private void onFirstMediaData(MediaOutputPath outputPath) {
@@ -205,33 +217,33 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     @Override
     public int getMajorVersion() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getMajorVersion start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getMajorVersion start", getTag());
         return 0;
     }
 
     @Override
     public int getMinorVersion() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getMinorVersion start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getMinorVersion start", getTag());
         return 0;
     }
 
     @Override
     public int getInstancesNumber() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getInstancesNumber start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getInstancesNumber start", getTag());
         return 0;
     }
 
     @Override
     public int getSyncInstancesNumber() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getSyncInstancesNumber start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getSyncInstancesNumber start", getTag());
         return 0;
     }
 
     @Override
     public void release() {
-        if (DEBUG) ASPlayerLog.d("%s-%d release start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s release start", getTag());
         if (mPlayerHandler == null) {
-            ASPlayerLog.d("%s-%d already released", TAG, mId);
+            ASPlayerLog.i("%s already released", getTag());
             return;
         }
 
@@ -280,7 +292,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     @Override
     public int writeFrameData(InputFrameBuffer inputFrameBuffer, long timeoutMillSecond) {
-        if (DEBUG) ASPlayerLog.d("%s-%d writeFrameData start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s writeFrameData start", getTag());
         return 0;
     }
 
@@ -288,45 +300,45 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     public int writeData(InputBuffer inputBuffer, long timeoutMillSecond) {
 //        if (DEBUG) ASPlayerLog.d("%s-%d writeData start, buffer size: %d", TAG, mId, (inputBuffer != null ? inputBuffer.mBufferSize : 0));
         if (inputBuffer == null) {
-            ASPlayerLog.i("%s-%d writeData failed, invalid param, inputBuffer is null", TAG, mId);
+            ASPlayerLog.i("%s writeData failed, invalid param, inputBuffer is null", getTag());
             return INFO_INVALID_PARAMS;
         } else if (inputBuffer.mBuffer == null) {
-            ASPlayerLog.i("%s-%d writeData failed, invalid param, inputBuffer.mBuffer is null", TAG, mId);
+            ASPlayerLog.i("%s writeData failed, invalid param, inputBuffer.mBuffer is null", getTag());
             return INFO_INVALID_PARAMS;
         } else if (inputBuffer.mOffset < 0 || inputBuffer.mBufferSize < 0) {
-            ASPlayerLog.i("%s-%d writeData failed, invalid param, offset: %d, bufferSize: %d",
-                    TAG, mId, inputBuffer.mOffset, inputBuffer.mBufferSize);
+            ASPlayerLog.i("%s writeData failed, invalid param, offset: %d, bufferSize: %d",
+                    getTag(), inputBuffer.mOffset, inputBuffer.mBufferSize);
             return INFO_INVALID_PARAMS;
         } else if (inputBuffer.mBufferSize == 0) {
-            ASPlayerLog.i("%s-%d writeData buffer is empty", TAG, mId);
+            ASPlayerLog.i("%s writeData buffer is empty", getTag());
             return INFO_ERROR_RETRY;
         }
 
         if (mTsPlayback != null) {
             return writeToTsPlayback(inputBuffer.mBuffer, inputBuffer.mOffset, inputBuffer.mBufferSize);
         } else {
-            ASPlayerLog.w("%s-%d writeData failed", TAG, mId);
+            ASPlayerLog.w("%s writeData failed", getTag());
             return INFO_INVALID_OPERATION;
         }
     }
 
     public int writeData(int inputBufferType, byte[] buffer, int offset, int size, long timeoutMillSecond) {
         if (buffer == null) {
-            ASPlayerLog.i("%s-%d writeData failed, invalid param, buffer is null", TAG, mId);
+            ASPlayerLog.i("%s writeData failed, invalid param, buffer is null", getTag());
             return INFO_INVALID_PARAMS;
         } else if (offset < 0 || size < 0) {
-            ASPlayerLog.i("%s-%d writeData failed, invalid param, offset: %d, size: %d",
-                    TAG, mId, offset, size);
+            ASPlayerLog.i("%s writeData failed, invalid param, offset: %d, size: %d",
+                    getTag(), offset, size);
             return INFO_INVALID_PARAMS;
         } else if (size == 0) {
-            ASPlayerLog.i("%s-%d writeData buffer is empty", TAG, mId);
+            ASPlayerLog.i("%s writeData buffer is empty", getTag());
             return INFO_ERROR_RETRY;
         }
 
         if (mTsPlayback != null) {
             return writeToTsPlayback(buffer, offset, size);
         } else {
-            ASPlayerLog.w("%s-%d writeData failed", TAG, mId);
+            ASPlayerLog.w("%s writeData failed", getTag());
             return INFO_INVALID_OPERATION;
         }
     }
@@ -338,7 +350,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         } else if (ret == 0) {
             return INFO_BUSY;
         } else {
-            ASPlayerLog.w("%s-%d writeData error, ret: %d", TAG, mId, ret);
+            ASPlayerLog.w("%s writeData error, ret: %d", getTag(), ret);
             return INFO_ERROR_RETRY;
         }
     }
@@ -354,7 +366,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             lock.block();
             return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.e("%s-%d flush called, but playerHandler is null", TAG, mId);
+            ASPlayerLog.e("%s flush called, but playerHandler is null", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
@@ -376,15 +388,15 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             lock.block();
             return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.e("%s-%d flushDvr failed, playerHandler: %s, tsPlayback: %s",
-                    TAG, mId, mPlayerHandler, mTsPlayback);
+            ASPlayerLog.e("%s flushDvr failed, playerHandler: %s, tsPlayback: %s",
+                    getTag(), mPlayerHandler, mTsPlayback);
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
 
     @Override
     public int setWorkMode(int mode) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setWorkMode start, work mode: %d", TAG, mId, mode);
+        if (DEBUG) ASPlayerLog.d("%s setWorkMode start, work mode: %d", getTag(), mode);
 
         if (mPlayerHandler != null && mPlayerThread != null && mPlayerThread.isAlive()) {
 //            ConditionVariable lock = new ConditionVariable();
@@ -398,7 +410,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 //            lock.block();
         } else {
             mRendererScheduler.setWorkMode(mode);
-            ASPlayerLog.w("%s-%d setWorkMode called, but playerHandler is null", TAG, mId);
+            ASPlayerLog.w("%s setWorkMode called, but playerHandler is null", getTag());
         }
         setThreadPriority(mode);
         return ErrorCode.SUCCESS;
@@ -449,7 +461,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
                 mRendererScheduler.setPIPMode(mode);
             });
         } else {
-            ASPlayerLog.e("%s-%d setPIPMode called, but playerHandler is null", TAG, mId);
+            ASPlayerLog.e("%s setPIPMode called, but playerHandler is null", getTag());
             mRendererScheduler.setPIPMode(mode);
         }
         return ErrorCode.SUCCESS;
@@ -457,44 +469,44 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     @Override
     public long getCurrentTime() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getCurrentTime start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getCurrentTime start", getTag());
         return 0;
     }
 
     @Override
     public long getPts(int streamType) {
-        if (DEBUG) ASPlayerLog.d("%s-%d getPts start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getPts start", getTag());
         return 0;
     }
 
     @Override
     public void setSyncMode(int mode) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setSyncMode start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s setSyncMode start", getTag());
 
     }
 
     @Override
     public int getSyncMode() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getSyncMode start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getSyncMode start", getTag());
         return 0;
     }
 
     @Override
     public int setPcrPid(int pid) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setPcrPid start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s setPcrPid start", getTag());
         return 0;
     }
 
     @Override
     public int startFast(float scale) {
-        if (DEBUG) ASPlayerLog.d("%s-%d startFast start, scale: %.3f", TAG, mId, scale);
+        if (DEBUG) ASPlayerLog.d("%s startFast start, scale: %.3f", getTag(), scale);
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
                 handleStartFast(scale);
             });
             return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.w("%s-%d startFast called, but playerHandler is null", TAG, mId);
+            ASPlayerLog.w("%s startFast called, but playerHandler is null", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
@@ -509,14 +521,14 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     @Override
     public int stopFast() {
-        if (DEBUG) ASPlayerLog.d("%s-%d stopFast start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s stopFast start", getTag());
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
                 handleStopFast();
             });
             return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.w("%s-%d stopFast called, but playerHandler is null", TAG, mId);
+            ASPlayerLog.w("%s stopFast called, but playerHandler is null", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
@@ -529,7 +541,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             });
             return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.w("%s-%d setTrickMode called, but playerHandler is null", TAG, mId);
+            ASPlayerLog.w("%s setTrickMode called, but playerHandler is null", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
@@ -543,15 +555,15 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         if (mPlayerHandler != null && mPlayerThread != null && mPlayerThread.isAlive()) {
             ConditionVariable lock = new ConditionVariable();
             mPlayerHandler.postAtFrontOfQueue(() -> {
-                ASPlayerLog.i("%s-%d [KPI-FCC] setSurface start", TAG, mId);
+                ASPlayerLog.i("%s [KPI-FCC] setSurface start", getTag());
                 mVideoOutputPath.setSurface(surface);
-                ASPlayerLog.i("%s-%d [KPI-FCC] setSurface done", TAG, mId);
+                ASPlayerLog.i("%s [KPI-FCC] setSurface done", getTag());
                 lock.open();
             });
             lock.block();
         } else {
             mVideoOutputPath.setSurface(surface);
-            ASPlayerLog.w("%s-%d setSurface called, but playerHandler is null", TAG, mId);
+            ASPlayerLog.w("%s setSurface called, but playerHandler is null", getTag());
         }
         return ErrorCode.SUCCESS;
     }
@@ -568,11 +580,11 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             int avSyncHwId = params.getAvSyncHwId();
             if (filterId < 0) {
                 String msg = String.format("invalid filter id: %d", filterId);
-                ASPlayerLog.e("%s-%d setVideoParams failed, error: %s", TAG, mId, msg);
+                ASPlayerLog.e("%s setVideoParams failed, error: %s", getTag(), msg);
                 throw new IllegalArgumentException(msg);
             } else if (avSyncHwId < 0) {
                 String msg = String.format("invalid avSyncHwId id: %d", avSyncHwId);
-                ASPlayerLog.e("%s-%d setVideoParams failed, error: %s", TAG, mId, msg);
+                ASPlayerLog.e("%s setVideoParams failed, error: %s", getTag(), msg);
                 throw new IllegalArgumentException(msg);
             }
         }
@@ -582,7 +594,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
                 handleSetVideoParams(params);
             });
         } else {
-            ASPlayerLog.e("%s-%d failed to set video params, playerHandler is null", TAG, mId);
+            ASPlayerLog.e("%s failed to set video params, playerHandler is null", getTag());
             throw new IllegalStateException("ASPlayer not prepared");
         }
     }
@@ -593,13 +605,16 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             int pid = params.getPid();
             int filterId = params.getTrackFilterId();
             int avSyncHwId = params.getAvSyncHwId();
-            ASPlayerLog.i("%s-%d setVideoParams pid: %d, filterId: %d, avsyncHwId: %d, media format: %s",
-                    TAG, mId, pid, filterId, avSyncHwId, format);
+
+            setInstanceId(avSyncHwId);
+
+            ASPlayerLog.i("%s setVideoParams pid: 0x%04x, filterId: 0x%016x, avsyncHwId: 0x%x, media format: %s",
+                    getTag(), pid, filterId, avSyncHwId, format);
 
             if (format == null) {
                 format = MediaFormat.createVideoFormat(params.getMimeType(), params.getWidth(), params.getHeight());
-                ASPlayerLog.i("%s-%d setVideoParams create MediaFormat, mimetype: %s, width: %d, height: %d",
-                        TAG, mId, params.getMimeType(), params.getWidth(), params.getHeight());
+                ASPlayerLog.i("%s setVideoParams create MediaFormat, mimetype: %s, width: %d, height: %d",
+                        getTag(), params.getMimeType(), params.getWidth(), params.getHeight());
             }
             mVideoOutputPath.setMediaFormat(format);
 
@@ -608,6 +623,8 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
                 outputPathV3.setTrackFilterId(filterId);
                 outputPathV3.setAvSyncHwId(avSyncHwId);
             }
+
+            mVideoOutputPath.setInstanceId(getInstanceIdBySyncId(avSyncHwId));
 
             mRendererScheduler.onSetVideoParams(true);
         } else {
@@ -618,8 +635,38 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
                 outputPathV3.setAvSyncHwId(MediaContainerExtractor.INVALID_AV_SYNC_HW_ID);
             }
 
+            mVideoOutputPath.setInstanceId(Constant.INVALID_INSTANCE_ID);
+
             mRendererScheduler.onSetVideoParams(false);
         }
+    }
+
+    private void setInstanceId(int avSyncHwId) {
+        int instanceId = getInstanceIdBySyncId(avSyncHwId);
+
+        if (instanceId != mInstanceId) {
+            ASPlayerLog.i("%s setInstanceId change instanceId %d to %d", getTag(), mInstanceId, instanceId);
+        } else {
+            ASPlayerLog.i("%s setInstanceId %d", getTag(), mInstanceId);
+        }
+        mInstanceId = instanceId;
+
+        if (mTsPlayback != null) {
+            mTsPlayback.setInstanceId(mInstanceId);
+        }
+        mRendererScheduler.setInstanceId(mInstanceId);
+
+        if (mOnGetInstanceIdListener != null) {
+            mOnGetInstanceIdListener.onGetInstanceId(mInstanceId);
+        }
+    }
+
+    private int getInstanceIdBySyncId(int avSyncHwId) {
+        if (avSyncHwId < 0) {
+            return Constant.INVALID_INSTANCE_ID;
+        }
+
+        return avSyncHwId & 0x00FF;
     }
 
     @Override
@@ -656,7 +703,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             lock.block();
             return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.i("%s-%d startVideoDecoding failed, playerHandler is null", TAG, mId);
+            ASPlayerLog.i("%s startVideoDecoding failed, playerHandler is null", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
@@ -701,7 +748,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             lock.block();
             return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.i("%s-%d pauseVideoDecoding failed, playerHandler is null", TAG, mId);
+            ASPlayerLog.i("%s pauseVideoDecoding failed, playerHandler is null", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
@@ -717,7 +764,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             lock.block();
             return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.i("%s-%d resumeVideoDecoding failed, playerHandler is null", TAG, mId);
+            ASPlayerLog.i("%s resumeVideoDecoding failed, playerHandler is null", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
@@ -733,7 +780,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             lock.block();
             return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.i("%s-%d stopVideoDecoding failed, playerHandler is null", TAG, mId);
+            ASPlayerLog.i("%s stopVideoDecoding failed, playerHandler is null", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
@@ -750,7 +797,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     @Override
     public int setAudioVolume(int volume) {
         if (volume < 0 || volume > 100) {
-            ASPlayerLog.w("%s-%d setAudioVolume invalid parameter, volume should in[0, 100], current: %d", TAG, mId, volume);
+            ASPlayerLog.w("%s setAudioVolume invalid parameter, volume should in[0, 100], current: %d", getTag(), volume);
             return ErrorCode.ERROR_INVALID_PARAMS;
         }
 
@@ -761,7 +808,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             });
             return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.i("%s-%d setAudioVolume failed, playerHandler is null", TAG, mId);
+            ASPlayerLog.i("%s setAudioVolume failed, playerHandler is null", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
@@ -770,7 +817,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     public int getAudioVolume() {
         float vol = mAudioOutputPath.getVolume();
         int volume = (int)(vol * 100);
-        ASPlayerLog.i("%s-%d getAudioVolume, volume: %.2f, return: %d", TAG, mId, vol, volume);
+        ASPlayerLog.i("%s getAudioVolume, volume: %.2f, return: %d", getTag(), vol, volume);
         return volume;
     }
 
@@ -791,7 +838,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             });
             return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.w("%s-%d setAudioMute failed, playerHandler is null", TAG, mId);
+            ASPlayerLog.w("%s setAudioMute failed, playerHandler is null", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
@@ -808,7 +855,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     @Override
     public void setAudioParams(AudioParams params) throws NullPointerException, IllegalArgumentException, IllegalStateException {
-        if (DEBUG) ASPlayerLog.d("%s-%d setAudioParams start, params: %s", TAG, mId, params);
+        if (DEBUG) ASPlayerLog.d("%s setAudioParams start, params: %s", getTag(), params);
         if (params == null) {
             throw new NullPointerException("AudioParams can not be null");
         }
@@ -819,11 +866,11 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             int avSyncHwId = params.getAvSyncHwId();
             if (filterId < 0) {
                 String msg = String.format("invalid filter id: %d", filterId);
-                ASPlayerLog.e("%s-%d setAudioParams failed, error: %s", TAG, mId, msg);
+                ASPlayerLog.e("%s setAudioParams failed, error: %s", getTag(), msg);
                 throw new IllegalArgumentException(msg);
             } else if (avSyncHwId < 0) {
                 String msg = String.format("invalid avSyncHw id: %d", avSyncHwId);
-                ASPlayerLog.e("%s-%d setAudioParams failed, error: %s", TAG, mId, msg);
+                ASPlayerLog.e("%s setAudioParams failed, error: %s", getTag(), msg);
                 throw new IllegalArgumentException(msg);
             }
         }
@@ -833,7 +880,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
                 handleSetAudioParams(params);
             });
         } else {
-            ASPlayerLog.e("%s-%d setAudioParams failed, playerHandler is null", TAG, mId);
+            ASPlayerLog.e("%s setAudioParams failed, playerHandler is null", getTag());
             throw new IllegalStateException("ASPlayer not prepared");
         }
     }
@@ -845,8 +892,10 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             int filterId = params.getTrackFilterId();
             int avSyncHwId = params.getAvSyncHwId();
 
-            ASPlayerLog.i("%s-%d setAudioParams pid: 0x%04x, filterId: 0x%016x, avSyncHwId: 0x%x, format: %s",
-                    TAG, mId, pid, filterId, avSyncHwId, mediaFormat);
+            setInstanceId(avSyncHwId);
+
+            ASPlayerLog.i("%s setAudioParams pid: 0x%04x, filterId: 0x%016x, avSyncHwId: 0x%x, format: %s",
+                    getTag(), pid, filterId, avSyncHwId, mediaFormat);
 
             if (mediaFormat == null) {
                 params = createAudioParamsWithMediaFormat(params);
@@ -854,10 +903,14 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
             mAudioOutputPath.setAudioParams(params);
 
+            mAudioOutputPath.setInstanceId(getInstanceIdBySyncId(avSyncHwId));
+
             mRendererScheduler.onSetAudioParams(true);
         } else {
-            ASPlayerLog.i("%s-%d setAudioParams params is null", TAG, mId);
+            ASPlayerLog.i("%s setAudioParams params is null", getTag());
             mAudioOutputPath.setAudioParams(null);
+
+            mAudioOutputPath.setInstanceId(Constant.INVALID_INSTANCE_ID);
 
             mRendererScheduler.onSetAudioParams(false);
         }
@@ -875,8 +928,8 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         MediaFormat mediaFormat = MediaFormat.createAudioFormat(audioParams.getMimeType(),
                 audioParams.getSampleRate(), audioParams.getChannelCount());
 
-        ASPlayerLog.i("%s-%d create audio MediaFormat, mimeType: %s, sampleRate: %d, channelCount: %d",
-                TAG, mId, audioParams.getMimeType(), audioParams.getSampleRate(), audioParams.getChannelCount());
+        ASPlayerLog.i("%s create audio MediaFormat, mimeType: %s, sampleRate: %d, channelCount: %d",
+                getTag(), audioParams.getMimeType(), audioParams.getSampleRate(), audioParams.getChannelCount());
 
         AudioParams newParams = new AudioParams.Builder(mediaFormat)
                 .setPid(audioParams.getPid())
@@ -899,11 +952,11 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             int avSyncHwId = params.getAvSyncHwId();
             if (filterId < 0) {
                 String msg = String.format("invalid filter id: %d", filterId);
-                ASPlayerLog.e("%s-%d switchAudioTrack failed, error: %s", TAG, mId, msg);
+                ASPlayerLog.e("%s switchAudioTrack failed, error: %s", getTag(), msg);
                 return ErrorCode.ERROR_INVALID_PARAMS;
             } else if (avSyncHwId < 0) {
                 String msg = String.format("invalid avSyncHw id: %d", avSyncHwId);
-                ASPlayerLog.e("%s-%d switchAudioTrack failed, error: %s", TAG, mId, msg);
+                ASPlayerLog.e("%s switchAudioTrack failed, error: %s", getTag(), msg);
                 return ErrorCode.ERROR_INVALID_PARAMS;
             }
         }
@@ -914,7 +967,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             });
             return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.e("%s-%d switchAudioTrack failed, playerHandler is null", TAG, mId);
+            ASPlayerLog.e("%s switchAudioTrack failed, playerHandler is null", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
@@ -926,8 +979,10 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             int filterId = params.getTrackFilterId();
             int avSyncHwId = params.getAvSyncHwId();
 
-            ASPlayerLog.i("%s-%d switchAudioTrack pid: 0x%04x, filterId: 0x%016x, avSyncHwId: 0x%x, format: %s",
-                    TAG, mId, pid, filterId, avSyncHwId, mediaFormat);
+            setInstanceId(avSyncHwId);
+
+            ASPlayerLog.i("%s switchAudioTrack pid: 0x%04x, filterId: 0x%016x, avSyncHwId: 0x%x, format: %s",
+                    getTag(), pid, filterId, avSyncHwId, mediaFormat);
 
             if (mediaFormat == null) {
                 params = createAudioParamsWithMediaFormat(params);
@@ -935,10 +990,14 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
             mAudioOutputPath.switchAudioTrack(params);
 
+            mAudioOutputPath.setInstanceId(getInstanceIdBySyncId(avSyncHwId));
+
             mRendererScheduler.onSetAudioParams(true);
         } else {
-            ASPlayerLog.i("%s-%d switchAudioTrack params is null", TAG, mId);
+            ASPlayerLog.i("%s switchAudioTrack params is null", getTag());
             mAudioOutputPath.switchAudioTrack(null);
+
+            mAudioOutputPath.setInstanceId(Constant.INVALID_INSTANCE_ID);
 
             mRendererScheduler.onSetAudioParams(false);
         }
@@ -946,7 +1005,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     @Override
     public MediaFormat getAudioInfo() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getAudioInfo start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getAudioInfo start", getTag());
         return null;
     }
 
@@ -962,7 +1021,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             lock.block();
             return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.i("%s-%d startAudioDecoding failed, playerHandler is null", TAG, mId);
+            ASPlayerLog.i("%s startAudioDecoding failed, playerHandler is null", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
@@ -978,7 +1037,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             lock.block();
             return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.i("%s-%d pauseAudioDecoding failed, playerHandler is null", TAG, mId);
+            ASPlayerLog.i("%s pauseAudioDecoding failed, playerHandler is null", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
@@ -994,7 +1053,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             lock.block();
             return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.i("%s-%d resumeAudioDecoding failed, playerHandler is null", TAG, mId);
+            ASPlayerLog.i("%s resumeAudioDecoding failed, playerHandler is null", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
@@ -1010,18 +1069,18 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             lock.block();
             return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.i("%s-%d stopAudioDecoding failed, playerHandler is null", TAG, mId);
+            ASPlayerLog.i("%s stopAudioDecoding failed, playerHandler is null", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
 
     @Override
     public int setADParams(AudioParams params) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setAudioDescriptionParams start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s setAudioDescriptionParams start", getTag());
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
-                ASPlayerLog.i("%s-%d setADParams pid: %d, filterId: %d, format: %s",
-                        TAG, mId, params.getPid(), params.getTrackFilterId(), params.getMediaFormat());
+                ASPlayerLog.i("%s setADParams pid: %d, filterId: %d, format: %s",
+                        getTag(), params.getPid(), params.getTrackFilterId(), params.getMediaFormat());
                 if (mAudioOutputPath instanceof AudioOutputPathV3) {
                     AudioOutputPathV3 outputPathV3 = (AudioOutputPathV3)mAudioOutputPath;
                     outputPathV3.setSubTrackAudioParams(params);
@@ -1029,7 +1088,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             });
             return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.i("%s-%d setADParams failed, playerHandler is null", TAG, mId);
+            ASPlayerLog.i("%s setADParams failed, playerHandler is null", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
@@ -1042,7 +1101,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             });
             return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.i("%s-%d enableADMix failed, playerHandler is null", TAG, mId);
+            ASPlayerLog.i("%s enableADMix failed, playerHandler is null", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
@@ -1055,38 +1114,42 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             });
             return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.i("%s-%d disableADMix failed, playerHandler is null", TAG, mId);
+            ASPlayerLog.i("%s disableADMix failed, playerHandler is null", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
 
     @Override
     public int setSubtitlePid(int pid) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setSubtitlePid start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s setSubtitlePid start", getTag());
         return 0;
     }
 
     @Override
     public com.amlogic.asplayer.api.State getState() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getState start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getState start", getTag());
         return null;
     }
 
     @Override
     public int startSubtitle() {
-        if (DEBUG) ASPlayerLog.d("%s-%d startSubtitle start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s startSubtitle start", getTag());
         return 0;
     }
 
     @Override
     public int stopSubtitle() {
-        if (DEBUG) ASPlayerLog.d("%s-%d stopSubtitle start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s stopSubtitle start", getTag());
         return 0;
     }
 
     @Override
     public long getFirstPts(int streamType) {
-        if (DEBUG) ASPlayerLog.d("%s-%d getFirstPts start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getFirstPts start", getTag());
         return 0;
+    }
+
+    private String getTag() {
+        return String.format("[No-%d]-[%d]ASPlayer", mInstanceId, mId);
     }
 }

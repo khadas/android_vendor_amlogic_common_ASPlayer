@@ -48,11 +48,20 @@ class EventNotifier {
     }
 
     private int mId;
+    private int mInstanceId = Constant.INVALID_INSTANCE_ID;
 
     EventNotifier(int id, Looper looper) {
         mId = id;
         mPlaybackListeners = new CopyOnWriteArraySet<>();
         mEventHandler = new WeakHandler(this, looper);
+    }
+
+    void setInstanceId(int instanceId) {
+        mInstanceId = instanceId;
+    }
+
+    private String getTag() {
+        return String.format("[No-%d]-[%d]EventNotifier", mInstanceId, mId);
     }
 
     void release() {
@@ -116,7 +125,7 @@ class EventNotifier {
             case EventType.EVENT_TYPE_VIDEO_CHANGED: {
                 MediaFormat videoFormat = (MediaFormat) msg.obj;
                 if (LOCAL_LOG_NOTIFICATIONS) {
-                    ASPlayerLog.d("EventNotifier-%d.notifyEvent: VideoFormatChangeEvent(%s)", mId, videoFormat);
+                    ASPlayerLog.d("%s notifyEvent: VideoFormatChangeEvent(%s)", getTag(), videoFormat);
                 }
                 for (TsPlaybackListener listener : mPlaybackListeners) {
                     listener.onPlaybackEvent(new VideoFormatChangeEvent(videoFormat));
@@ -126,7 +135,7 @@ class EventNotifier {
             case EventType.EVENT_TYPE_AUDIO_CHANGED: {
                 MediaFormat audioFormat= (MediaFormat) msg.obj;
                 if (LOCAL_LOG_NOTIFICATIONS) {
-                    ASPlayerLog.d("EventNotifier-%d.notifyEvent: AudioFormatChangeEvent(%s)", mId, audioFormat);
+                    ASPlayerLog.d("%s notifyEvent: AudioFormatChangeEvent(%s)", getTag(), audioFormat);
                 }
                 for (TsPlaybackListener listener : mPlaybackListeners) {
                     listener.onPlaybackEvent(new AudioFormatChangeEvent(audioFormat));
@@ -136,7 +145,7 @@ class EventNotifier {
             case EventType.EVENT_TYPE_RENDER_FIRST_FRAME_VIDEO: {
                 VideoFirstFrameEvent event = (VideoFirstFrameEvent) msg.obj;
                 if (LOCAL_LOG_NOTIFICATIONS) {
-                    ASPlayerLog.d("EventNotifier-%d.notifyEvent: VideoFirstFrameEvent(%s)", mId, event);
+                    ASPlayerLog.d("%s notifyEvent: VideoFirstFrameEvent(%s)", getTag(), event);
                 }
                 notifyPlaybackEvent(event);
             }
@@ -144,7 +153,7 @@ class EventNotifier {
             case EventType.EVENT_TYPE_RENDER_FIRST_FRAME_AUDIO: {
                 AudioFirstFrameEvent event = (AudioFirstFrameEvent) msg.obj;
                 if (LOCAL_LOG_NOTIFICATIONS) {
-                    ASPlayerLog.d("EventNotifier-%d.notifyEvent: AudioFirstFrameEvent(%s)", mId, event);
+                    ASPlayerLog.d("%s notifyEvent: AudioFirstFrameEvent(%s)", getTag(), event);
                 }
                 notifyPlaybackEvent(event);
             }
@@ -152,7 +161,7 @@ class EventNotifier {
             case EventType.EVENT_TYPE_DECODE_FIRST_FRAME_VIDEO: {
                 DecodeFirstVideoFrameEvent event = (DecodeFirstVideoFrameEvent) msg.obj;
                 if (LOCAL_LOG_NOTIFICATIONS) {
-                    ASPlayerLog.d("EventNotifier-%d.notifyEvent: DecodeFirstVideoFrameEvent(%s)", mId, event);
+                    ASPlayerLog.d("%s notifyEvent: DecodeFirstVideoFrameEvent(%s)", getTag(), event);
                 }
                 notifyPlaybackEvent(event);
             }
@@ -160,7 +169,7 @@ class EventNotifier {
             case EventType.EVENT_TYPE_DECODE_FIRST_FRAME_AUDIO: {
                 DecodeFirstAudioFrameEvent event = (DecodeFirstAudioFrameEvent) msg.obj;
                 if (LOCAL_LOG_NOTIFICATIONS) {
-                    ASPlayerLog.d("EventNotifier-%d.notifyEvent: DecodeFirstAudioFrameEvent(%s)", mId, event);
+                    ASPlayerLog.d("%s notifyEvent: DecodeFirstAudioFrameEvent(%s)", getTag(), event);
                 }
                 notifyPlaybackEvent(event);
             }
@@ -169,7 +178,7 @@ class EventNotifier {
                 notifyPlaybackEvent((PtsEvent) msg.obj);
                 break;
             default:
-                ASPlayerLog.w("EventNotifier-%d, unexpected event:%d", mId, eventType);
+                ASPlayerLog.w("%s notifyEvent, unexpected event:%d", getTag(), eventType);
                 break;
         }
     }

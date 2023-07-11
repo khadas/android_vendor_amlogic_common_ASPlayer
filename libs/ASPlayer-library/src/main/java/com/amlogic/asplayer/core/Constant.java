@@ -6,4 +6,5 @@ public class Constant {
 
     public static final int INVALID_AUDIO_SESSION_ID = -1;
 
+    public static final int INVALID_INSTANCE_ID = -1;
 }

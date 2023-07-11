@@ -162,8 +162,6 @@ class RendererPlayback extends Renderer {
         }
     }
 
-    private int mId;
-
     // audio caps, to reconfigure pipeline if needed
     private AudioCaps mAudioCaps;
 
@@ -191,8 +189,8 @@ class RendererPlayback extends Renderer {
     private long mLastMessageTimestampMs;
     private boolean mBlockingDecodersNotified;
 
-    RendererPlayback(RendererScheduler rendererScheduler) {
-        super(rendererScheduler);
+    RendererPlayback(int id, RendererScheduler rendererScheduler) {
+        super(id, rendererScheduler);
 
         mVideoRendererTask = new VideoRendererTask();
         PlaybackTask audioRendererTask = new AudioRendererTask();
@@ -243,6 +241,11 @@ class RendererPlayback extends Renderer {
         };
     }
 
+    @Override
+    protected String getName() {
+        return "RendererPlayback";
+    }
+
     void setHasVideo(boolean hasVideo) {
         mHasVideo = hasVideo;
     }
@@ -252,8 +255,8 @@ class RendererPlayback extends Renderer {
     }
 
     @Override
-    void prepare(int id, Context context, Handler handler) {
-        mId = id;
+    void prepare(Context context, Handler handler) {
+        super.prepare(context, handler);
         mAudioCaps = new AudioCaps(context, handler);
         mAudioCaps.setListener(new AudioCaps.Listener() {
             @Override
@@ -273,7 +276,7 @@ class RendererPlayback extends Renderer {
 
     @Override
     void setSpeed(Renderer previousRenderer, double speed) {
-        ASPlayerLog.i("RendererPlayback-%d speed:%f", mId, speed);
+        ASPlayerLog.i("%s speed:%f", getTag(), speed);
         super.setSpeed(previousRenderer, speed);
 
         // TODO : suspicious
@@ -284,7 +287,7 @@ class RendererPlayback extends Renderer {
 
         // ensure that all renderers are ready to play
         if (speed == 1 && previousRenderer != this) {
-            ASPlayerLog.i("RendererPlaybackV3-%d set speed, reset VideoOutputPath", mId);
+            ASPlayerLog.i("%s set speed, reset VideoOutputPath", getTag());
             mVideoOutputPath.reset();
             mLastMessageTimestampMs = 0;
 
@@ -318,21 +321,21 @@ class RendererPlayback extends Renderer {
                 "RESET_REASON_DECODERS_BLOCKED"
         };
         if (reason >= 1 && reason <= reasons.length)
-            ASPlayerLog.i("RendererPlayback-%d %s", mId, reasons[reason - 1]);
+            ASPlayerLog.i("%s reset %s", getTag(), reasons[reason - 1]);
         else
-            ASPlayerLog.i("RendererPlayback-%d unexpected reason:%d", mId, reason);
+            ASPlayerLog.i("%s unexpected reason:%d", getTag(), reason);
 
         switch (reason) {
             case Renderer.RESET_REASON_NEW_POSITION:
             case Renderer.RESET_REASON_NO_MEDIA:
             case Renderer.RESET_REASON_BAD_DATA:
             case Renderer.RESET_REASON_NO_DATA:
-                ASPlayerLog.i("RendererPlaybackV3-%d reset VideoOutputPath, RESET_REASON_NO_DATA", mId);
+                ASPlayerLog.i("%s reset VideoOutputPath, RESET_REASON_NO_DATA", getTag());
                 mVideoOutputPath.reset();
                 mAudioOutputPath.reset();
                 break;
             case Renderer.RESET_REASON_DISCONTINUITY:
-                ASPlayerLog.i("RendererPlaybackV3-%d reset VideoOutputPath, RESET_REASON_DISCONTINUITY", mId);
+                ASPlayerLog.i("%s reset VideoOutputPath, RESET_REASON_DISCONTINUITY", getTag());
                 mVideoOutputPath.reset();
                 mAudioOutputPath.reset();
                 if (mTunneledPlayback)
@@ -417,12 +420,12 @@ class RendererPlayback extends Renderer {
     }
 
     private void onAudioCapabilitiesChanged(AudioCaps audioCapabilities) {
-        ASPlayerLog.i("RendererPlayback-%d output audio caps have changed to %s", mId, audioCapabilities);
+        ASPlayerLog.i("%s output audio caps have changed to %s", getTag(), audioCapabilities);
 
         boolean wasTunneledPlayback = mTunneledPlayback;
         mTunneledPlayback = canUseTunneledPlayback();
         if (wasTunneledPlayback != mTunneledPlayback) {
-            ASPlayerLog.i("RendererPlayback-%d tunneled mode must changed:%b -> %b", mId, wasTunneledPlayback, mTunneledPlayback);
+            ASPlayerLog.i("%s tunneled mode must changed:%b -> %b", getTag(), wasTunneledPlayback, mTunneledPlayback);
             mVideoOutputPath.setTunneledPlayback(mTunneledPlayback);
             mAudioOutputPath.setTunneledPlayback(mTunneledPlayback);
             mVideoOutputPath.release();
@@ -441,15 +444,14 @@ class RendererPlayback extends Renderer {
 
         long avDeltaUs = audioDisplayPositionUs - videoDisplayPositionUs;
         if (Math.abs(avDeltaUs) > 5000000) {
-            ASPlayerLog.w("RendererPlayback-%d monitorSynchro : huge av delta %d, there is something wrong",
-                    mId, avDeltaUs / 1000);
+            ASPlayerLog.w("%s monitorSynchro : huge av delta %d, there is something wrong",
+                    getTag(), avDeltaUs / 1000);
         } else if (Math.abs(avDeltaUs) > MAX_AV_DELTA_US) {
             // we readjust video clock offset
             long newOffset = mVideoOutputPath.mClock.getOffsetUs() + avDeltaUs;
             mVideoOutputPath.mClock.setOffsetUs(newOffset);
-            ASPlayerLog.i("RendererPlayback-%d readjust video clock with delta:%d ms, new offset:%d ms",
-                    mId, avDeltaUs / 1000,
-                    mVideoOutputPath.mClock.getOffsetUs() / 1000);
+            ASPlayerLog.i("%s readjust video clock with delta:%d ms, new offset:%d ms",
+                    getTag(), avDeltaUs / 1000, mVideoOutputPath.mClock.getOffsetUs() / 1000);
         }
         if ((SystemClock.elapsedRealtime() - mLastMessageTimestampMs) > 5000) {
             long videoClock = mVideoOutputPath.mClock.timeUs();
@@ -465,10 +467,9 @@ class RendererPlayback extends Renderer {
                         mAudioOutputPath.hasOutputBuffers(),
                         mVideoOutputPath.hasOutputBuffers());
             }
-            ASPlayerLog.i("RendererPlayback-%d d_av:%d ms, video offset:%d, d_clock[av:%d] %s",
-                    mId, avDeltaUs / 1000, mVideoOutputPath.mClock.getOffsetUs(),
-                    (audioClock - videoClock),
-                    deltaAVoutputs);
+            ASPlayerLog.i("%s d_av:%d ms, video offset:%d, d_clock[av:%d] %s",
+                    getTag(), avDeltaUs / 1000, mVideoOutputPath.mClock.getOffsetUs(),
+                    (audioClock - videoClock), deltaAVoutputs);
             mLastMessageTimestampMs = SystemClock.elapsedRealtime();
         }
     }
@@ -521,7 +522,7 @@ class RendererPlayback extends Renderer {
             }
             // if blocked, release decoders, try to restarts
             if (blocking && !mBlockingDecodersNotified) {
-                ASPlayerLog.w("RendererPlayback-%d blocking detected (%s): reset decoders ", mId, blockingMessage);
+                ASPlayerLog.w("%s blocking detected (%s): reset decoders ", getTag(), blockingMessage);
                 reset(Renderer.RESET_REASON_DECODERS_BLOCKED);
                 mBlockingDecodersNotified = true;
             }
@@ -548,7 +549,7 @@ class RendererPlayback extends Renderer {
         // check if pipeline is blocked
         if (mAudioOutputPath.elapsedSinceInputBufferQueueFull() > SYNCHRO_MAX_AV_DELTA_US / 1000 ||
                 mVideoOutputPath.elapsedSinceInputBufferQueueFull() > SYNCHRO_MAX_AV_DELTA_US / 1000) {
-            ASPlayerLog.w("RendererPlayback-%d injection blocked because of audio/video decoders, must restart", mId);
+            ASPlayerLog.w("%s injection blocked because of audio/video decoders, must restart", getTag());
             mAudioOutputPath.release();
             mVideoOutputPath.release();
         }
@@ -660,13 +661,13 @@ class RendererPlayback extends Renderer {
                                 marginUs / 1000,
                                 (minVideoTimestampUs - maxAudioTimestampUs) / 1000);
                     } else { // should not happen
-                        ASPlayerLog.w("RendererPlayback-%d unexpected origin case a[%d,%d] v[%d,%d]",
-                                mId, minAutioTimestampUs / 1000, maxAudioTimestampUs / 1000,
+                        ASPlayerLog.w("%s unexpected origin case a[%d,%d] v[%d,%d]",
+                                getTag(), minAutioTimestampUs / 1000, maxAudioTimestampUs / 1000,
                                 minVideoTimestampUs / 1000, maxVideoTimestampUs / 1000);
                         origin = "no origin defined";
                     }
 
-                    ASPlayerLog.i("RendererPlayback-%d because %s, must set clock origin to %s", mId, setClockReason, origin);
+                    ASPlayerLog.i("%s because %s, must set clock origin to %s", getTag(), setClockReason, origin);
                     originTimestampUs = Math.max(originTimestampUs - marginUs, 0);
 
                     mAudioOutputPath.setSynchroOn(originTimestampUs);
@@ -674,7 +675,7 @@ class RendererPlayback extends Renderer {
                 }
 
                 if (mSynchroMode != SYNCHRO_MODE_SYNCHRONIZABLE)
-                    ASPlayerLog.i("RendererPlayback-%d av sync is on", mId);
+                    ASPlayerLog.i("%s av sync is on", getTag());
                 mSynchroMode = SYNCHRO_MODE_SYNCHRONIZABLE;
             }
         }

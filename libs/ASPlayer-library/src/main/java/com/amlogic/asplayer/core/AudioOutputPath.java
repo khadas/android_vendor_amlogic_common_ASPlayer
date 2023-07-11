@@ -51,7 +51,7 @@ class AudioOutputPath extends MediaOutputPath {
     protected AudioFormatListener mAudioFormatListener;
 
     AudioOutputPath(int id) {
-        super(id, String.format("a%d", id));
+        super(id);
         mGain = 1.f;
         mInputBuffer = new InputBuffer();
     }
@@ -66,6 +66,14 @@ class AudioOutputPath extends MediaOutputPath {
 
     void setTunneledPlayback(boolean tunneledPlayback) {
         mTunneledPlayback = tunneledPlayback;
+    }
+
+    @Override
+    void setInstanceId(int syncId) {
+        super.setInstanceId(syncId);
+        if (mAudioCodecRenderer != null) {
+            mAudioCodecRenderer.setInstanceId(syncId);
+        }
     }
 
     void setMuted(boolean muted) {
@@ -210,7 +218,7 @@ class AudioOutputPath extends MediaOutputPath {
             MediaFormat newFormat = getMediaFormat();
             if (newFormat != null && mHasAudioFormatChanged) {
                 MediaDescrambler descrambler = getMediaDescrambler();
-                ASPlayerLog.i("AudioOutputPath-%d input format has changed (%s)", mId, mMediaFormat);
+                ASPlayerLog.i("%s input format has changed (%s)", getTag(), mMediaFormat);
                 mAudioCodecRenderer.configure(mMediaFormat, descrambler);
                 String errorMessage = mAudioCodecRenderer.getErrorMessage();
                 handleConfigurationError(errorMessage);
@@ -228,7 +236,7 @@ class AudioOutputPath extends MediaOutputPath {
             // without crash
             while (!mInputBufferQueue.pop(mInputBuffer)) {
                 if (mInputBufferQueue.isEmpty()) {
-                    ASPlayerLog.w("AudioOutputPath-%d all input buffers are incorrect, we push an empty one to mediacodec", mId);
+                    ASPlayerLog.w("%s all input buffers are incorrect, we push an empty one to mediacodec", getTag());
                     break;
                 }
             }
@@ -298,7 +306,7 @@ class AudioOutputPath extends MediaOutputPath {
 
     @Override
     public void reset() {
-//        TvLog.i("AudioOutputPath-%d reset", mId);
+        ASPlayerLog.i("%s reset", getTag());
         super.reset();
         // maybe one day we will reuse mAudioCodecRenderer, but today it is safer to forget it
         if (mAudioCodecRenderer != null) mAudioCodecRenderer.release();
@@ -310,7 +318,7 @@ class AudioOutputPath extends MediaOutputPath {
 
     @Override
     public void release() {
-        ASPlayerLog.i("AudioOutputPath-%d release", mId);
+        ASPlayerLog.i("%s release", getTag());
         super.release();
         if (mAudioCodecRenderer != null) mAudioCodecRenderer.release();
         mAudioCodecRenderer = null;
@@ -369,7 +377,7 @@ class AudioOutputPath extends MediaOutputPath {
             return;
         }
 
-        ASPlayerLog.i("AudioOutputPath-%d setWorkMode: %d, last mode:%d", mId, workMode, mLastWorkMode);
+        ASPlayerLog.i("%s setWorkMode: %d, last mode:%d", getTag(), workMode, mLastWorkMode);
         if (workMode == WorkMode.CACHING_ONLY) {
             handleConfigurationError(null);
         }
@@ -385,7 +393,7 @@ class AudioOutputPath extends MediaOutputPath {
             return;
         }
 
-        ASPlayerLog.i("AudioOutputPath-%d setPIPMode: %d, last mode: %d", mId, pipMode, mLastPIPMode);
+        ASPlayerLog.i("%s setPIPMode: %d, last mode: %d", getTag(), pipMode, mLastPIPMode);
         super.setPIPMode(pipMode);
         mChangePIPMode = true;
         setConfigured(false);

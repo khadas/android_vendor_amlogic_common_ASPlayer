@@ -11,18 +11,21 @@ import static com.amlogic.asplayer.core.VideoOutputPathV3.TRICK_MODE_SMOOTH;
 class RendererTrickSmoothV3 extends Renderer {
 
     private final Bundle mParamsTrickSmooth;
-    private int mId;
 
     RendererTrickSmoothV3(int id, RendererScheduler rendererScheduler) {
-        super(rendererScheduler);
-        mId = id;
+        super(id, rendererScheduler);
         mParamsTrickSmooth = new Bundle();
         mParamsTrickSmooth.putInt(PARAM_TRICK_MODE, TRICK_MODE_SMOOTH);
     }
 
     @Override
+    protected String getName() {
+        return "RendererTrickSmoothV3";
+    }
+
+    @Override
     void setSpeed(Renderer previousRenderer, double speed) {
-        ASPlayerLog.i("RendererTrickSmoothV3-%d speed:%f->%f", mId, mSpeed, speed);
+        ASPlayerLog.i("%s speed:%f->%f", getTag(), mSpeed, speed);
         super.setSpeed(previousRenderer, speed);
 
         mAudioOutputPath.setMuted(true);

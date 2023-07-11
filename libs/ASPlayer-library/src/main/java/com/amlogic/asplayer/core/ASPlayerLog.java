@@ -38,21 +38,20 @@ public class ASPlayerLog {
     }
 
     public static void e(String format, Object... args) {
-        Log.e(TAG, formatMessage(4, format, args));
-//        Log.e(TAG, String.format(format, args));
+        Log.e(TAG, String.format(format, args));
     }
 
     public static void w(String format, Object... args) {
-        Log.w(TAG, formatMessage(4, format, args));
-//        Log.w(TAG, String.format(format, args));
+        Log.w(TAG, String.format(format, args));
     }
 
     public static void i(String format, Object... args) {
-        Log.i(TAG, formatMessage(4, format, args));
-//        Log.i(TAG, String.format(format, args));
+        Log.i(TAG, String.format(format, args));
     }
 
     public static void d(String format, Object... args) {
-        if (DEBUG) Log.d(TAG, formatMessage(4, format, args));
+        if (DEBUG) {
+            Log.i(TAG, String.format(format, args));
+        }
     }
 }

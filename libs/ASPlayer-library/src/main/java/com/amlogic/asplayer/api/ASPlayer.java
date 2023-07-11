@@ -12,16 +12,17 @@ import android.content.Context;
 import android.media.MediaFormat;
 import android.media.tv.tuner.Tuner;
 import android.os.Looper;
-import android.util.Log;
 import android.view.Surface;
 
 import com.amlogic.asplayer.BuildConfiguration;
-import com.amlogic.asplayer.core.BaseAppContext;
 import com.amlogic.asplayer.core.ASPlayerConfig;
 import com.amlogic.asplayer.core.ASPlayerImpl;
 import com.amlogic.asplayer.core.ASPlayerLog;
+import com.amlogic.asplayer.core.BaseAppContext;
+import com.amlogic.asplayer.core.Constant;
 
 import java.util.concurrent.atomic.AtomicInteger;
+
 
 public class ASPlayer implements IASPlayer {
 
@@ -36,6 +37,7 @@ public class ASPlayer implements IASPlayer {
     // Mainly for debug
     private final int mId;
     private static AtomicInteger sId = new AtomicInteger(0);
+    private int mInstanceId = Constant.INVALID_INSTANCE_ID;
 
     private ASPlayerConfig mConfig;
     private ASPlayerImpl mPlayer;
@@ -55,6 +57,7 @@ public class ASPlayer implements IASPlayer {
             looper = Looper.getMainLooper();
         }
         mPlayer = new ASPlayerImpl(mId, appContext, tuner, mConfig, looper);
+        mPlayer.setOnGetInstanceIdListener(this::onGetInstanceId);
 
         logVersionInfo();
     }
@@ -78,14 +81,22 @@ public class ASPlayer implements IASPlayer {
 
     @Override
     public void addPlaybackListener(TsPlaybackListener listener) {
-        ASPlayerLog.i("%s-%d addPlaybackListener start", TAG, mId);
+        ASPlayerLog.i("%s addPlaybackListener start", getTag());
         mPlayer.addPlaybackListener(listener);
     }
 
     @Override
     public void removePlaybackListener(TsPlaybackListener listener) {
-        ASPlayerLog.i("%s-%d removePlaybackListener start", TAG, mId);
+        ASPlayerLog.i("%s removePlaybackListener start", getTag());
         mPlayer.removePlaybackListener(listener);
+    }
+
+    private void onGetInstanceId(int instanceId) {
+        mInstanceId = instanceId;
+    }
+
+    private String getTag() {
+        return String.format("[No-%d]-[%d]ASPlayer", mInstanceId, mId);
     }
 
     /**
@@ -93,7 +104,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int prepare() {
-        ASPlayerLog.i("%s-%d prepare start", TAG, mId);
+        ASPlayerLog.i("%s prepare start", getTag());
         return mPlayer.prepare();
     }
 
@@ -102,9 +113,9 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int getMajorVersion() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getMajorVersion start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getMajorVersion start", getTag());
 //        throw new RuntimeException("Not Implementation");
-        Log.e(TAG, "ASPlayer-" + mId + " getMajorVersion Not Implementation");
+        ASPlayerLog.e("%s getMajorVersion Not Implementation", getTag());
         return 0;
     }
 
@@ -114,9 +125,9 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int getMinorVersion() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getMinorVersion start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getMinorVersion start", getTag());
 //        throw new RuntimeException("Not Implementation");
-        Log.e(TAG, "ASPlayer-" + mId + " getMinorVersion Not Implementation");
+        ASPlayerLog.e("%s getMinorVersion Not Implementation", getTag());
         return 0;
     }
 
@@ -125,8 +136,8 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int getInstancesNumber() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getInstancesNumber start", TAG, mId);
-        Log.e(TAG, "ASPlayer-" + mId + " getInstancesNumber Not Implementation");
+        if (DEBUG) ASPlayerLog.d("%s getInstancesNumber start", getTag());
+        ASPlayerLog.e("%s getInstancesNumber Not Implementation", getTag());
 //        throw new RuntimeException("Not Implementation");
         return 0;
     }
@@ -136,7 +147,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int getSyncInstancesNumber() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getSyncInstancesNumber start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getSyncInstancesNumber start", getTag());
         throw new RuntimeException("Not Implementation");
     }
 
@@ -145,7 +156,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public void release() {
-        ASPlayerLog.i("%s-%d release start", TAG, mId);
+        ASPlayerLog.i("%s release start", getTag());
         mPlayer.release();
         mPlayer = null;
     }
@@ -159,7 +170,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int writeFrameData(InputFrameBuffer inputFrameBuffer, long timeoutMillSecond) {
-        if (DEBUG) ASPlayerLog.d("%s-%d writeFrameData start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s writeFrameData start", getTag());
         throw new RuntimeException("Not Implementation");
     }
 
@@ -178,7 +189,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int writeData(InputBuffer inputBuffer, long timeoutMillSecond) {
-//        if (DEBUG) ASPlayerLog.d("%s-%d writeData start, size: %d", TAG, mId, (inputBuffer != null ? inputBuffer.mBufferSize : 0));
+//        if (DEBUG) ASPlayerLog.d("%s writeData start, size: %d", getTag(), (inputBuffer != null ? inputBuffer.mBufferSize : 0));
         return mPlayer.writeData(inputBuffer, timeoutMillSecond);
     }
 
@@ -188,13 +199,13 @@ public class ASPlayer implements IASPlayer {
 
     @Override
     public int flush() {
-        ASPlayerLog.i("%s-%d flush start", TAG, mId);
+        ASPlayerLog.i("%s flush start", getTag());
         return mPlayer.flush();
     }
 
     @Override
     public int flushDvr() {
-        ASPlayerLog.i("%s-%d flushDvr start", TAG, mId);
+        ASPlayerLog.i("%s flushDvr start", getTag());
         return mPlayer.flushDvr();
     }
 
@@ -207,7 +218,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int setWorkMode(int mode) {
-        ASPlayerLog.i("%s-%d setWorkMode start, work mode: %d", TAG, mId, mode);
+        ASPlayerLog.i("%s setWorkMode start, work mode: %d", getTag(), mode);
         if (mode != WorkMode.NORMAL && mode != WorkMode.CACHING_ONLY && mode != WorkMode.DECODE_ONLY) {
             return ErrorCode.ERROR_INVALID_PARAMS;
         }
@@ -224,7 +235,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int resetWorkMode() {
-        ASPlayerLog.i("%s-%d resetWorkMode start", TAG, mId);
+        ASPlayerLog.i("%s resetWorkMode start", getTag());
         return mPlayer.resetWorkMode();
     }
 
@@ -237,7 +248,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int setPIPMode(int mode) {
-        ASPlayerLog.i("%s-%d setPIPMode start, pip mode: %d", TAG, mId, mode);
+        ASPlayerLog.i("%s setPIPMode start, pip mode: %d", getTag(), mode);
         if (mode != PIPMode.NORMAL && mode != PIPMode.PIP) {
             return ErrorCode.ERROR_INVALID_PARAMS;
         }
@@ -251,7 +262,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public long getCurrentTime() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getCurrentTime start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getCurrentTime start", getTag());
         throw new RuntimeException("Not Implementation");
     }
 
@@ -264,7 +275,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public long getPts(int streamType) {
-        if (DEBUG) ASPlayerLog.d("%s-%d getPts start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getPts start", getTag());
         throw new RuntimeException("Not Implementation");
     }
 
@@ -277,7 +288,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public void setSyncMode(int mode) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setSyncMode start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s setSyncMode start", getTag());
         throw new RuntimeException("Not Implementation");
     }
 
@@ -286,7 +297,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int getSyncMode() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getSyncMode start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getSyncMode start", getTag());
         throw new RuntimeException("Not Implementation");
     }
 
@@ -297,7 +308,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int setPcrPid(int pid) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setPcrPid start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s setPcrPid start", getTag());
         throw new RuntimeException("Not Implementation");
     }
 
@@ -308,7 +319,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int startFast(float scale) {
-        if (DEBUG) ASPlayerLog.d("%s-%d startFast start, scale: %.3f", TAG, mId, scale);
+        if (DEBUG) ASPlayerLog.d("%s startFast start, scale: %.3f", getTag(), scale);
         return mPlayer.startFast(scale);
     }
 
@@ -317,7 +328,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int stopFast() {
-        if (DEBUG) ASPlayerLog.d("%s-%d stopFast start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s stopFast start", getTag());
         return mPlayer.stopFast();
     }
 
@@ -330,12 +341,12 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int setTrickMode(int trickMode) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setTrickMode start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s setTrickMode start, trick mode: %d", getTag(), trickMode);
         if (trickMode != VideoTrickMode.NONE
             && trickMode != VideoTrickMode.TRICK_MODE_SMOOTH
             && trickMode != VideoTrickMode.TRICK_MODE_BY_SEEK
             && trickMode != VideoTrickMode.TRICK_MODE_IONLY) {
-            ASPlayerLog.e("%s-%d setTrickMode failed, invalid trickMode: %d", TAG, mId, trickMode);
+            ASPlayerLog.e("%s setTrickMode failed, invalid trickMode: %d", getTag(), trickMode);
             return ErrorCode.ERROR_INVALID_PARAMS;
         }
         return mPlayer.setTrickMode(trickMode);
@@ -348,7 +359,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int setSurface(Surface surface) {
-        ASPlayerLog.i("%s-%d setSurface start, surface: %s", TAG, mId, surface);
+        ASPlayerLog.i("%s setSurface start, surface: %s", getTag(), surface);
         return mPlayer.setSurface(surface);
     }
 
@@ -359,7 +370,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public void setVideoParams(VideoParams params) throws NullPointerException, IllegalArgumentException, IllegalStateException {
-        if (DEBUG) ASPlayerLog.d("%s-%d setVideoParams start, params: %s", TAG, mId, params);
+        if (DEBUG) ASPlayerLog.d("%s setVideoParams start, params: %s", getTag(), params);
         mPlayer.setVideoParams(params);
     }
 
@@ -372,7 +383,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int setTransitionModeBefore(int transitionModeBefore) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setVideoBlackOut start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s setTransitionModeBefore start, mode: %d", getTag(), transitionModeBefore);
         return mPlayer.setTransitionModeBefore(transitionModeBefore);
     }
 
@@ -381,7 +392,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public MediaFormat getVideoInfo() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getVideoInfo start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getVideoInfo start", getTag());
         throw new RuntimeException("Not Implementation");
     }
 
@@ -390,7 +401,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int startVideoDecoding() {
-        ASPlayerLog.i("%s-%d startVideoDecoding start", TAG, mId);
+        ASPlayerLog.i("%s startVideoDecoding start", getTag());
         return mPlayer.startVideoDecoding();
     }
 
@@ -399,7 +410,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int pauseVideoDecoding() {
-        ASPlayerLog.i("%s-%d pauseVideoDecoding start", TAG, mId);
+        ASPlayerLog.i("%s pauseVideoDecoding start", getTag());
         return mPlayer.pauseVideoDecoding();
     }
 
@@ -408,7 +419,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int resumeVideoDecoding() {
-        ASPlayerLog.i("%s-%d resumeVideoDecoding start", TAG, mId);
+        ASPlayerLog.i("%s resumeVideoDecoding start", getTag());
         return mPlayer.resumeVideoDecoding();
     }
 
@@ -417,7 +428,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int stopVideoDecoding() {
-        ASPlayerLog.i("%s-%d stopVideoDecoding start", TAG, mId);
+        ASPlayerLog.i("%s stopVideoDecoding start", getTag());
         return mPlayer.stopVideoDecoding();
     }
 
@@ -428,7 +439,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int setAudioVolume(int volume) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setAudioVolume start, volume: %d", TAG, mId, volume);
+        if (DEBUG) ASPlayerLog.d("%s setAudioVolume start, volume: %d", getTag(), volume);
         return mPlayer.setAudioVolume(volume);
     }
 
@@ -437,7 +448,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int getAudioVolume() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getAudioVolume start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getAudioVolume start", getTag());
         return mPlayer.getAudioVolume();
     }
 
@@ -450,7 +461,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public void setAudioStereoMode(int audioStereoMode) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setAudioStereoMode start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s setAudioStereoMode start", getTag());
         throw new RuntimeException("Not Implementation");
     }
 
@@ -459,7 +470,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int getAudioStereoMode() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getAudioStereoMode start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getAudioStereoMode start", getTag());
         throw new RuntimeException("Not Implementation");
     }
 
@@ -471,7 +482,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int setAudioMute(boolean analogMute, boolean digitalMute) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setAudioMute start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s setAudioMute start", getTag());
         return mPlayer.setAudioMute(analogMute, digitalMute);
     }
 
@@ -480,7 +491,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int getAudioAnalogMute() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getAudioAnalogMute start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getAudioAnalogMute start", getTag());
         throw new RuntimeException("Not Implementation");
     }
 
@@ -489,7 +500,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int getAudioDigitMute() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getAudioDigitMute start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getAudioDigitMute start", getTag());
         throw new RuntimeException("Not Implementation");
     }
 
@@ -500,7 +511,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public void setAudioParams(AudioParams params) throws NullPointerException, IllegalArgumentException, IllegalStateException{
-        ASPlayerLog.i("%s-%d setAudioParams start, params: %s", TAG, mId, params);
+        ASPlayerLog.i("%s setAudioParams start, params: %s", getTag(), params);
         mPlayer.setAudioParams(params);
     }
 
@@ -511,7 +522,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int switchAudioTrack(AudioParams params) {
-        ASPlayerLog.i("%s-%d switchAudioTrack start, params: %s", TAG, mId, params);
+        ASPlayerLog.i("%s switchAudioTrack start, params: %s", getTag(), params);
         return mPlayer.switchAudioTrack(params);
     }
 
@@ -520,7 +531,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public MediaFormat getAudioInfo() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getAudioInfo start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getAudioInfo start", getTag());
         throw new RuntimeException("Not Implementation");
     }
 
@@ -529,7 +540,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int startAudioDecoding() {
-        ASPlayerLog.i("%s-%d startAudioDecoding start", TAG, mId);
+        ASPlayerLog.i("%s startAudioDecoding start", getTag());
         return mPlayer.startAudioDecoding();
     }
 
@@ -538,7 +549,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int pauseAudioDecoding() {
-        ASPlayerLog.i("%s-%d pauseAudioDecoding start", TAG, mId);
+        ASPlayerLog.i("%s pauseAudioDecoding start", getTag());
         return mPlayer.pauseAudioDecoding();
     }
 
@@ -547,7 +558,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int resumeAudioDecoding() {
-        ASPlayerLog.i("%s-%d resumeAudioDecoding start", TAG, mId);
+        ASPlayerLog.i("%s resumeAudioDecoding start", getTag());
         return mPlayer.resumeAudioDecoding();
     }
 
@@ -556,7 +567,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int stopAudioDecoding() {
-        ASPlayerLog.i("%s-%d stopAudioDecoding start", TAG, mId);
+        ASPlayerLog.i("%s stopAudioDecoding start", getTag());
         return mPlayer.stopAudioDecoding();
     }
 
@@ -565,7 +576,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int setADParams(AudioParams params) {
-        ASPlayerLog.i("%s-%d setADParams start, params: %s", TAG, mId, params);
+        ASPlayerLog.i("%s setADParams start, params: %s", getTag(), params);
         return mPlayer.setADParams(params);
     }
 
@@ -576,7 +587,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int enableADMix() {
-        ASPlayerLog.i("%s-%d enableADMix start", TAG, mId);
+        ASPlayerLog.i("%s enableADMix start", getTag());
         return mPlayer.enableADMix();
     }
 
@@ -587,7 +598,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int disableADMix() {
-        ASPlayerLog.i("%s-%d disableADMix start", TAG, mId);
+        ASPlayerLog.i("%s disableADMix start", getTag());
         return mPlayer.disableADMix();
     }
 
@@ -598,7 +609,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int setSubtitlePid(int pid) {
-        if (DEBUG) ASPlayerLog.d("%s-%d setSubtitlePid start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s setSubtitlePid start", getTag());
         throw new RuntimeException("Not Implementation");
     }
 
@@ -607,7 +618,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public State getState() {
-        if (DEBUG) ASPlayerLog.d("%s-%d getState start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getState start", getTag());
         throw new RuntimeException("Not Implementation");
     }
 
@@ -616,7 +627,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int startSubtitle() {
-        if (DEBUG) ASPlayerLog.d("%s-%d startSubtitle start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s startSubtitle start", getTag());
         throw new RuntimeException("Not Implementation");
     }
 
@@ -625,7 +636,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int stopSubtitle() {
-        if (DEBUG) ASPlayerLog.d("%s-%d stopSubtitle start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s stopSubtitle start", getTag());
         throw new RuntimeException("Not Implementation");
     }
 
@@ -638,7 +649,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public long getFirstPts(int streamType) {
-        if (DEBUG) ASPlayerLog.d("%s-%d getFirstPts start", TAG, mId);
+        if (DEBUG) ASPlayerLog.d("%s getFirstPts start", getTag());
         throw new RuntimeException("Not Implementation");
     }
 }
