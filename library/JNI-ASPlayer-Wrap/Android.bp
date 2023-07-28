@@ -17,6 +17,7 @@ cc_library_shared {
         "src/main/jni/DynamicJniASPlayerWrapper.cpp",
         "src/main/jni/JniASPlayerWrapper.cpp",
         "src/main/jni/native-lib.cpp",
+        "src/main/jni/JniNativeLib.cpp",
         "src/main/jni/PlaybackListenerWrapper.cpp",
         "src/main/jni/common/utils/AutoEnv.cpp",
     ],

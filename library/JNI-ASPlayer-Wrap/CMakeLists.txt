@@ -17,18 +17,21 @@ message(JNI_ASPLAYER_SO_DIR=${JNI_ASPLAYER_SO_DIR})
 
 string(TOLOWER ${CMAKE_BUILD_TYPE} buildTypeLower)
 
-if (NOT USE_SYSTEM_SO)
+include_directories(${JNI_ASPLAYER_INCLUDE_DIR})
+
+if (USE_SYSTEM_SO EQUAL 1)
+        add_definitions(-DUSE_SYSTEM_SO=1)
+        message("Don't Add libjniasplayer.so")
+else()
+        add_definitions(-DUSE_SYSTEM_SO=0)
         add_library(libjniasplayer SHARED IMPORTED)
         set_target_properties(libjniasplayer
                 PROPERTIES
                 IMPORTED_LOCATION
                 ${JNI_ASPLAYER_SO_DIR}/${buildTypeLower}/${ANDROID_ABI}/libjniasplayer-jni.so)
-        include_directories(${JNI_ASPLAYER_INCLUDE_DIR})
 
-        message(STATUS ANDROID_ABI=${ANDROID_ABI})
-        message(STATUS "Add libjniasplayer.so")
-else()
-        message(STATUS "Don't Add libjniasplayer.so")
+        message(ANDROID_ABI=${ANDROID_ABI})
+        message("Add libjniasplayer-jni.so")
 endif()
 
 add_library( # Sets the name of the library.
@@ -40,6 +43,7 @@ add_library( # Sets the name of the library.
         ${JNI_DIR}/DynamicJniASPlayerWrapper.cpp
         ${JNI_DIR}/PlaybackListenerWrapper.cpp
         ${JNI_DIR}/ASPlayerJni.cpp
+        ${JNI_DIR}/JniNativeLib.cpp
         ${JNI_DIR}/native-lib.cpp)
 
 find_library( # Sets the name of the path variable.

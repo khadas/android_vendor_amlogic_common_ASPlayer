@@ -3,7 +3,7 @@ plugins {
 }
 
 // 是否调用板卡中的libjniasplayer-jni.so
-def useSystemJniASPlayer = USE_SYSTEM_ASPLAYER.toBoolean() ? 1 : 0
+def useSystemJniASPlayer = USE_SYSTEM_JNI_ASPLAYER.toBoolean() ? 1 : 0
 
 // JNI-ASPlayer settings
 def jniAsPlayerDir = gradle.ext.JniASPlayerLibraryDir

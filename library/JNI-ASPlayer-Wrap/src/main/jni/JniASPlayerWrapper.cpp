@@ -7,6 +7,10 @@
  * Description:
  */
 
+#define PRINT_MICRO_HELPER(x) #x
+#define PRINT_MICRO(x) #x"=" PRINT_MICRO_HELPER(x)
+#pragma message(PRINT_MICRO(USE_SYSTEM_SO))
+
 #if (USE_SYSTEM_SO == 0)
 #include "JniASPlayerWrapper.h"
 #include "common/utils/Log.h"

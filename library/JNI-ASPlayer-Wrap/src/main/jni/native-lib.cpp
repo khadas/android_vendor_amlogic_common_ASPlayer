@@ -9,649 +9,226 @@
 
 #include <jni.h>
 
-#include <thread>
 #include <unistd.h>
 #include <dlfcn.h>
 
-#include <JNIASPlayer.h>
+#include "config.h"
+
 #include "common/utils/Log.h"
-#include "BaseJniASPlayerWrapper.h"
-#if (USE_SYSTEM_SO == 1)
-#include "DynamicJniASPlayerWrapper.h"
-#else
-#include "JniASPlayerWrapper.h"
-#endif
-#include "PlaybackListenerWrapper.h"
-#include "ASPlayerJni.h"
+#include "common/utils/AutoEnv.h"
 
-#define LOG_GET_JNIENV_FAILED() ALOGE("%s[%d] failed to get jni env", __func__, __LINE__)
-#define LOG_GET_PLAYER_FAILED() ALOGE("%s[%d] failed to get player instance", __func__, __LINE__)
+#include "JniNativeLib.h"
 
+#define LOG_NULL_PARAM(ptr) ALOGE("[%s/%d] failed, null pointer" #ptr "", __FUNCTION__, __LINE__)
+#define LOG_GET_JNIENV_FAILED() ALOGE("[%s/%d] failed to get jni env", __FUNCTION__, __LINE__)
+
+extern char *CLASS_PATH_NAME;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-static const char *CLASS_PATH_NAME = "com/amlogic/asplayer/jni/wrapper/JniASPlayerWrapper";
-
-struct field_t {
-    jfieldID context;
-};
-
-static field_t gFields;
-
-static ASPlayerJni gASPlayerJni;
-
-
-static void setASPlayer(JNIEnv *env, jobject thiz, BaseJniASPlayerWrapper* handle) {
-    ALOGD("%s[%d] setASPlayer start", __func__, __LINE__);
-    env->SetLongField(thiz, gFields.context, (jlong)handle);
-    ALOGD("%s[%d] setASPlayer end", __func__, __LINE__);
-    jthrowable thr = env->ExceptionOccurred();
-    if (thr) {
-        ALOGE("%s[%d] failed to set asplayer native context", __func__, __LINE__);
-        return;
-    }
-}
-
-static BaseJniASPlayerWrapper* getASPlayer(JNIEnv *env, jobject thiz) {
-    jlong nativeHandle = env->GetLongField(thiz, gFields.context);
-    return (BaseJniASPlayerWrapper*)nativeHandle;
-}
 
 static void
 native_init(JNIEnv* env) {
-    jclass cls = env->FindClass(CLASS_PATH_NAME);
-    if (cls == nullptr) {
-        ALOGE("%s[%d] failed to find class: JniASPlayerWrapper", __func__, __LINE__);
-        return;
-    }
-
-    gFields.context = env->GetFieldID(cls, "mNativeContext", "J");
-    if (gFields.context == nullptr) {
-        ALOGE("%s[%d] failed to find field mNativeContext", __func__, __LINE__);
-        return;
-    }
-
-    bool ret = gASPlayerJni.initJni(env);
-    if (!ret) {
+    jni_asplayer_result ret = init_jni_env(env);
+    if (ret != JNI_ASPLAYER_OK) {
         ALOGE("%s[%d] failed to init jni", __func__, __LINE__);
     } else {
         ALOGD("%s[%d] init jni success", __func__, __LINE__);
     }
 }
 
-static void create_asplayer(JNIEnv *env, jobject thiz, jobject initParams, jobject jTuner) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        return;
-    }
-
-#if (USE_SYSTEM_SO == 1)
-    BaseJniASPlayerWrapper *asPlayer = new DynamicJniASPlayerWrapper();
-#else
-    BaseJniASPlayerWrapper *asPlayer = new JniASPlayerWrapper();
-#endif
-
-    setASPlayer(env, thiz, asPlayer);
-
-    jni_asplayer_init_params params;
-    if (!gASPlayerJni.convertInitParams(env, initParams, &params)) {
-        ALOGE("%s[%d] failed to create ASPlayer, get init parameter error", __func__, __LINE__);
-        return;
-    } else {
-        ALOGD("%s[%d] convert InitParams success", __func__, __LINE__);
-    }
-
-    jni_asplayer_handle handle = 0;
-    ALOGD("%s[%d] JniASPlayer_create start", __func__, __LINE__);
-    jni_asplayer_result ret = asPlayer->create(params, (void*)jTuner, &handle);
-    ALOGD("%s[%d] JniASPlayer_create end", __func__, __LINE__);
-    if (ret != JNI_ASPLAYER_OK) {
-        ALOGE("failed to create ASPlayer, ret: %d", ret);
-        return;
-    }
-
-    ALOGV("%s[%d] ASPlayer created, ret: %d", __func__, __LINE__, ret);
-    asPlayer->setHandle(handle);
-    LOG_FUNCTION_ENTER();
-}
-
 static void
 native_create(JNIEnv* env, jobject thiz, jobject initParams, jobject tuner) {
     LOG_FUNCTION_ENTER();
-    create_asplayer(env, thiz, initParams, tuner);
-    LOG_FUNCTION_END();
-}
+    jni_asplayer_result ret = create_asplayer(env, thiz, initParams, tuner);
 
-static bool
-asplayer_get_java_as_player(JNIEnv* env, jobject thiz, jobject *result) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return false;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return false;
-    }
-
-    jni_asplayer_result ret = player->getJavaASPlayer(result);
-    LOG_FUNCTION_INT_END(ret);
     if (ret != JNI_ASPLAYER_OK) {
-        ALOGE("%s[%d] failed to get java ASPlayer, ret: %d", __func__, __LINE__, ret);
-        return false;
+        ALOGE("[%s/%d] failed to create asplayer, ret: %d", __func__, __LINE__, ret);
     }
-    return true;
+
+    LOG_FUNCTION_END();
 }
 
 static jobject
 native_getJavaASPlayer(JNIEnv* env, jobject thiz) {
     LOG_FUNCTION_ENTER();
     jobject asplayer = nullptr;
-    bool success = asplayer_get_java_as_player(env, thiz, &asplayer);
-    if (success) {
-        return asplayer;
-    } else {
-        return nullptr;
+
+    jni_asplayer_result ret = asplayer_get_java_asplayer(env, thiz, &asplayer);
+
+    if (ret != JNI_ASPLAYER_OK) {
+        ALOGE("%s[%d] failed to get java ASPlayer, ret: %d", __func__, __LINE__, ret);
     }
+
     LOG_FUNCTION_END();
-}
-
-static void
-asplayer_prepare(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return;
-    }
-
-    jni_asplayer_result ret = player->prepare();
-    LOG_FUNCTION_INT_END(ret);
+    return asplayer;
 }
 
 static jint
 native_prepare(JNIEnv* env, jobject thiz) {
     LOG_FUNCTION_ENTER();
-    asplayer_prepare(env, thiz);
-    LOG_FUNCTION_END();
-    return 0;
-}
 
-static void
-asplayer_add_playback_listener(JNIEnv* env, jobject thiz, jobject jListener) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return;
-    }
+    jni_asplayer_result result = asplayer_prepare(env, thiz);
 
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return;
-    }
-
-    jni_asplayer_result ret = player->addPlaybackListener(env, jListener);
-    LOG_FUNCTION_INT_END(ret);
+    LOG_FUNCTION_INT_END(result);
+    return result;
 }
 
 static void
 native_add_playback_listener(JNIEnv* env, jobject thiz, jobject jListener) {
     LOG_FUNCTION_ENTER();
-    asplayer_add_playback_listener(env, thiz, jListener);
+    jni_asplayer_result result = asplayer_add_playback_listener(env, thiz, jListener);
+
+    if (result != JNI_ASPLAYER_OK) {
+        ALOGE("[%s/%d] add playback listener failed, result: %d", __func__, __LINE__, result);
+    }
+
     LOG_FUNCTION_END();
-}
-
-static void
-asplayer_remove_playback_listener(JNIEnv* env, jobject thiz, jobject jListener) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return;
-    }
-
-    jni_asplayer_result ret = player->removePlaybackListener(env, jListener);
-    LOG_FUNCTION_INT_END(ret);
 }
 
 static void
 native_remove_playback_listener(JNIEnv* env, jobject thiz, jobject jListener) {
     LOG_FUNCTION_ENTER();
-    asplayer_remove_playback_listener(env, thiz, jListener);
+
+    jni_asplayer_result result = asplayer_remove_playback_listener(env, thiz, jListener);
+
+    if (result != JNI_ASPLAYER_OK) {
+        ALOGE("[%s/%d] remove playback listener failed, result: %d", __func__, __LINE__, result);
+    }
+
     LOG_FUNCTION_END();
-}
-
-static jint
-asplayer_start_video_decoding(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->startVideoDecoding();
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
 }
 
 static jint
 native_start_video_decoding(JNIEnv* env, jobject thiz) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_start_video_decoding(env, thiz);
+    jni_asplayer_result result = asplayer_start_video_decoding(env, thiz);
+
     LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_stop_video_decoding(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->stopVideoDecoding();
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
 }
 
 static jint
 native_stop_video_decoding(JNIEnv* env, jobject thiz) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_stop_video_decoding(env, thiz);
+    jni_asplayer_result result = JNI_ASPLAYER_OK;
+
+    result = asplayer_stop_video_decoding(env, thiz);
+
     LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_pause_video_decoding(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->pauseVideoDecoding();
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
 }
 
 static jint
 native_pause_video_decoding(JNIEnv* env, jobject thiz) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_pause_video_decoding(env, thiz);
+
+    jni_asplayer_result result = asplayer_pause_video_decoding(env, thiz);
+
     LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_resume_video_decoding(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->resumeVideoDecoding();
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
 }
 
 static jint
 native_resume_video_decoding(JNIEnv* env, jobject thiz) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_resume_video_decoding(env, thiz);
+
+    jni_asplayer_result result = asplayer_resume_video_decoding(env, thiz);
+
     LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_start_audio_decoding(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->startAudioDecoding();
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
 }
 
 static jint
 native_start_audio_decoding(JNIEnv* env, jobject thiz) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_start_audio_decoding(env, thiz);
+
+    jni_asplayer_result result = asplayer_start_audio_decoding(env, thiz);
+
     LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_stop_audio_decoding(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->stopAudioDecoding();
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
 }
 
 static jint
 native_stop_audio_decoding(JNIEnv* env, jobject thiz) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_stop_audio_decoding(env, thiz);
+
+    jni_asplayer_result result = asplayer_stop_audio_decoding(env, thiz);
+
     LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_pause_audio_decoding(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->pauseAudioDecoding();
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
 }
 
 static jint
 native_pause_audio_decoding(JNIEnv* env, jobject thiz) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_pause_audio_decoding(env, thiz);
+
+    jni_asplayer_result result = asplayer_pause_audio_decoding(env, thiz);
+
     LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_resume_audio_decoding(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->resumeAudioDecoding();
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
 }
 
 static jint
 native_resume_audio_decoding(JNIEnv* env, jobject thiz) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_resume_audio_decoding(env, thiz);
+
+    jni_asplayer_result result = asplayer_resume_audio_decoding(env, thiz);
+
     LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_set_video_params(JNIEnv* env, jobject thiz, jobject videoParams) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_video_params params;
-    if (!gASPlayerJni.convertVideoParams(env, videoParams, &params)) {
-        ALOGE("%s[%d] failed to setVideoParams, failed to convert video params", __func__, __LINE__);
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->setVideoParams(&params);
-
-    if (params.mimeType) {
-        delete[] params.mimeType;
-        params.mimeType = nullptr;
-    }
-
-    LOG_FUNCTION_INT_END(ret);
-
-    return ret;
 }
 
 static jint
 native_set_video_params(JNIEnv* env, jobject thiz, jobject videoParams) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_set_video_params(env, thiz, videoParams);
+
+    jni_asplayer_result result = asplayer_set_video_params(env, thiz, videoParams);
+
     LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_set_audio_params(JNIEnv* env, jobject thiz, jobject audioParams) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_audio_params params;
-    if (!gASPlayerJni.convertAudioParams(env, audioParams, &params)) {
-        ALOGE("%s[%d] failed to setVideoParams, failed to convert video params", __func__, __LINE__);
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->setAudioParams(&params);
-
-    if (params.mimeType) {
-        delete[] params.mimeType;
-        params.mimeType = nullptr;
-    }
-
-    LOG_FUNCTION_INT_END(ret);
-
-    return ret;
 }
 
 static jint
 native_set_audio_params(JNIEnv* env, jobject thiz, jobject audioParams) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_set_audio_params(env, thiz, audioParams);
+
+    jni_asplayer_result result = asplayer_set_audio_params(env, thiz, audioParams);
+
     LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_switch_audio_track(JNIEnv* env, jobject thiz, jobject audioParams) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_audio_params params;
-    if (!gASPlayerJni.convertAudioParams(env, audioParams, &params)) {
-        ALOGE("[%s/%d] failed to switch audio track, failed to convert audio params", __func__, __LINE__);
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->switchAudioTrack(&params);
-
-    if (params.mimeType) {
-        delete[] params.mimeType;
-        params.mimeType = nullptr;
-    }
-
-    LOG_FUNCTION_INT_END(ret);
-
-    return ret;
 }
 
 static jint
 native_switch_audio_track(JNIEnv* env, jobject thiz, jobject audioParams) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_switch_audio_track(env, thiz, audioParams);
+
+    jni_asplayer_result result = asplayer_switch_audio_track(env, thiz, audioParams);
+
     LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_flush(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->flush();
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
 }
 
 static jint
 native_flush(JNIEnv* env, jobject thiz) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_flush(env, thiz);
+
+    jni_asplayer_result result = asplayer_flush(env, thiz);
+
     LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_flush_dvr(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->flushDvr();
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
 }
 
 static jint
 native_flush_dvr(JNIEnv* env, jobject thiz) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_flush_dvr(env, thiz);
+
+    jni_asplayer_result result = asplayer_flush_dvr(env, thiz);
+
     LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_write_data(JNIEnv* env, jobject thiz, jobject jInputBuffer, jlong jTimeoutMillSecond) {
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_input_buffer inputBuffer;
-    if (!gASPlayerJni.convertInputBuffer(env, jInputBuffer, &inputBuffer)) {
-        ALOGE("%s[%d] failed to writeData, failed to convert input buffer", __func__, __LINE__);
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    uint64_t timeout_us = jTimeoutMillSecond;
-    jni_asplayer_result ret = player->writeData(&inputBuffer, timeout_us);
-    if (inputBuffer.buf_data) {
-        delete[] (jbyte*)inputBuffer.buf_data;
-    }
-
-    return ret;
 }
 
 static jint
@@ -661,437 +238,151 @@ native_write_data(JNIEnv* env, jobject thiz, jobject jInputBuffer, jlong jTimeou
 }
 
 static jint
-asplayer_set_surface(JNIEnv* env, jobject thiz, jobject jSurface) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->setSurface(jSurface);
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
-}
-
-static jint
 native_set_surface(JNIEnv* env, jobject thiz, jobject jSurface) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_set_surface(env, thiz, jSurface);
+
+    jni_asplayer_result result = asplayer_set_surface(env, thiz, jSurface);
+
     LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_set_audio_mute(JNIEnv* env, jobject thiz, jboolean jAnalogMute, jboolean jDigitMute) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->setAudioMute(jAnalogMute, jDigitMute);
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
 }
 
 static jint
 native_set_audio_mute(JNIEnv* env, jobject thiz, jboolean jAnalogMute, jboolean jDigitMute) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_set_audio_mute(env, thiz, jAnalogMute, jDigitMute);
+
+    jni_asplayer_result result = asplayer_set_audio_mute(env, thiz, jAnalogMute, jDigitMute);
+
     LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_set_audio_volume(JNIEnv* env, jobject thiz, jint volume) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->setAudioVolume(volume);
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
 }
 
 static jint
 native_set_audio_volume(JNIEnv* env, jobject thiz, jint volume) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_set_audio_volume(env, thiz, volume);
+
+    jni_asplayer_result result = asplayer_set_audio_volume(env, thiz, volume);
+
     LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_get_audio_volume(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    int volume = -1;
-    jni_asplayer_result ret = player->getAudioVolume(&volume);
-    LOG_FUNCTION_INT_END(ret);
-    if (ret == JNI_ASPLAYER_OK) {
-        return volume;
-    } else {
-        ALOGE("%s[%d] failed to get audio volume, ret: %d", __func__, __LINE__, ret);
-        return ret;
-    }
 }
 
 static jint
 native_get_audio_volume(JNIEnv *env, jobject thiz) {
     LOG_FUNCTION_ENTER();
+
     jint result = asplayer_get_audio_volume(env, thiz);
+
     LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_start_fast(JNIEnv *env, jobject thiz, jfloat scale) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->startFast(scale);
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
 }
 
 static jint
 native_start_fast(JNIEnv *env, jobject thiz, jfloat scale) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_start_fast(env, thiz, scale);
+
+    jni_asplayer_result result = asplayer_start_fast(env, thiz, scale);
+
     LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_stop_fast(JNIEnv *env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->stopFast();
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
 }
 
 static jint
 native_stop_fast(JNIEnv *env, jobject thiz) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_stop_fast(env, thiz);
+
+    jni_asplayer_result result = asplayer_stop_fast(env, thiz);
+
     LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_set_trick_mode(JNIEnv *env, jobject thiz, jint jTrickMode) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_video_trick_mode trickMode = static_cast<jni_asplayer_video_trick_mode>(jTrickMode);
-    jni_asplayer_result ret = player->setTrickMode(trickMode);
-
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
 }
 
 static jint
 native_set_trick_mode(JNIEnv *env, jobject thiz, jint jTrickMode) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_set_trick_mode(env, thiz, jTrickMode);
+
+    jni_asplayer_result result = asplayer_set_trick_mode(env, thiz, jTrickMode);
+
     LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_set_transition_mode_before(JNIEnv *env, jobject thiz, jint jMode) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_transition_mode_before mode = static_cast<jni_asplayer_transition_mode_before>(jMode);
-    jni_asplayer_result ret = player->setTransitionModeBefore(mode);
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
 }
 
 static jint
 native_set_transition_mode_before(JNIEnv *env, jobject thiz, jint jMode) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_set_transition_mode_before(env, thiz, jMode);
+
+    jni_asplayer_result result = asplayer_set_transition_mode_before(env, thiz, jMode);
+
     LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_set_work_mode(JNIEnv *env, jobject thiz, jint mode) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->setWorkMode(static_cast<jni_asplayer_work_mode>(mode));
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
-}
-
-static jint
-native_set_work_mode(JNIEnv *env, jobject thiz, jint workMode) {
-    LOG_FUNCTION_ENTER();
-    jint result = asplayer_set_work_mode(env, thiz, workMode);
-    LOG_FUNCTION_END();
-    return result;
-}
-
-static jint
-asplayer_reset_work_mode(JNIEnv *env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->resetWorkMode();
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
-}
-
-static jint
-native_reset_work_mode(JNIEnv *env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-    jint result = asplayer_reset_work_mode(env, thiz);
-    LOG_FUNCTION_END();
-    return result;
-}
-
-static jint
-asplayer_set_pip_mode(JNIEnv *env, jobject thiz, jint mode) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->setPIPMode(static_cast<jni_asplayer_pip_mode>(mode));
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
 }
 
 static jint
 native_set_pip_mode(JNIEnv *env, jobject thiz, jint pipMode) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_set_pip_mode(env, thiz, pipMode);
+
+    jni_asplayer_result result = asplayer_set_pip_mode(env, thiz, pipMode);
+
     LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
-asplayer_set_ad_params(JNIEnv* env, jobject thiz, jobject audioParams) {
+native_set_work_mode(JNIEnv *env, jobject thiz, jint workMode) {
     LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
 
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
+    jni_asplayer_result result = asplayer_set_work_mode(env, thiz, workMode);
 
-    jni_asplayer_audio_params params;
-    if (!gASPlayerJni.convertAudioParams(env, audioParams, &params)) {
-        ALOGE("%s[%d] failed to setADParams, failed to convert ad params", __func__, __LINE__);
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
+    LOG_FUNCTION_INT_END(result);
+    return result;
+}
 
-    jni_asplayer_result ret = player->setADParams(&params);
+static jint
+native_reset_work_mode(JNIEnv *env, jobject thiz) {
+    LOG_FUNCTION_ENTER();
 
-    if (params.mimeType) {
-        delete[] params.mimeType;
-        params.mimeType = nullptr;
-    }
+    jni_asplayer_result result = asplayer_reset_work_mode(env, thiz);
 
-    LOG_FUNCTION_INT_END(ret);
-
-    return ret;
+    LOG_FUNCTION_INT_END(result);
+    return result;
 }
 
 static jint
 native_set_ad_params(JNIEnv* env, jobject thiz, jobject audioParams) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_set_ad_params(env, thiz, audioParams);
+
+    jni_asplayer_result result = asplayer_set_ad_params(env, thiz, audioParams);
+
     LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
-asplayer_enable_ad_mix(JNIEnv *env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->enableADMix();
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
-}
-
-static jint
 native_enable_ad_mix(JNIEnv *env, jobject thiz) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_enable_ad_mix(env, thiz);
-    LOG_FUNCTION_END();
+
+    jni_asplayer_result result = asplayer_enable_ad_mix(env, thiz);
+
+    LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static jint
-asplayer_disable_ad_mix(JNIEnv *env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
-    }
-
-    jni_asplayer_result ret = player->disableADMix();
-    LOG_FUNCTION_INT_END(ret);
-    return ret;
 }
 
 static jint
 native_disable_ad_mix(JNIEnv *env, jobject thiz) {
     LOG_FUNCTION_ENTER();
-    jint result = asplayer_disable_ad_mix(env, thiz);
-    LOG_FUNCTION_END();
+
+    jni_asplayer_result result = asplayer_disable_ad_mix(env, thiz);
+
+    LOG_FUNCTION_INT_END(result);
     return result;
-}
-
-static void
-asplayer_release(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-    if (env == nullptr) {
-        LOG_GET_JNIENV_FAILED();
-        return;
-    }
-
-    BaseJniASPlayerWrapper *player = getASPlayer(env, thiz);
-    if (player == nullptr) {
-        LOG_GET_PLAYER_FAILED();
-        return;
-    }
-
-    jni_asplayer_result ret = player->release();
-    if (ret != JNI_ASPLAYER_OK) {
-        ALOGE("%s[%d] error, failed to release asplayer ret: %d", __func__, __LINE__, ret);
-        return;
-    }
-
-    // reset Java mNativeContext
-    setASPlayer(env, thiz, nullptr);
-
-    delete player;
-
-    LOG_FUNCTION_INT_END(ret);
 }
 
 static void
 native_release(JNIEnv* env, jobject thiz) {
     LOG_FUNCTION_ENTER();
-    asplayer_release(env, thiz);
+
+    jni_asplayer_result result = asplayer_release(env, thiz);
+
     LOG_FUNCTION_END();
 }
 
