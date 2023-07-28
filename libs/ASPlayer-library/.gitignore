@@ -1,2 +1,3 @@
 /build
 .cxx/
+src/main/java/com/amlogic/asplayer/BuildConfiguration.java

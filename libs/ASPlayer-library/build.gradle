@@ -53,3 +53,20 @@ task releaseJar(type: Copy) {
 }
 
 releaseJar.dependsOn(clearJar, build)
+
+void copyBuildConfiguration() {
+    println('copy BuildConfiguration.java.in to BuildConfiguration.java')
+
+    copy {
+        from "./"
+        into 'src/main/java/com/amlogic/asplayer/'
+
+        include 'BuildConfiguration.java.in'
+        rename ('BuildConfiguration.java.in', 'BuildConfiguration.java')
+    }
+}
+
+this.project.afterEvaluate { project -> {
+        copyBuildConfiguration()
+    }
+}

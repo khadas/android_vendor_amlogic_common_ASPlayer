@@ -61,7 +61,13 @@ func setversion(ctx android.BaseContext) {
     versionFile := sourceDir + "/version/VERSION"
     fmt.Println("ASPlayer versionFile: ", versionFile)
 
+    javaBuildConfigTemplateFile := sourceDir + "/libs/ASPlayer-library/BuildConfiguration.java.in"
     javaBuildConfigFile := sourceDir + "/libs/ASPlayer-library/src/main/java/com/amlogic/asplayer/BuildConfiguration.java"
+
+    // copy build config file
+    copyConfigCmd := fmt.Sprintf("cp \"%s\" \"%s\"", javaBuildConfigTemplateFile, javaBuildConfigFile)
+    execCommand(copyConfigCmd, "copy build config file")
+    fmt.Printf("ASPlayer copy: %s => %s\n", javaBuildConfigTemplateFile, javaBuildConfigFile)
 
     majorVersionCmd := "sed -n 's/Major_V=\\(.*\\)/\\1/p' " + versionFile
     majorVersionout, _ := execCommand(majorVersionCmd, "get major version")
