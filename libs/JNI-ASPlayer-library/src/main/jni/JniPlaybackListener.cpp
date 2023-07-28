@@ -243,7 +243,8 @@ void JniPlaybackListener::notifyPlaybackEvent(JNIEnv *env, jobject jEvent) {
         ALOGE("[%s/%d] notifyPlaybackEvent unknown event", __FUNCTION__, __LINE__);
     }
 
-    env->DeleteLocalRef(jEvent);
+    // warning: Attempt to remove non-JNI local reference, dumping thread
+    // env->DeleteLocalRef(jEvent);
 }
 
 void JniPlaybackListener::handleVideoFormatChangeEvent(JNIEnv *env, jobject jEvent) {

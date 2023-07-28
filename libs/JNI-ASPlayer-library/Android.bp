@@ -53,7 +53,6 @@ java_library {
     ],
 
     static_libs: [
-        "androidx.annotation_annotation",
         "droidlogic.jasplayer",
     ],
 }

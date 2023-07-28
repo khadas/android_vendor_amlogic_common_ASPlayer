@@ -528,17 +528,17 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     private boolean switchAudioTrackMode(boolean cache) {
         ASPlayerLog.i("%s switchAudioTrackMode type: %s", getTag(), cache ? "cache" : "normal");
         if (cache) {
-            ASPlayerLog.w("%s AudioTrack.setVolume(0)", getTag());
+            ASPlayerLog.i("%s AudioTrack.setVolume(0)", getTag());
             mAudioTrack.setVolume(0.f);
-            ASPlayerLog.w("%s AudioTrack.stop", getTag());
+            ASPlayerLog.i("%s AudioTrack.stop", getTag());
             mAudioTrack.stop();
             mErrorMessage = null;
 
             releaseDecoderThread();
         } else {
-            ASPlayerLog.w("%s AudioTrack.setVolume: %.2f", getTag(), mGain);
+            ASPlayerLog.i("%s AudioTrack.setVolume: %.2f", getTag(), mGain);
             mAudioTrack.setVolume(mGain);
-            ASPlayerLog.w("%s AudioTrack.play", getTag());
+            ASPlayerLog.i("%s AudioTrack.play", getTag());
             mAudioTrack.play();
             mErrorMessage = null;
 

@@ -14,31 +14,6 @@ import android.view.Surface;
 
 public interface IASPlayer {
 
-    public interface OnPtsListener {
-        /**
-         * ASPLAYER_EVENT_TYPE_PTS
-         * @param pts
-         */
-        void onPts(Pts pts);
-    }
-
-    public interface OnInfoListener {
-
-        /**
-         * @param what info type
-         *      EVENT_TYPE_DATA_LOSS
-         *      EVENT_TYPE_DATA_RESUME
-         *      EVENT_TYPE_FIRST_FRAME
-         *      EVENT_TYPE_STREAM_MODE_EOF
-         *      EVENT_TYPE_DECODE_FIRST_FRAME_VIDEO
-         *      EVENT_TYPE_DECODE_FIRST_FRAME_AUDIO
-         *      EVENT_TYPE_RENDER_FIRST_FRAME_VIDEO
-         *      EVENT_TYPE_RENDER_FIRST_FRAME_AUDIO
-         *      EVENT_TYPE_AV_SYNC_DONE
-         */
-        void onInfo(IASPlayer player, int what, int extra);
-    }
-
     /**
      * Add playback listener
      * @param listener
@@ -54,32 +29,32 @@ public interface IASPlayer {
     /**
      * Prepares the player for playback
      */
-    public int prepare();
+    int prepare();
 
     /**
      * Get ASPlayer interface major version.
      */
-    public int getMajorVersion();
+    int getMajorVersion();
 
     /**
      * Get ASPlayer interface minor version.
      */
-    public int getMinorVersion();
+    int getMinorVersion();
 
     /**
      * Get the instance number of specified ASPlayer
      */
-    public int getInstancesNumber();
+    int getInstancesNumber();
 
     /**
      * Get the sync instance number of specified ASPlayer
      */
-    public int getSyncInstancesNumber();
+    int getSyncInstancesNumber();
 
     /**
      * Release specified ASPlayer instance
      */
-    public void release();
+    void release();
 
     /**
      * Write Frame data to ASPlayer instance.
@@ -88,7 +63,7 @@ public interface IASPlayer {
      * @param inputFrameBuffer
      * @param timeoutMillSecond Time out limit
      */
-    public int writeFrameData(InputFrameBuffer inputFrameBuffer, long timeoutMillSecond);
+    int writeFrameData(InputFrameBuffer inputFrameBuffer, long timeoutMillSecond);
 
     /**
      * Write data to ASPlayer instance.
@@ -97,17 +72,17 @@ public interface IASPlayer {
      * @param inputBuffer
      * @param timeoutMillSecond
      */
-    public int writeData(InputBuffer inputBuffer, long timeoutMillSecond);
+    int writeData(InputBuffer inputBuffer, long timeoutMillSecond);
 
     /**
      * Flush data of ASPlayer instance.
      */
-    public int flush();
+    int flush();
 
     /**
      * Flush DvrPlayback of ASPlayer instance.
      */
-    public int flushDvr();
+    int flushDvr();
 
     /**
      * Set work mode of ASPlayer instance.
@@ -134,14 +109,14 @@ public interface IASPlayer {
      *
      * @return
      */
-    public int setPIPMode(int mode);
+    int setPIPMode(int mode);
 
     /**
      * Get the playing time of ASPlayer instance.
      *
      * @return Playing time.
      */
-    public long getCurrentTime();
+    long getCurrentTime();
 
     /**
      * Get the pts of ASPlayer instance.
@@ -150,7 +125,7 @@ public interface IASPlayer {
      *
      * @param streamType stream type
      */
-    public long getPts(int streamType);
+    long getPts(int streamType);
 
     /**
      * Set the tsync mode for ASPlayer instance.
@@ -159,33 +134,33 @@ public interface IASPlayer {
      *
      * @param mode
      */
-    public void setSyncMode(int mode);
+    void setSyncMode(int mode);
 
     /**
      * Get the tsync mode for ASPlayer instance.
      *
      * @see AVSyncMode
      */
-    public int getSyncMode();
+    int getSyncMode();
 
     /**
      * Set pcr pid to ASPlayer instance.
      *
      * @param pid The pid of pcr.
      */
-    public int setPcrPid(int pid);
+    int setPcrPid(int pid);
 
     /**
      * Start Fast play for ASPlayer instance.
      *
      * @param scale Fast play speed.
      */
-    public int startFast(float scale);
+    int startFast(float scale);
 
     /**
      * Stop Fast play for ASPlayer instance.
      */
-    public int stopFast();
+    int stopFast();
 
     /**
      * Start trick mode for ASPlayer instance.
@@ -194,21 +169,21 @@ public interface IASPlayer {
      *
      * @param trickMode trick mode type
      */
-    public int setTrickMode(int trickMode);
+    int setTrickMode(int trickMode);
 
     /**
      * Set surface to ASPlayer Instance.
      *
      * @param surface
      */
-    public int setSurface(Surface surface);
+    int setSurface(Surface surface);
 
     /**
      * Set video params need by demuxer and video decoder for ASPlayer instance.
      *
      * @param params Params need by demuxer and video decoder.
      */
-    public void setVideoParams(VideoParams params) throws NullPointerException, IllegalArgumentException, IllegalStateException;
+    void setVideoParams(VideoParams params) throws NullPointerException, IllegalArgumentException, IllegalStateException;
 
     /**
      * Set if need keep last frame for video display for ASPlayer instance.
@@ -217,44 +192,44 @@ public interface IASPlayer {
      *
      * @see com.amlogic.asplayer.api.TransitionSettings.TransitionModeBefore
      */
-    public int setTransitionModeBefore(int transitionModeBefore);
+    int setTransitionModeBefore(int transitionModeBefore);
 
     /**
      * Get video basic info of ASPlayer instance.
      */
-    public MediaFormat getVideoInfo();
+    MediaFormat getVideoInfo();
 
     /**
      * Start video decoding for ASPlayer instance.
      */
-    public int startVideoDecoding();
+    int startVideoDecoding();
 
     /**
      * Pause video decoding for ASPlayer instance.
      */
-    public int pauseVideoDecoding();
+    int pauseVideoDecoding();
 
     /**
      * Resume video decoding for ASPlayer instance.
      */
-    public int resumeVideoDecoding();
+    int resumeVideoDecoding();
 
     /**
      * Stop video decoding for ASPlayer instance.
      */
-    public int stopVideoDecoding();
+    int stopVideoDecoding();
 
     /**
      * Set audio volume to ASPlayer instance.
      *
      * @param volume Volume value
      */
-    public int setAudioVolume(int volume);
+    int setAudioVolume(int volume);
 
     /**
      * Get audio volume value from ASPlayer instance.
      */
-    public int getAudioVolume();
+    int getAudioVolume();
 
     /**
      * Set audio stereo mode to ASPlayer instance
@@ -263,12 +238,12 @@ public interface IASPlayer {
      *
      * @param audioStereoMode audio stereo mode
      */
-    public void setAudioStereoMode(int audioStereoMode);
+    void setAudioStereoMode(int audioStereoMode);
 
     /**
      * Get audio stereo mode to ASPlayer instance.
      */
-    public int getAudioStereoMode();
+    int getAudioStereoMode();
 
     /**
      * Set audio output mute to ASPlayer instance.
@@ -276,24 +251,24 @@ public interface IASPlayer {
      * @param analogMute If analog mute or unmute
      * @param digitalMute If digital mute or unmute
      */
-    public int setAudioMute(boolean analogMute, boolean digitalMute);
+    int setAudioMute(boolean analogMute, boolean digitalMute);
 
     /**
      * Get audio output mute status from ASPlayer instance
      */
-    public int getAudioAnalogMute();
+    int getAudioAnalogMute();
 
     /**
      * Get audio output mute status from ASPlayer instance
      */
-    public int getAudioDigitMute();
+    int getAudioDigitMute();
 
     /**
      * Set audio params need by demuxer and audio decoder to ASPlayer instance.
      *
      * @param params Params need by demuxer and audio decoder
      */
-    public void setAudioParams(AudioParams params) throws NullPointerException, IllegalArgumentException, IllegalStateException;
+    void setAudioParams(AudioParams params) throws NullPointerException, IllegalArgumentException, IllegalStateException;
 
     /**
      * Switch audio track
@@ -306,27 +281,27 @@ public interface IASPlayer {
     /**
      * Get audio basic info of ASPlayer instance.
      */
-    public MediaFormat getAudioInfo();
+    MediaFormat getAudioInfo();
 
     /**
      * Start audio decoding for ASPlayer instance
      */
-    public int startAudioDecoding();
+    int startAudioDecoding();
 
     /**
      * Pause audio decoding for ASPlayer instance
      */
-    public int pauseAudioDecoding();
+    int pauseAudioDecoding();
 
     /**
      * Resume audio decoding for ASPlayer instance
      */
-    public int resumeAudioDecoding();
+    int resumeAudioDecoding();
 
     /**
      * Stop audio decoding for ASPlayer instance
      */
-    public int stopAudioDecoding();
+    int stopAudioDecoding();
 
     /**
      * Set audio description params need by demuxer and audio decoder to ASPlayer instance.
@@ -352,22 +327,22 @@ public interface IASPlayer {
      *
      * @param pid
      */
-    public int setSubtitlePid(int pid);
+    int setSubtitlePid(int pid);
 
     /**
      * get State for ASPlayer instance
      */
-    public State getState();
+    State getState();
 
     /**
      * Start subtitle for ASPlayer instance
      */
-    public int startSubtitle();
+    int startSubtitle();
 
     /**
      * Stop subtitle for ASPlayer instance
      */
-    public int stopSubtitle();
+    int stopSubtitle();
 
     /**
      * Get the first pts of ASPlayer instance.
@@ -376,5 +351,5 @@ public interface IASPlayer {
      *
      * @param streamType stream type
      */
-    public long getFirstPts(int streamType);
+    long getFirstPts(int streamType);
 }

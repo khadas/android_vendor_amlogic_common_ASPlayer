@@ -102,9 +102,6 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         mVideoOutputPath = new VideoOutputPathV3(mId, ASPlayerConfig.PLAYBACK_MODE_PASSTHROUGH);
         mAudioOutputPath = new AudioOutputPathV3(mId);
 
-        mVideoOutputPath.setDataListener(this::onFirstMediaData);
-        mAudioOutputPath.setDataListener(this::onFirstMediaData);
-
         mRendererScheduler = new RendererScheduler(mId, context, this, mConfig,
                 mVideoOutputPath, mAudioOutputPath, mEventNotifier);
     }
@@ -147,14 +144,6 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         mRendererScheduler.setVideoFormatListener(this);
         mRendererScheduler.setAudioFormatListener(this);
         mRendererScheduler.prepare(mPlayerHandler);
-    }
-
-    private void onFirstMediaData(MediaOutputPath outputPath) {
-        if (outputPath == mVideoOutputPath) {
-
-        } else if (outputPath == mAudioOutputPath) {
-
-        }
     }
 
     @Override

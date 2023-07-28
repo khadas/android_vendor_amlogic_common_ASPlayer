@@ -142,26 +142,6 @@ class RendererPlayback extends Renderer {
         }
     }
 
-    class SubtitleTask extends PlaybackTask {
-        SubtitleTask() {
-            super("SubtitleTask");
-        }
-
-        long run() {
-            return 10000;
-        }
-    }
-
-    class EitTask extends PlaybackTask {
-        EitTask() {
-            super("EitTask");
-        }
-
-        long run() {
-            return 10000;
-        }
-    }
-
     // audio caps, to reconfigure pipeline if needed
     private AudioCaps mAudioCaps;
 
@@ -198,8 +178,6 @@ class RendererPlayback extends Renderer {
         mFeedingTask = new FeedingTask();
         mAudioInputBuffersTask = new AudioInputBuffersTask();
         mVideoInputBuffersTask = new VideoInputBuffersTask();
-        PlaybackTask subtitleTask = new SubtitleTask();
-        PlaybackTask eitTask = new EitTask();
 
         mTasks = new ArrayList<>();
         mTasks.add(mVideoRendererTask);
@@ -208,8 +186,6 @@ class RendererPlayback extends Renderer {
         mTasks.add(mFeedingTask);
         mTasks.add(mAudioInputBuffersTask);
         mTasks.add(mVideoInputBuffersTask);
-        mTasks.add(subtitleTask);
-        mTasks.add(eitTask);
 
         mVideoRendererTask.setMinimumExecutionTimeMs(10);
         audioRendererTask.setMinimumExecutionTimeMs(10);
@@ -217,8 +193,6 @@ class RendererPlayback extends Renderer {
         mFeedingTask.setMinimumExecutionTimeMs(20);
         mAudioInputBuffersTask.setMinimumExecutionTimeMs(30);
         mVideoInputBuffersTask.setMinimumExecutionTimeMs(30);
-        subtitleTask.setMinimumExecutionTimeMs(5);
-        eitTask.setMinimumExecutionTimeMs(5);
 
         checkSynchroModeTask.setPriority(0);
         mVideoRendererTask.setPriority(1);
@@ -226,8 +200,6 @@ class RendererPlayback extends Renderer {
         mAudioInputBuffersTask.setPriority(2);
         mVideoInputBuffersTask.setPriority(2);
         mFeedingTask.setPriority(3);
-        subtitleTask.setPriority(4);
-        eitTask.setPriority(4);
 
         mTaskComparator = new Comparator<PlaybackTask>() {
             @Override

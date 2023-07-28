@@ -63,17 +63,6 @@ class RendererPlaybackV3 extends Renderer {
         abstract long run();
     }
 
-    class CheckSynchroModeTask extends PlaybackTask {
-        CheckSynchroModeTask() {
-            super("CheckSynchroModeTask");
-        }
-
-        long run() {
-            checkSynchroMode();
-            return 1000000;
-        }
-    }
-
     class FeedingTask extends PlaybackTask {
         FeedingTask() {
             super("FeedingTask");
@@ -132,21 +121,17 @@ class RendererPlaybackV3 extends Renderer {
     RendererPlaybackV3(int id, RendererScheduler rendererScheduler) {
         super(id, rendererScheduler);
 
-        PlaybackTask checkSynchroModeTask = new CheckSynchroModeTask();
         mFeedingTask = new FeedingTask();
         mAudioInputBuffersTask = new AudioInputBuffersTask();
         mVideoInputBuffersTask = new VideoInputBuffersTask();
 
         mTasks = new ArrayList<>();
-        mTasks.add(checkSynchroModeTask);
         mTasks.add(mFeedingTask);
 
-        checkSynchroModeTask.setMinimumExecutionTimeMs(100);
         mFeedingTask.setMinimumExecutionTimeMs(20);
         mAudioInputBuffersTask.setMinimumExecutionTimeMs(30);
         mVideoInputBuffersTask.setMinimumExecutionTimeMs(30);
 
-        checkSynchroModeTask.setPriority(0);
         mAudioInputBuffersTask.setPriority(2);
         mVideoInputBuffersTask.setPriority(2);
         mFeedingTask.setPriority(3);
@@ -313,24 +298,6 @@ class RendererPlaybackV3 extends Renderer {
 
     private void onAudioCapabilitiesChanged(AudioCaps audioCapabilities) {
         ASPlayerLog.i("%s output audio caps have changed to %s", getTag(), audioCapabilities);
-    }
-
-    private void checkSynchroSubtitles() {
-//        long avSyncTime = Mpeg.ptsToUs(mExtractor.getAvSyncTime());
-    }
-
-    private void checkSynchroMode() {
-        // if there is no audio and no video, don't try to synchronize
-        if (!mAudioOutputPath.isConfigured() && !mVideoOutputPath.isConfigured()) {
-            return;
-        }
-
-        // if speed is not 1, should be 0, there is no synchro
-        if (mSpeed != 1) {
-            return;
-        }
-
-        checkSynchroSubtitles();
     }
 
     @Override

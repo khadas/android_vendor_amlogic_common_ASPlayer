@@ -184,7 +184,7 @@ public class ASPlayer implements IASPlayer {
      * @return the actual buffer size written successfully or an error code,
      *  {@link #INFO_ERROR_RETRY},
      *  {@link #INFO_BUSY},
-     *  {@link #INFO_INVALID_PARAM},
+     *  {@link #INFO_INVALID_PARAMS},
      *  {@link #INFO_INVALID_OPERATION}
      */
     @Override
