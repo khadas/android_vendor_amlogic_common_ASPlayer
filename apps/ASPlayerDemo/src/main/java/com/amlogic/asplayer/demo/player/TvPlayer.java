@@ -107,7 +107,6 @@ public class TvPlayer {
         InitParams initParams = new InitParams.Builder()
                 .setPlaybackMode(InitParams.PLAYBACK_MODE_PASSTHROUGH)
                 .setInputSourceType(InputSourceType.TS_DEMOD)
-                .setInputBufferType(InputBufferType.NORMAL)
                 .setEventMask(EventMask.EVENT_TYPE_PTS_MASK)
                 .build();
         mASPlayer = new JniASPlayerWrapper(initParams, mTuner);
@@ -761,9 +760,9 @@ public class TvPlayer {
         } else if (event instanceof TsPlaybackListener.DecodeFirstAudioFrameEvent) {
             TvLog.i("TvPlayer-%d DecodeFirstAudioFrameEvent", mId);
         } else if (event instanceof TsPlaybackListener.PtsEvent) {
-            TsPlaybackListener.PtsEvent ev = (TsPlaybackListener.PtsEvent) event;
-            TvLog.d("TvPlayer-%d PtsEvent, stream: %s, pts: %d, rendertime: %d",
-                    mId, StreamType.toString(ev.mStreamType), ev.mPts, ev.mRenderTime);
+            // TsPlaybackListener.PtsEvent ev = (TsPlaybackListener.PtsEvent) event;
+            // TvLog.d("TvPlayer-%d PtsEvent, stream: %s, pts: %d, rendertime: %d",
+            //         mId, StreamType.toString(ev.mStreamType), ev.mPts, ev.mRenderTime);
         }
 
         if (mTsPlaybackListener != null) {

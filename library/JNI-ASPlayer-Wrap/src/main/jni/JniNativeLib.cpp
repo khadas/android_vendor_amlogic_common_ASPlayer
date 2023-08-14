@@ -453,7 +453,6 @@ asplayer_flush_dvr(JNIEnv* env, jobject jniASPlayerWrapperObj) {
 jni_asplayer_result
 asplayer_write_data(JNIEnv* env, jobject jniASPlayerWrapperObj,
                     jobject jInputBuffer, jlong jTimeoutMillSecond) {
-    LOG_FUNCTION_ENTER();
     if (env == nullptr) {
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }

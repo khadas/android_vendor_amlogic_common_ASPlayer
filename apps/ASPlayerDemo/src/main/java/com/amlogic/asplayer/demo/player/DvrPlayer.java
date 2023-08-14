@@ -66,7 +66,6 @@ public class DvrPlayer extends TvPlayer {
         InitParams initParams = new InitParams.Builder()
                 .setPlaybackMode(InitParams.PLAYBACK_MODE_PASSTHROUGH)
                 .setInputSourceType(InputSourceType.TS_MEMORY)
-                .setInputBufferType(InputBufferType.NORMAL)
                 .setEventMask(EventMask.EVENT_TYPE_PTS_MASK)
                 .build();
         mASPlayer = new JniASPlayerWrapper(initParams, mTuner);
@@ -89,7 +88,7 @@ public class DvrPlayer extends TvPlayer {
 
         mFeedDataTask = this::handleFeedData;
         mTsPacket = new byte[TS_PACKET_BUFFER_SIZE];
-        mInputBuffer = new InputBuffer(InputBufferType.NORMAL, mTsPacket, 0, 0);
+        mInputBuffer = new InputBuffer(mTsPacket, 0, 0);
     }
 
     public void setLoop(final boolean loop) {

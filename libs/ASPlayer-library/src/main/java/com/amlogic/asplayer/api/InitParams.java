@@ -33,18 +33,6 @@ public class InitParams {
     private int mInputSourceType;
 
     /**
-     * Input buffer type (normal, secure, tvp)
-     *
-     * @see InputBufferType
-     */
-    private int mInputBufferType;
-
-    /**
-     * Demux device id
-     */
-    private int mDmxDevId;
-
-    /**
      * Mask the event type need by caller
      */
     private long mEventMask;
@@ -79,22 +67,6 @@ public class InitParams {
         this.mInputSourceType = inputSourceType;
     }
 
-    public int getInputBufferType() {
-        return mInputBufferType;
-    }
-
-    private void setInputBufferType(int inputBufferType) {
-        this.mInputBufferType = inputBufferType;
-    }
-
-    public int getDmxDevId() {
-        return mDmxDevId;
-    }
-
-    private void setDmxDevId(int dmxDevId) {
-        this.mDmxDevId = dmxDevId;
-    }
-
     public long getEventMask() {
         return mEventMask;
     }
@@ -108,10 +80,6 @@ public class InitParams {
         private int mPlaybackMode = PLAYBACK_MODE_PASSTHROUGH;
 
         private int mInputSourceType = InputSourceType.TS_MEMORY;
-
-        private int mInputBufferType = InputBufferType.NORMAL;
-
-        private int mDmxDevId = -1;
 
         private long mEventMask = 0;
 
@@ -142,24 +110,6 @@ public class InitParams {
             return this;
         }
 
-        /**
-         * Input buffer type
-         *
-         * @see InputBufferType
-         *
-         * @param inputBufferType
-         * @return
-         */
-        public Builder setInputBufferType(int inputBufferType) {
-            this.mInputBufferType = inputBufferType;
-            return this;
-        }
-
-        public Builder setDemuxDeviceId(int dmxDevId) {
-            this.mDmxDevId = dmxDevId;
-            return this;
-        }
-
         public Builder setEventMask(long eventMask) {
             this.mEventMask = eventMask;
             return this;
@@ -169,8 +119,6 @@ public class InitParams {
             InitParams initParams = new InitParams();
             initParams.setPlaybackMode(mPlaybackMode);
             initParams.setInputSourceType(mInputSourceType);
-            initParams.setInputBufferType(mInputBufferType);
-            initParams.setDmxDevId(mDmxDevId);
             initParams.setEventMask(mEventMask);
             return initParams;
         }

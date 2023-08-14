@@ -288,6 +288,8 @@ void JniPlaybackListener::handleVideoFormatChangeEvent(JNIEnv *env, jobject jEve
         .type = JNI_ASPLAYER_EVENT_TYPE_VIDEO_CHANGED
     };
 
+    env->DeleteLocalRef(jVideoFormat);
+
     notifyCallbackEvent(&event);
 }
 
@@ -332,6 +334,8 @@ void JniPlaybackListener::handleAudioFormatChangeEvent(JNIEnv *env, jobject jEve
         .event = { .audio_format = audioFormat },
         .type = JNI_ASPLAYER_EVENT_TYPE_AUDIO_CHANGED
     };
+
+    env->DeleteLocalRef(jAudioFormat);
 
     notifyCallbackEvent(&event);
 }

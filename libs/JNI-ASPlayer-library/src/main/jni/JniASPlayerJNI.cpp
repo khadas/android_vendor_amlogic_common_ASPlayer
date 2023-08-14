@@ -76,8 +76,6 @@ struct init_param_t {
     jmethodID constructorMID;
     jfieldID playbackMode;
     jfieldID inputSourceType;
-    jfieldID inputBufferType;
-    jfieldID dmxDevId;
     jfieldID eventMask;
 };
 
@@ -109,7 +107,6 @@ struct audio_param_t {
 // InputBuffer
 struct input_buffer_t {
     jmethodID constructorMID;
-    jfieldID inputBufferType;
     jfieldID buffer;
     jfieldID offset;
     jfieldID bufferSize;
@@ -268,8 +265,6 @@ bool JniASPlayerJNI::createInitParams(JNIEnv *env, jni_asplayer_init_params para
     }
     env->SetIntField(initParams, gInitParamsCtx.playbackMode, (jint)params.playback_mode);
     env->SetIntField(initParams, gInitParamsCtx.inputSourceType, (jint)params.source);
-    env->SetIntField(initParams, gInitParamsCtx.inputBufferType, (jint)params.drmmode);
-    env->SetIntField(initParams, gInitParamsCtx.dmxDevId, (jint)params.dmx_dev_id);
     env->SetLongField(initParams, gInitParamsCtx.eventMask, (jlong)params.event_mask);
     *outJInitParams = initParams;
     ALOGD("%s[%d] end", __func__, __LINE__);
@@ -351,8 +346,6 @@ bool JniASPlayerJNI::createInputBuffer(JNIEnv *env, jni_asplayer_input_buffer *i
         env->ExceptionDescribe();
         return false;
     }
-
-    env->SetIntField(buffer, gInputBufferCtx.inputBufferType, (jint) inputBuffer->buf_type);
 
     int32_t offset = inputBuffer->offset;
     int32_t bufferSize = inputBuffer->buf_size;
@@ -452,8 +445,6 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
     gInitParamsCtx.constructorMID = env->GetMethodID(gInitParamsCls, "<init>", "()V");
     gInitParamsCtx.playbackMode = env->GetFieldID(gInitParamsCls, "mPlaybackMode", "I");
     gInitParamsCtx.inputSourceType = env->GetFieldID(gInitParamsCls, "mInputSourceType", "I");
-    gInitParamsCtx.inputBufferType = env->GetFieldID(gInitParamsCls, "mInputBufferType", "I");
-    gInitParamsCtx.dmxDevId = env->GetFieldID(gInitParamsCls, "mDmxDevId", "I");
     gInitParamsCtx.eventMask = env->GetFieldID(gInitParamsCls, "mEventMask", "J");
 
     // VideoParams
@@ -491,7 +482,6 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
     gInputBufferCls = static_cast<jclass>(env->NewGlobalRef(inputBufferCls));
     env->DeleteLocalRef(inputBufferCls);
     gInputBufferCtx.constructorMID = env->GetMethodID(gInputBufferCls, "<init>", "()V");
-    gInputBufferCtx.inputBufferType = env->GetFieldID(gInputBufferCls, "mInputBufferType", "I");
     gInputBufferCtx.buffer = env->GetFieldID(gInputBufferCls, "mBuffer", "[B");
     gInputBufferCtx.offset = env->GetFieldID(gInputBufferCls, "mOffset", "I");
     gInputBufferCtx.bufferSize = env->GetFieldID(gInputBufferCls, "mBufferSize", "I");

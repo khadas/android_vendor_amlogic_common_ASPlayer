@@ -41,19 +41,15 @@ native_init(JNIEnv* env) {
 
 static void
 native_create(JNIEnv* env, jobject thiz, jobject initParams, jobject tuner) {
-    LOG_FUNCTION_ENTER();
     jni_asplayer_result ret = create_asplayer(env, thiz, initParams, tuner);
 
     if (ret != JNI_ASPLAYER_OK) {
         ALOGE("[%s/%d] failed to create asplayer, ret: %d", __func__, __LINE__, ret);
     }
-
-    LOG_FUNCTION_END();
 }
 
 static jobject
 native_getJavaASPlayer(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
     jobject asplayer = nullptr;
 
     jni_asplayer_result ret = asplayer_get_java_asplayer(env, thiz, &asplayer);
@@ -62,172 +58,124 @@ native_getJavaASPlayer(JNIEnv* env, jobject thiz) {
         ALOGE("%s[%d] failed to get java ASPlayer, ret: %d", __func__, __LINE__, ret);
     }
 
-    LOG_FUNCTION_END();
     return asplayer;
 }
 
 static jint
 native_prepare(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_prepare(env, thiz);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static void
 native_add_playback_listener(JNIEnv* env, jobject thiz, jobject jListener) {
-    LOG_FUNCTION_ENTER();
     jni_asplayer_result result = asplayer_add_playback_listener(env, thiz, jListener);
 
     if (result != JNI_ASPLAYER_OK) {
         ALOGE("[%s/%d] add playback listener failed, result: %d", __func__, __LINE__, result);
     }
-
-    LOG_FUNCTION_END();
 }
 
 static void
 native_remove_playback_listener(JNIEnv* env, jobject thiz, jobject jListener) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_remove_playback_listener(env, thiz, jListener);
 
     if (result != JNI_ASPLAYER_OK) {
         ALOGE("[%s/%d] remove playback listener failed, result: %d", __func__, __LINE__, result);
     }
-
-    LOG_FUNCTION_END();
 }
 
 static jint
 native_start_video_decoding(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
     jni_asplayer_result result = asplayer_start_video_decoding(env, thiz);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_stop_video_decoding(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
     jni_asplayer_result result = JNI_ASPLAYER_OK;
 
     result = asplayer_stop_video_decoding(env, thiz);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_pause_video_decoding(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_pause_video_decoding(env, thiz);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_resume_video_decoding(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_resume_video_decoding(env, thiz);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_start_audio_decoding(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_start_audio_decoding(env, thiz);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_stop_audio_decoding(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_stop_audio_decoding(env, thiz);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_pause_audio_decoding(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_pause_audio_decoding(env, thiz);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_resume_audio_decoding(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_resume_audio_decoding(env, thiz);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_set_video_params(JNIEnv* env, jobject thiz, jobject videoParams) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_set_video_params(env, thiz, videoParams);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_set_audio_params(JNIEnv* env, jobject thiz, jobject audioParams) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_set_audio_params(env, thiz, audioParams);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_switch_audio_track(JNIEnv* env, jobject thiz, jobject audioParams) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_switch_audio_track(env, thiz, audioParams);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_flush(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_flush(env, thiz);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_flush_dvr(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_flush_dvr(env, thiz);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
@@ -239,151 +187,105 @@ native_write_data(JNIEnv* env, jobject thiz, jobject jInputBuffer, jlong jTimeou
 
 static jint
 native_set_surface(JNIEnv* env, jobject thiz, jobject jSurface) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_set_surface(env, thiz, jSurface);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_set_audio_mute(JNIEnv* env, jobject thiz, jboolean jAnalogMute, jboolean jDigitMute) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_set_audio_mute(env, thiz, jAnalogMute, jDigitMute);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_set_audio_volume(JNIEnv* env, jobject thiz, jint volume) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_set_audio_volume(env, thiz, volume);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_get_audio_volume(JNIEnv *env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-
     jint result = asplayer_get_audio_volume(env, thiz);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_start_fast(JNIEnv *env, jobject thiz, jfloat scale) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_start_fast(env, thiz, scale);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_stop_fast(JNIEnv *env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_stop_fast(env, thiz);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_set_trick_mode(JNIEnv *env, jobject thiz, jint jTrickMode) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_set_trick_mode(env, thiz, jTrickMode);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_set_transition_mode_before(JNIEnv *env, jobject thiz, jint jMode) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_set_transition_mode_before(env, thiz, jMode);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_set_pip_mode(JNIEnv *env, jobject thiz, jint pipMode) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_set_pip_mode(env, thiz, pipMode);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_set_work_mode(JNIEnv *env, jobject thiz, jint workMode) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_set_work_mode(env, thiz, workMode);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_reset_work_mode(JNIEnv *env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_reset_work_mode(env, thiz);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_set_ad_params(JNIEnv* env, jobject thiz, jobject audioParams) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_set_ad_params(env, thiz, audioParams);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_enable_ad_mix(JNIEnv *env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_enable_ad_mix(env, thiz);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static jint
 native_disable_ad_mix(JNIEnv *env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_disable_ad_mix(env, thiz);
 
-    LOG_FUNCTION_INT_END(result);
     return result;
 }
 
 static void
 native_release(JNIEnv* env, jobject thiz) {
-    LOG_FUNCTION_ENTER();
-
     jni_asplayer_result result = asplayer_release(env, thiz);
-
-    LOG_FUNCTION_END();
 }
 
 static JNINativeMethod methods[] = {

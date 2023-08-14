@@ -135,13 +135,6 @@ typedef enum
     JNI_ASPLAYER_ES_MEMORY = 2,                         // ES Data input from memory
 } jni_asplayer_input_source_type;
 
-/*Input buffer type*/
-typedef enum {
-    JNI_ASPLAYER_TS_INPUT_BUFFER_TYPE_NORMAL = 0,       // Input buffer is normal buffer
-    JNI_ASPLAYER_TS_INPUT_BUFFER_TYPE_SECURE = 1,       // Input buffer is secure buffer
-    JNI_ASPLAYER_TS_INPUT_BUFFER_TYPE_TVP = 2           // Input buffer is normal but tvp enabled
-} jni_asplayer_input_buffer_type;
-
 /*Ts stream type*/
 typedef enum {
     JNI_ASPLAYER_TS_STREAM_VIDEO = 0,                   // Video
@@ -200,14 +193,11 @@ typedef size_t jni_asplayer_handle;
 typedef struct {
     jni_asplayer_playback_mode playback_mode; // playback mode
     jni_asplayer_input_source_type source;  // Input source type
-    jni_asplayer_input_buffer_type drmmode; // Input buffer type (normal, secure, tvp)
-    int32_t dmx_dev_id;                    // Demux device id
     int64_t event_mask;                    // Mask the event type needed by caller
 } jni_asplayer_init_params;
 
 /*JniASPlayer input buffer type*/
 typedef struct {
-    jni_asplayer_input_buffer_type buf_type;// Input buffer type (secure/no secure)
     void *buf_data;                        // Input buffer addr
     int32_t offset;
     int32_t buf_size;                      // Input buffer size
@@ -215,7 +205,6 @@ typedef struct {
 
 /*JniASPlayer input buffer type*/
 typedef struct {
-    jni_asplayer_input_buffer_type buf_type;// Input buffer type (secure/no secure)
     void *buf_data;                        // Input buffer addr
     int32_t buf_size;                      // Input buffer size
     uint64_t pts;                          //Frame pts,used only for frame mode

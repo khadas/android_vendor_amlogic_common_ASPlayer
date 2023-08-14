@@ -48,7 +48,6 @@ public class ASPlayer implements IASPlayer {
         ASPlayerConfig config = new ASPlayerConfig.Builder()
                 .setPlaybackMode(initParams.getPlaybackMode())
                 .setInputSourceType(initParams.getInputSourceType())
-                .setInputBufferType(initParams.getInputBufferType())
                 .setEventMask(initParams.getEventMask())
                 .build();
         mConfig = config;

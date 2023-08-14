@@ -94,7 +94,10 @@ JniASPlayer_disableADMix_FUNC DynamicJniASPlayerWrapper::ASPlayer_disableADMix =
 
 
 static void asplayer_callback(void *user_data, jni_asplayer_event *event) {
-    ALOGI("%s[%d] event type: %d", __func__, __LINE__, event ? event->type : -1);
+    if (event && event->type != JNI_ASPLAYER_EVENT_TYPE_PTS) {
+        ALOGI("%s[%d] event type: %d", __func__, __LINE__, event ? event->type : -1);
+    }
+
     dasplayer_callback_userdata_t *data = static_cast<dasplayer_callback_userdata_t *>(user_data);
     DynamicJniASPlayerWrapper *player = data->player;
 

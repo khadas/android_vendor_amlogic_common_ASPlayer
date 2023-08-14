@@ -14,13 +14,6 @@ package com.amlogic.asplayer.api;
 public class InputBuffer {
 
     /**
-     * Input buffer type (secure/no secure)
-     *
-     * @see InputBufferType
-     */
-    public int mInputBufferType;
-
-    /**
      * Input buffer data
      */
     public byte[] mBuffer;
@@ -39,8 +32,7 @@ public class InputBuffer {
     public InputBuffer() {
     }
 
-    public InputBuffer(int inputBufferType, byte[] buffer, int offset, int bufferSize) {
-        this.mInputBufferType = inputBufferType;
+    public InputBuffer(byte[] buffer, int offset, int bufferSize) {
         this.mBuffer = buffer;
         this.mOffset = offset;
         this.mBufferSize = bufferSize;

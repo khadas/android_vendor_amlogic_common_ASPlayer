@@ -14,8 +14,6 @@
 struct init_param_t {
     jfieldID playbackMode;
     jfieldID inputSourceType;
-    jfieldID inputBufferType;
-    jfieldID dmxDevId;
     jfieldID eventMask;
 };
 
@@ -41,7 +39,6 @@ struct audio_param_t {
 };
 
 struct input_buffer_t {
-    jfieldID inputBufferType;
     jfieldID buffer;
     jfieldID offset;
     jfieldID bufferSize;
@@ -166,8 +163,6 @@ bool ASPlayerJni::initJni(JNIEnv *env) {
     if (makeClassGlobalRef(&gInitParamsCls, env, "com/amlogic/asplayer/api/InitParams")) {
         gInitParamsCtx.playbackMode = env->GetFieldID(gInitParamsCls, "mPlaybackMode", "I");
         gInitParamsCtx.inputSourceType = env->GetFieldID(gInitParamsCls, "mInputSourceType", "I");
-        gInitParamsCtx.inputBufferType = env->GetFieldID(gInitParamsCls, "mInputBufferType", "I");
-        gInitParamsCtx.dmxDevId = env->GetFieldID(gInitParamsCls, "mDmxDevId", "I");
         gInitParamsCtx.eventMask = env->GetFieldID(gInitParamsCls, "mEventMask", "J");
     }
 
@@ -196,7 +191,6 @@ bool ASPlayerJni::initJni(JNIEnv *env) {
 
     // init InputBuffer
     if (makeClassGlobalRef(&gInputBufferCls, env, "com/amlogic/asplayer/api/InputBuffer")) {
-        gInputBufferCtx.inputBufferType = env->GetFieldID(gInputBufferCls, "mInputBufferType", "I");
         gInputBufferCtx.buffer = env->GetFieldID(gInputBufferCls, "mBuffer", "[B");
         gInputBufferCtx.offset = env->GetFieldID(gInputBufferCls, "mOffset", "I");
         gInputBufferCtx.bufferSize = env->GetFieldID(gInputBufferCls, "mBufferSize", "I");
@@ -298,15 +292,10 @@ bool ASPlayerJni::convertInitParams(
             jInitParam, gInitParamsCtx.playbackMode));
     jni_asplayer_input_source_type tsType = static_cast<jni_asplayer_input_source_type>(env->GetIntField(
             jInitParam, gInitParamsCtx.inputSourceType));
-    jni_asplayer_input_buffer_type drmmode = static_cast<jni_asplayer_input_buffer_type>(env->GetIntField(
-            jInitParam, gInitParamsCtx.inputBufferType));
-    int32_t dmxDevId = env->GetIntField(jInitParam, gInitParamsCtx.dmxDevId);
     int64_t eventMask = env->GetLongField(jInitParam, gInitParamsCtx.eventMask);
 
     outParams->playback_mode = playbackMode;
     outParams->source = tsType;
-    outParams->drmmode = drmmode;
-    outParams->dmx_dev_id = dmxDevId;
     outParams->event_mask = eventMask;
 
     LOG_FUNCTION_END();
@@ -396,12 +385,10 @@ bool ASPlayerJni::convertInputBuffer(
         return false;
     }
 
-    jint inputBufferType = env->GetIntField(jInputBuffer, gInputBufferCtx.inputBufferType);
     jint offset = env->GetIntField(jInputBuffer, gInputBufferCtx.offset);
     jint bufferSize = env->GetIntField(jInputBuffer, gInputBufferCtx.bufferSize);
     jbyteArray buffer = static_cast<jbyteArray>(env->GetObjectField(jInputBuffer, gInputBufferCtx.buffer));
 
-    outInputBuffer->buf_type = static_cast<jni_asplayer_input_buffer_type>(inputBufferType);
     outInputBuffer->offset = (int32_t) offset;
     outInputBuffer->buf_size = (int32_t) bufferSize;
 

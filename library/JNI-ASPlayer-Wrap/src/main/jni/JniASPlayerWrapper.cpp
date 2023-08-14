@@ -18,7 +18,10 @@
 #define LOG_PLAYER_OP_FAILED(ret) ALOGE("[%s/%d] %s failed, ret: %d", __func__, __LINE__, __func__, ret)
 
 static void asplayer_callback(void *user_data, jni_asplayer_event *event) {
-    ALOGI("%s[%d] event type: %d", __FUNCTION__, __LINE__, event ? event->type : -1);
+    if (event && event->type != JNI_ASPLAYER_EVENT_TYPE_PTS) {
+        ALOGI("%s[%d] event type: %d", __FUNCTION__, __LINE__, event ? event->type : -1);
+    }
+
     asplayer_callback_userdata_t *data = static_cast<asplayer_callback_userdata_t *>(user_data);
     JniASPlayerWrapper *player = data->player;
 
@@ -359,7 +362,6 @@ jni_asplayer_result JniASPlayerWrapper::flushDvr() {
 }
 
 jni_asplayer_result JniASPlayerWrapper::writeData(jni_asplayer_input_buffer *buf, uint64_t timeout_ms) {
-    LOG_FUNCTION_ENTER();
     jni_asplayer_handle handle = mHandle;
     if (handle == 0) {
         jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
@@ -367,7 +369,6 @@ jni_asplayer_result JniASPlayerWrapper::writeData(jni_asplayer_input_buffer *buf
         return ret;
     }
     jni_asplayer_result ret = JniASPlayer_writeData(handle, buf, timeout_ms);
-    LOG_FUNCTION_INT_END(ret);
     return ret;
 }
 

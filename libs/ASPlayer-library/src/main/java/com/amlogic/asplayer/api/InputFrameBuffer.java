@@ -32,8 +32,8 @@ public class InputFrameBuffer {
         this.isVideo = isVideo;
     }
 
-    public InputFrameBuffer(int inputBufferType, byte[] buffer, int offset, int bufferSize, long pts, boolean isVideo) {
-        this.inputBuffer = new InputBuffer(inputBufferType, buffer, offset, bufferSize);
+    public InputFrameBuffer(byte[] buffer, int offset, int bufferSize, long pts, boolean isVideo) {
+        this.inputBuffer = new InputBuffer(buffer, offset, bufferSize);
         this.pts = pts;
         this.isVideo = isVideo;
     }
