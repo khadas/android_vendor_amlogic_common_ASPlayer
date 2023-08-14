@@ -1,9 +1,21 @@
 Major_V=1
-Minor_V=0
-BaseChangeId=Ie86064ccd1d620ea6b5b486816a1b7d49dd721cd
+Minor_V=1
+BaseChangeId=Ic207fc76bcffcda9d38d35aa2f0a66c8785eee71
 
 #Android :
+#V1.1.0-c1212c1 Release Notes (2023.08.14):
+#ASPlayer:
+#Support trick mode
+#Add flushDvr api
+#Add flush api
+#Support PIP
+#Support switch audio track
+#Support AD
+#Support FCC
+#ChangeId=Ic207fc76bcffcda9d38d35aa2f0a66c8785eee71
+
 #V1.0.0-gaaf138 Release Notes (2023.03.20):
-#New feature: 1
-#  Significant feature: 1
+#First commit
+#Support Live play
+#Support Dvr playback
 #ChangeId=Ie86064ccd1d620ea6b5b486816a1b7d49dd721cd
