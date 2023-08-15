@@ -12,6 +12,8 @@ public class Constant {
 
     public static final String LOG_TAG = "ASPlayerDemo";
 
+    public static final boolean USE_JNI_AS_PLAYER = true;
+
     public static final String EXTRA_TS_PATH = "ts.path";
     public static final String EXTRA_PROGRAM_BUNDLE = "program.bundle";
     public static final String EXTRA_VIDEO_PID = "video.pid";

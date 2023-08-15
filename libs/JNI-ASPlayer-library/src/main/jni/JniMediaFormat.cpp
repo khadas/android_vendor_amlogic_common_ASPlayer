@@ -16,6 +16,7 @@ jmethodID JniMediaFormat::sGetIntegerMID = nullptr;
 jmethodID JniMediaFormat::sGetIntegerDefaultValueMID = nullptr;
 jmethodID JniMediaFormat::sGetFloatMID = nullptr;
 jmethodID JniMediaFormat::sGetFloatDefaultValueMID = nullptr;
+jmethodID JniMediaFormat::sGetLongDefaultValueMID = nullptr;
 jmethodID JniMediaFormat::sGetKeysMID = nullptr;
 jmethodID JniMediaFormat::sGetValueTypeForKeyMID = nullptr;
 
@@ -41,6 +42,7 @@ bool JniMediaFormat::initJni(JNIEnv *env) {
     sGetIntegerDefaultValueMID = env->GetMethodID(sMediaFormatCls, "getInteger", "(Ljava/lang/String;I)I");
     sGetFloatMID = env->GetMethodID(sMediaFormatCls, "getFloat", "(Ljava/lang/String;)F");
     sGetFloatDefaultValueMID = env->GetMethodID(sMediaFormatCls, "getFloat", "(Ljava/lang/String;F)F");
+    sGetLongDefaultValueMID = env->GetMethodID(sMediaFormatCls, "getLong", "(Ljava/lang/String;J)J");
     sGetKeysMID = env->GetMethodID(sMediaFormatCls, "getKeys", "()Ljava/util/Set;");
     sGetValueTypeForKeyMID = env->GetMethodID(sMediaFormatCls, "getValueTypeForKey",
                                               "(Ljava/lang/String;)I");
@@ -115,6 +117,21 @@ float JniMediaFormat::getFloat(JNIEnv *env, jobject jMediaFormat, const char *ke
 
     jobject keyStr = env->NewStringUTF(key);
     jfloat value = env->CallFloatMethod(jMediaFormat, sGetFloatDefaultValueMID, keyStr, defaultValue);
+    env->DeleteLocalRef(keyStr);
+
+    return value;
+}
+
+long
+JniMediaFormat::getLong(JNIEnv *env, jobject jMediaFormat, const char *key, long defaultValue) {
+    if (env == nullptr) {
+        return defaultValue;
+    } else if (jMediaFormat == nullptr || key == nullptr) {
+        return defaultValue;
+    }
+
+    jobject keyStr = env->NewStringUTF(key);
+    jlong value = env->CallLongMethod(jMediaFormat, sGetLongDefaultValueMID, keyStr, defaultValue);
     env->DeleteLocalRef(keyStr);
 
     return value;

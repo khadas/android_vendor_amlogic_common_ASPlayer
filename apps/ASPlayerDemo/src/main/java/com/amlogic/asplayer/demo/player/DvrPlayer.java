@@ -24,6 +24,7 @@ import com.amlogic.asplayer.api.InputBuffer;
 import com.amlogic.asplayer.api.InputBufferType;
 import com.amlogic.asplayer.api.InputSourceType;
 import com.amlogic.asplayer.api.ASPlayer;
+import com.amlogic.asplayer.demo.Constant;
 import com.amlogic.asplayer.demo.utils.TvLog;
 import com.amlogic.asplayer.jni.wrapper.JniASPlayerWrapper;
 
@@ -68,7 +69,11 @@ public class DvrPlayer extends TvPlayer {
                 .setInputSourceType(InputSourceType.TS_MEMORY)
                 .setEventMask(EventMask.EVENT_TYPE_PTS_MASK)
                 .build();
-        mASPlayer = new JniASPlayerWrapper(initParams, mTuner);
+        if (Constant.USE_JNI_AS_PLAYER) {
+            mASPlayer = new JniASPlayerWrapper(initParams, mTuner);
+        } else {
+            mASPlayer = new ASPlayer(initParams, mTuner, null);
+        }
         mASPlayer.addPlaybackListener(this::onPlaybackEvent);
         mASPlayer.prepare();
     }

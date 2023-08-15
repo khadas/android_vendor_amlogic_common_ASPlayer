@@ -608,6 +608,20 @@ jni_asplayer_result JniASPlayerWrapper::disableADMix() {
     return ret;
 }
 
+jni_asplayer_result JniASPlayerWrapper::getVideoInfo(jni_asplayer_video_info *videoInfo) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = JniASPlayer_getVideoInfo(handle, videoInfo);
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
 jni_asplayer_result JniASPlayerWrapper::release() {
     LOG_FUNCTION_ENTER();
     jni_asplayer_handle handle = mHandle;

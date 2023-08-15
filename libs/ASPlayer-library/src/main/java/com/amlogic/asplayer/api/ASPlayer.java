@@ -392,7 +392,7 @@ public class ASPlayer implements IASPlayer {
     @Override
     public MediaFormat getVideoInfo() {
         if (DEBUG) ASPlayerLog.d("%s getVideoInfo start", getTag());
-        throw new RuntimeException("Not Implementation");
+        return mPlayer.getVideoInfo();
     }
 
     /**

@@ -239,8 +239,7 @@ typedef struct {
     uint32_t width;                        // Video frame width
     uint32_t height;                       // Video frame height
     uint32_t framerate;                    // Video frame rate
-    uint32_t bitrate;                      // Video bitrate
-    uint64_t ratio64;                      // Video aspect ratio
+    uint32_t aspectRatio;                  // Video aspect ratio
 } jni_asplayer_video_info;
 
 /*Video qos information*/

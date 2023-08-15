@@ -283,6 +283,12 @@ native_disable_ad_mix(JNIEnv *env, jobject thiz) {
     return result;
 }
 
+static jobject
+native_get_video_info(JNIEnv *env, jobject thiz) {
+    jobject result = asplayer_get_video_info(env, thiz);
+    return result;
+}
+
 static void
 native_release(JNIEnv* env, jobject thiz) {
     jni_asplayer_result result = asplayer_release(env, thiz);
@@ -323,6 +329,7 @@ static JNINativeMethod methods[] = {
         {"native_setADParams", "(Lcom/amlogic/asplayer/api/AudioParams;)I", (void*)native_set_ad_params },
         {"native_enableADMix", "()I", (void*)native_enable_ad_mix },
         {"native_disableADMix", "()I", (void*)native_disable_ad_mix },
+        {"native_getVideoInfo", "()Landroid/media/MediaFormat;", (void*) native_get_video_info },
         {"native_release", "()V", (void*)native_release },
 };
 

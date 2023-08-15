@@ -677,7 +677,17 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     @Override
     public MediaFormat getVideoInfo() {
-        return null;
+        if (mVideoOutputPath == null) {
+            return null;
+        }
+
+        MediaFormat mediaFormat = new MediaFormat();
+        mediaFormat.setInteger(VideoFormat.KEY_WIDTH, mVideoOutputPath.getVideoWidth());
+        mediaFormat.setInteger(VideoFormat.KEY_HEIGHT, mVideoOutputPath.getVideoHeight());
+        mediaFormat.setInteger(VideoFormat.KEY_FRAME_RATE, mVideoOutputPath.getFrameRate());
+        mediaFormat.setInteger(VideoFormat.KEY_ASPECT_RATIO, mVideoOutputPath.getPixelAspectRatio());
+
+        return mediaFormat;
     }
 
     @Override

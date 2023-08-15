@@ -48,6 +48,7 @@ struct media_format_t {
     jmethodID constructor;
     jmethodID setInteger;
     jmethodID setFloat;
+    jmethodID setLong;
 };
 
 struct video_format_change_event_t {
@@ -201,6 +202,7 @@ bool ASPlayerJni::initJni(JNIEnv *env) {
         gMediaFormatCtx.constructor = env->GetMethodID(gMediaFormatCls, "<init>", "()V");
         gMediaFormatCtx.setInteger = env->GetMethodID(gMediaFormatCls, "setInteger", "(Ljava/lang/String;I)V");
         gMediaFormatCtx.setFloat = env->GetMethodID(gMediaFormatCls, "setFloat", "(Ljava/lang/String;F)V");
+        gMediaFormatCtx.setLong = env->GetMethodID(gMediaFormatCls, "setLong", "(Ljava/lang/String;J)V");
     }
 
     // init VideoFormatChangeEvent
@@ -549,6 +551,35 @@ bool ASPlayerJni::createDecodeFirstAudioFrameEvent(
     jobject decodeFirstAudioFrameEvent = env->NewObject(gDecodeFirstAudioFrameEventCls,
             gDecodeFirstAudioFrameEventCtx.constructor, pts, speed);
     *jEvent = decodeFirstAudioFrameEvent;
+    return true;
+}
+
+bool ASPlayerJni::createMediaFormat(JNIEnv *env, jni_asplayer_video_info *videoInfo, jobject *jMediaFormat) {
+    if (env == nullptr) {
+        return false;
+    } else if (videoInfo == nullptr || jMediaFormat == nullptr) {
+        return false;
+    }
+
+    jobject mediaFormat = env->NewObject(gMediaFormatCls, gMediaFormatCtx.constructor);
+
+    jstring width = env->NewStringUTF("width");
+    env->CallVoidMethod(mediaFormat, gMediaFormatCtx.setInteger, width,videoInfo->width);
+    env->DeleteLocalRef(width);
+
+    jstring height = env->NewStringUTF("height");
+    env->CallVoidMethod(mediaFormat, gMediaFormatCtx.setInteger, height,videoInfo->height);
+    env->DeleteLocalRef(height);
+
+    jstring frameRate = env->NewStringUTF("frame-rate");
+    env->CallVoidMethod(mediaFormat, gMediaFormatCtx.setInteger, frameRate,videoInfo->framerate);
+    env->DeleteLocalRef(frameRate);
+
+    jstring aspectRadio = env->NewStringUTF("aspect-ratio");
+    env->CallVoidMethod(mediaFormat, gMediaFormatCtx.setInteger, aspectRadio,videoInfo->aspectRatio);
+    env->DeleteLocalRef(aspectRadio);
+
+    *jMediaFormat = mediaFormat;
     return true;
 }
 

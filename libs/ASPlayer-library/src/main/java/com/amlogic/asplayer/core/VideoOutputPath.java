@@ -138,7 +138,7 @@ class VideoOutputPath extends MediaOutputPath {
     protected String mMimeType;
     protected int mVideoWidth;
     protected int mVideoHeight;
-    protected float mFrameRate;
+    protected int mFrameRate;
     protected byte mActiveFormat;
 
     protected long mNbDecodedFrames;
@@ -265,6 +265,22 @@ class VideoOutputPath extends MediaOutputPath {
     @Override
     long getMarginUs() {
         return MAX_THRESHOLD_BETWEEN_PTS_US;
+    }
+
+    public int getVideoWidth() {
+        return mVideoWidth;
+    }
+
+    public int getVideoHeight() {
+        return mVideoHeight;
+    }
+
+    public int getFrameRate() {
+        return mFrameRate;
+    }
+
+    public int getPixelAspectRatio() {
+        return mPixelAspectRatio;
     }
 
     @Override
@@ -548,7 +564,7 @@ class VideoOutputPath extends MediaOutputPath {
         mVideoWidth = 0;
         mVideoHeight = 0;
         mPixelAspectRatio = 0;
-        mFrameRate = 0f;
+        mFrameRate = 0;
         mActiveFormat = 0;
 
         mTrickModeSpeed = 0;

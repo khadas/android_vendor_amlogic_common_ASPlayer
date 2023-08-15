@@ -121,6 +121,9 @@ asplayer_set_work_mode(JNIEnv *env, jobject jniASPlayerWrapperObj, jint mode);
 jni_asplayer_result
 asplayer_reset_work_mode(JNIEnv *env, jobject jniASPlayerWrapperObj);
 
+jobject
+asplayer_get_video_info(JNIEnv *env, jobject jniASPlayerWrapperObj);
+
 jni_asplayer_result
 asplayer_release(JNIEnv *env, jobject jniASPlayerWrapperObj);
 

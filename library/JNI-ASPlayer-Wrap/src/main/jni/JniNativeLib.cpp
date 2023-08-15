@@ -738,6 +738,35 @@ asplayer_reset_work_mode(JNIEnv *env, jobject jniASPlayerWrapperObj) {
     return ret;
 }
 
+jobject
+asplayer_get_video_info(JNIEnv *env, jobject jniASPlayerWrapperObj) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr) {
+        return nullptr;
+    }
+
+    BaseJniASPlayerWrapper *player = getASPlayer(env, jniASPlayerWrapperObj);
+    if (player == nullptr) {
+        LOG_GET_PLAYER_FAILED();
+        return nullptr;
+    }
+
+    jni_asplayer_video_info *videoInfo = new jni_asplayer_video_info;
+    jni_asplayer_result ret = player->getVideoInfo(videoInfo);
+
+    jobject mediaFormat = nullptr;
+
+    if (!ASPlayerJni::createMediaFormat(env, videoInfo, &mediaFormat)) {
+        ALOGE("[%s/%d] error, failed to create mediaformat from videoinfo", __func__, __LINE__);
+        delete videoInfo;
+        return nullptr;
+    }
+
+    delete videoInfo;
+
+    return mediaFormat;
+}
+
 jni_asplayer_result
 asplayer_release(JNIEnv* env, jobject jniASPlayerWrapperObj) {
     LOG_FUNCTION_ENTER();

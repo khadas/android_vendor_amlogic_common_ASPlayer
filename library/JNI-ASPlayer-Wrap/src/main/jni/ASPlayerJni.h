@@ -29,6 +29,7 @@ public:
     static bool createAudioFirstFrameEvent(JNIEnv *env, jni_asplayer_event *event, jobject *jEvent);
     static bool createDecodeFirstVideoFrameEvent(JNIEnv *env, jni_asplayer_event *event, jobject *jEvent);
     static bool createDecodeFirstAudioFrameEvent(JNIEnv *env, jni_asplayer_event *event, jobject *jEvent);
+    static bool createMediaFormat(JNIEnv *env, jni_asplayer_video_info *videoInfo, jobject *jMediaFormat);
 
     static bool notifyPlaybackEvent(JNIEnv *env, jobject jPlaybackListener, jobject playbackEvent);
 

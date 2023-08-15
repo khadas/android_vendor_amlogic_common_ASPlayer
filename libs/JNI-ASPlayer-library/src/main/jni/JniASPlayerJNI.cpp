@@ -69,6 +69,7 @@ struct asplayer_t {
     jmethodID setADParamsMID;
     jmethodID enableADMixMID;
     jmethodID disableADMixMID;
+    jmethodID getVideoInfoMID;
 };
 
 // InitParams
@@ -437,6 +438,7 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
     gASPlayerCtx.setADParamsMID = GetMethodIDOrDie(env, gASPlayerCls, "setADParams", "(Lcom/amlogic/asplayer/api/AudioParams;)I");
     gASPlayerCtx.enableADMixMID = GetMethodIDOrDie(env, gASPlayerCls, "enableADMix", "()I");
     gASPlayerCtx.disableADMixMID = GetMethodIDOrDie(env, gASPlayerCls, "disableADMix", "()I");
+    gASPlayerCtx.getVideoInfoMID = GetMethodIDOrDie(env, gASPlayerCls, "getVideoInfo", "()Landroid/media/MediaFormat;");
 
     // InitParams
     jclass initParamCls = env->FindClass("com/amlogic/asplayer/api/InitParams");
@@ -1131,4 +1133,35 @@ jni_asplayer_result JniASPlayer::disableADMix() {
 
     int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.disableADMixMID);
     return static_cast<jni_asplayer_result>(ret);
+}
+
+jni_asplayer_result JniASPlayer::getVideoInfo(jni_asplayer_video_info *videoInfo) {
+    if (!videoInfo) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jobject jVideoMediaFormat = env->CallObjectMethod(mJavaPlayer, gASPlayerCtx.getVideoInfoMID);
+    if (jVideoMediaFormat == nullptr) {
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    int32_t width = JniMediaFormat::getInteger(env, jVideoMediaFormat, "width", 0);
+    int32_t height = JniMediaFormat::getInteger(env, jVideoMediaFormat, "height", 0);
+    int32_t frameRate = JniMediaFormat::getInteger(env, jVideoMediaFormat, "frame-rate", 0);
+    int32_t aspectRatio = JniMediaFormat::getInteger(env, jVideoMediaFormat, "aspect-ratio", 0);
+
+    videoInfo->width = (uint32_t)width;
+    videoInfo->height = (uint32_t)height;
+    videoInfo->framerate = (uint32_t)frameRate;
+    videoInfo->aspectRatio = (uint32_t)aspectRatio;
+
+    env->DeleteLocalRef(jVideoMediaFormat);
+
+    return JNI_ASPLAYER_OK;
 }

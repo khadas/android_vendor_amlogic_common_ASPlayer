@@ -204,7 +204,7 @@ public class JniASPlayerWrapper implements IASPlayer {
 
     @Override
     public MediaFormat getVideoInfo() {
-        return null;
+        return native_getVideoInfo();
     }
 
     @Override
@@ -378,5 +378,6 @@ public class JniASPlayerWrapper implements IASPlayer {
     private native int native_setADParams(AudioParams params);
     private native int native_enableADMix();
     private native int native_disableADMix();
+    private native MediaFormat native_getVideoInfo();
     private native void native_release();
 }

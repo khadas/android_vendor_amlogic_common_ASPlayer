@@ -185,6 +185,10 @@ public class LocalTvPlayerActivity extends Activity implements TsPlaybackListene
                 toggleAudioMute();
                 handled = true;
                 break;
+            case KeyEvent.KEYCODE_INFO:
+                handleShowVideoInfo();
+                handled = true;
+                break;
             default:
                 break;
         }
@@ -220,5 +224,15 @@ public class LocalTvPlayerActivity extends Activity implements TsPlaybackListene
 
         mDvrPlayer.setAudioVolume(volume);
         ToastUtils.showToast(getApplicationContext(), "set volume: " + volume);
+    }
+
+    private void handleShowVideoInfo() {
+        MediaFormat format = mDvrPlayer.getVideoInfo();
+        int width = format.getInteger(VideoFormat.KEY_WIDTH);
+        int height = format.getInteger(VideoFormat.KEY_HEIGHT);
+        int frameRate = format.getInteger(VideoFormat.KEY_FRAME_RATE);
+        int aspectRatio = format.getInteger(VideoFormat.KEY_ASPECT_RATIO);
+        TvLog.i("videoInfo: %d x %d, framerate: %d, aspectRatio: %d",
+                width, height, frameRate, aspectRatio);
     }
 }

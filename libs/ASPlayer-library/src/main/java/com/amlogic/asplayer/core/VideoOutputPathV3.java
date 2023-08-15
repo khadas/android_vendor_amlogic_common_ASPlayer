@@ -9,6 +9,7 @@ import android.view.Surface;
 
 import com.amlogic.asplayer.api.TransitionSettings;
 import com.amlogic.asplayer.api.WorkMode;
+import com.amlogic.asplayer.core.utils.StringUtils;
 
 import java.nio.ByteBuffer;
 
@@ -81,7 +82,7 @@ class VideoOutputPathV3 extends VideoOutputPath {
             }
 
             if (VideoMediaFormatEvent.isEventData(presentationTimeUs)) {
-//                ASPlayerLog.i("%s media format event: %d", getTag(), presentationTimeUs);
+                ASPlayerLog.i("%s media format event: %d", getTag(), presentationTimeUs);
                 handleMediaFormatEvent(presentationTimeUs);
                 return;
             }
@@ -105,9 +106,7 @@ class VideoOutputPathV3 extends VideoOutputPath {
             ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
             buffer.putLong(eventData);
             if (DEBUG) {
-                for (int i = 0; i < Long.BYTES; i++) {
-                    ASPlayerLog.i("%s [%d] %02x", getTag(), i, buffer.array()[i]);
-                }
+                StringUtils.dumpBytes(getTag(), buffer.array(), 0, Long.BYTES);
             }
 
             VideoMediaFormatEvent event = VideoMediaFormatEvent.parse(buffer.array());

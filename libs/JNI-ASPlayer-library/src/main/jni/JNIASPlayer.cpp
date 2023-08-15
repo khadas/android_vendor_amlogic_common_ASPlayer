@@ -89,6 +89,26 @@ jni_asplayer_result  JniASPlayer_prepare(jni_asplayer_handle handle) {
 }
 
 /**
+ *@brief:        Get video basic info of specified JniASPlayer instance.
+ *@param:        Handle      JniASPlayer handle.
+ *@param:        *pInfo      The ptr of video basic info struct .
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_getVideoInfo(jni_asplayer_handle handle, jni_asplayer_video_info *pInfo) {
+    LOG_FUNCTION_ENTER();
+    if (handle == 0) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    } else if (!pInfo) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
+    jni_asplayer_result ret = player->getVideoInfo(pInfo);
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+/**
  *@brief:        Start video decoding for specified JniASPlayer instance .
  *@param:        Handle      JniASPlayer handle.
  *@return:       The JniASPlayer result.

@@ -30,6 +30,7 @@ import android.os.Process;
 import android.util.Log;
 import android.view.Surface;
 
+import com.amlogic.asplayer.api.ASPlayer;
 import com.amlogic.asplayer.api.AudioParams;
 import com.amlogic.asplayer.api.EventMask;
 import com.amlogic.asplayer.api.InitParams;
@@ -109,7 +110,11 @@ public class TvPlayer {
                 .setInputSourceType(InputSourceType.TS_DEMOD)
                 .setEventMask(EventMask.EVENT_TYPE_PTS_MASK)
                 .build();
-        mASPlayer = new JniASPlayerWrapper(initParams, mTuner);
+        if (Constant.USE_JNI_AS_PLAYER) {
+            mASPlayer = new JniASPlayerWrapper(initParams, mTuner);
+        } else {
+            mASPlayer = new ASPlayer(initParams, mTuner, null);
+        }
         mASPlayer.addPlaybackListener(this::onPlaybackEvent);
         mASPlayer.prepare();
     }
@@ -677,6 +682,13 @@ public class TvPlayer {
         } else {
             TvLog.d("Player-%d unMuteAudio failed, asplayer is null", mId);
         }
+    }
+
+    public MediaFormat getVideoInfo() {
+        if (mASPlayer != null) {
+            return mASPlayer.getVideoInfo();
+        }
+        return null;
     }
 
     public void setSpeed(float speed) {

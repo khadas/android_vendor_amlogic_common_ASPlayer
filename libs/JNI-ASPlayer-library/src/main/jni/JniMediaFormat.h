@@ -27,6 +27,8 @@ public:
 
     static float getFloat(JNIEnv *env, jobject jMediaFormat, const char *key, float defaultValue);
 
+    static long getLong(JNIEnv *env, jobject jMediaFormat, const char *key, long defaultValue);
+
 public:
     JniMediaFormat();
     virtual ~JniMediaFormat();
@@ -39,6 +41,7 @@ private:
     static jmethodID sGetIntegerDefaultValueMID;
     static jmethodID sGetFloatMID;
     static jmethodID sGetFloatDefaultValueMID;
+    static jmethodID sGetLongDefaultValueMID;
     static jmethodID sGetKeysMID;
     static jmethodID sGetValueTypeForKeyMID;
 };
