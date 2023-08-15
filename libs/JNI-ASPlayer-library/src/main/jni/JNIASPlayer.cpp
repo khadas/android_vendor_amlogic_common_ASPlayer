@@ -606,6 +606,42 @@ jni_asplayer_result  JniASPlayer_disableADMix(jni_asplayer_handle handle) {
 }
 
 /**
+ *@brief:        Set audio description volume
+ *@param:        handle        JniASPlayer handle.
+ *@param:        volumeDb      AD volume in dB.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_setADVolumeDB(jni_asplayer_handle handle, float volumeDB) {
+    LOG_FUNCTION_ENTER();
+    if (handle == 0) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
+    jni_asplayer_result ret = player->setADVolumeDB(volumeDB);
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+/**
+ *@brief:        Get audio description volume
+ *@param:        handle        JniASPlayer handle.
+ *@param:        *volumeDB     AD volume in dB.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_getADVolumeDB(jni_asplayer_handle handle, float *volumeDB) {
+    LOG_FUNCTION_ENTER();
+    if (handle == 0) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
+    jni_asplayer_result ret = player->getADVolumeDB(volumeDB);
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+/**
  *@brief:        Release specified JniASPlayer instance.
  *@param:        handle     JniASPlayer handle.
  *@return:       The JniASPlayer result.

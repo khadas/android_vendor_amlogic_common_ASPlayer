@@ -705,6 +705,47 @@ asplayer_disable_ad_mix(JNIEnv *env, jobject jniASPlayerWrapperObj) {
 }
 
 jni_asplayer_result
+asplayer_set_ad_volume_db(JNIEnv *env, jobject jniASPlayerWrapperObj, jfloat volumeDb) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr) {
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    BaseJniASPlayerWrapper *player = getASPlayer(env, jniASPlayerWrapperObj);
+    if (player == nullptr) {
+        LOG_GET_PLAYER_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jni_asplayer_result ret = player->setADVolumeDB(volumeDb);
+    return ret;
+}
+
+jni_asplayer_result
+asplayer_get_ad_volume_db(JNIEnv *env, jobject jniASPlayerWrapperObj, jfloat *volumeDb) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr) {
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    } else if (volumeDb == nullptr) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    BaseJniASPlayerWrapper *player = getASPlayer(env, jniASPlayerWrapperObj);
+    if (player == nullptr) {
+        LOG_GET_PLAYER_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jni_asplayer_result ret = player->getADVolumeDB(volumeDb);
+    if (ret != JNI_ASPLAYER_OK) {
+        ALOGE("[%s/%d] failed to get ad volume, ret: %d", __func__, __LINE__, ret);
+    }
+
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result
 asplayer_set_work_mode(JNIEnv *env, jobject jniASPlayerWrapperObj, jint mode) {
     LOG_FUNCTION_ENTER();
     if (env == nullptr) {

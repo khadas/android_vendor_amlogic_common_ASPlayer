@@ -741,6 +741,22 @@ jni_asplayer_result  JniASPlayer_stopAudioDecoding(jni_asplayer_handle Handle);
 jni_asplayer_result  JniASPlayer_setADParams(jni_asplayer_handle Handle, jni_asplayer_audio_params *pParams);
 
 /**
+ *@brief:        Set audio description volume
+ *@param:        handle        JniASPlayer handle.
+ *@param:        volumeDb      AD volume in dB.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_setADVolumeDB(jni_asplayer_handle handle, float volumeDB);
+
+/**
+ *@brief:        Get audio description volume
+ *@param:        handle        JniASPlayer handle.
+ *@param:        *volumeDB     AD volume in dB.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_getADVolumeDB(jni_asplayer_handle handle, float *volumeDB);
+
+/**
  *@brief:        Enable audio description mix with master audio
  *@param:        handle     JniASPlayer handle.
  *@return:       The JniASPlayer result.

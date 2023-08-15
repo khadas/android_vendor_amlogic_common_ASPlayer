@@ -52,6 +52,8 @@ public:
     virtual jni_asplayer_result setADParams(jni_asplayer_audio_params *params) = 0;
     virtual jni_asplayer_result enableADMix() = 0;
     virtual jni_asplayer_result disableADMix() = 0;
+    virtual jni_asplayer_result setADVolumeDB(float volumeDb) = 0;
+    virtual jni_asplayer_result getADVolumeDB(float *volumeDb) = 0;
     virtual jni_asplayer_result getVideoInfo(jni_asplayer_video_info *videoInfo) = 0;
     virtual jni_asplayer_result release() = 0;
 

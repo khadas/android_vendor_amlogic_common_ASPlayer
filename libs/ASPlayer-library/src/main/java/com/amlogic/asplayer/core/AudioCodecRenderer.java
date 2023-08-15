@@ -80,6 +80,13 @@ interface AudioCodecRenderer {
     void setVolume(float gain);
 
     /**
+     * Sets Sub Audio volume
+     *
+     * @param volumeDb
+     */
+    void setSubAudioVolumeDb(float volumeDb);
+
+    /**
      * Renders frame without synchronization with external track
      *
      * @return number of us to wait before calling this function again

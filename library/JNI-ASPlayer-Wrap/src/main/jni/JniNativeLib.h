@@ -116,6 +116,12 @@ jni_asplayer_result
 asplayer_disable_ad_mix(JNIEnv *env, jobject jniASPlayerWrapperObj);
 
 jni_asplayer_result
+asplayer_set_ad_volume_db(JNIEnv *env, jobject jniASPlayerWrapperObj, jfloat volumeDb);
+
+jni_asplayer_result
+asplayer_get_ad_volume_db(JNIEnv *env, jobject jniASPlayerWrapperObj, jfloat *volumeDb);
+
+jni_asplayer_result
 asplayer_set_work_mode(JNIEnv *env, jobject jniASPlayerWrapperObj, jint mode);
 
 jni_asplayer_result

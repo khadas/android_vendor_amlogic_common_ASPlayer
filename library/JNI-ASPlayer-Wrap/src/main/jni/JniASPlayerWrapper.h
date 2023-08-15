@@ -62,6 +62,8 @@ public:
     jni_asplayer_result setADParams(jni_asplayer_audio_params *params);
     jni_asplayer_result enableADMix();
     jni_asplayer_result disableADMix();
+    jni_asplayer_result setADVolumeDB(float volumeDb);
+    jni_asplayer_result getADVolumeDB(float *volumeDb);
     jni_asplayer_result getVideoInfo(jni_asplayer_video_info *videoInfo);
     jni_asplayer_result release();
 

@@ -1093,6 +1093,32 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     @Override
+    public int setADVolumeDB(float adVolumeDb) {
+        if (adVolumeDb < AudioUtils.VOLUME_MIN_DB || adVolumeDb > AudioUtils.VOLUME_MAX_DB) {
+            ASPlayerLog.w("%s setADVolumeDB invalid parameter, ad volume should in (-758, 48), current: %.2f",
+                    getTag(), adVolumeDb);
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        }
+
+        if (mPlayerHandler != null) {
+            mPlayerHandler.post(() -> {
+                mAudioOutputPath.setADVolumeDb(adVolumeDb);
+            });
+            return ErrorCode.SUCCESS;
+        } else {
+            ASPlayerLog.i("%s setADVolumeDB failed, playerHandler is null", getTag());
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+    }
+
+    @Override
+    public float getADVolumeDB() {
+        float volume = mAudioOutputPath.getADVolumeDb();
+        ASPlayerLog.i("%s getADVolumeDB return: %.2f", getTag(), volume);
+        return volume;
+    }
+
+    @Override
     public int enableADMix() {
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {

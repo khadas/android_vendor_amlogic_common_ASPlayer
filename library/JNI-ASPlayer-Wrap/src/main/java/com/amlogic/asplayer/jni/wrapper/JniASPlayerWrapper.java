@@ -310,6 +310,16 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
+    public int setADVolumeDB(float adVolumeDb) {
+        return native_setADVolumeDB(adVolumeDb);
+    }
+
+    @Override
+    public float getADVolumeDB() {
+        return native_getADVolumeDB();
+    }
+
+    @Override
     public int enableADMix() {
         return native_enableADMix();
     }
@@ -378,6 +388,8 @@ public class JniASPlayerWrapper implements IASPlayer {
     private native int native_setADParams(AudioParams params);
     private native int native_enableADMix();
     private native int native_disableADMix();
+    private native int native_setADVolumeDB(float volumeDb);
+    private native float native_getADVolumeDB();
     private native MediaFormat native_getVideoInfo();
     private native void native_release();
 }

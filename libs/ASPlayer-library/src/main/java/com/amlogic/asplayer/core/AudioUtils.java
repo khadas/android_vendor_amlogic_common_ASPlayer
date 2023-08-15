@@ -18,6 +18,11 @@ public class AudioUtils {
 
     private static final String TAG = Constant.LOG_TAG + "_AudioUtils";
 
+    // Absolute min volume in dB (can be represented in single precision normal float value)
+    public static final float VOLUME_MIN_DB = -758.0f;
+
+    public static final float VOLUME_MAX_DB = 48.0f;
+
     public static int getEncoding(MediaFormat format) {
         int encoding;
         String mimeType = format.getString(MediaFormat.KEY_MIME);
@@ -279,5 +284,19 @@ public class AudioUtils {
         }
 
         audioTrack.release();
+    }
+
+    public static float dbToAmpl(float db) {
+        if (db <= VOLUME_MIN_DB) {
+            return 0.f;
+        }
+        return (float) Math.exp(db * 0.115129f); // exp( dB * ln(10) / 20 )
+    }
+
+    public static float amplToDb(float amplification) {
+        if (amplification == 0) {
+            return VOLUME_MIN_DB;
+        }
+        return (float) (20 * Math.log10(amplification));
     }
 }

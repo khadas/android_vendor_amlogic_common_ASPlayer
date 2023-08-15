@@ -31,7 +31,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     private final Handler mHandler;
     private AudioCaps mAudioCaps;
     private float mGain;
-    private float mMixLevel;
+    private float mSubAudioVolumeDb = 0.f;
     private final MediaClock mClock;
     private int mAudioFilterId = INVALID_FILTER_ID;
     private int mAvSyncHwId = INVALID_AV_SYNC_HW_ID;
@@ -101,8 +101,10 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
         }
     }
 
-    public void setSubAudioMixLevel(float mixLevel) {
-        mMixLevel = mixLevel;
+    @Override
+    public void setSubAudioVolumeDb(float volumeDb) {
+        mSubAudioVolumeDb = volumeDb;
+        setAudioDescriptionVolume(mSubAudioVolumeDb);
     }
 
     public void setAvSyncHwId(int avSyncHwId) {
@@ -219,6 +221,9 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
             if (workMode == WorkMode.NORMAL && pipMode == PIPMode.NORMAL) {
                 ASPlayerLog.i("%s set volume %f", getTag(), mGain);
                 mAudioTrack.setVolume(mGain);
+
+                setAudioDescriptionVolume(mSubAudioVolumeDb);
+
                 if (mClock.getSpeed() == 0) {
                     ASPlayerLog.i("%s AudioTrack.pause", getTag());
                     mAudioTrack.pause();
@@ -231,10 +236,6 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
                 mAudioTrack.setVolume(0.f);
                 ASPlayerLog.i("%s AudioTrack.stop", getTag());
                 mAudioTrack.stop();
-            }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                mAudioTrack.setAudioDescriptionMixLeveldB(mMixLevel);
             }
 
             if (workMode == WorkMode.NORMAL && pipMode == PIPMode.NORMAL) {
@@ -251,6 +252,17 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
             releaseDecoderThread();
             AudioUtils.releaseAudioTrack(mAudioTrack);
             mAudioTrack = null;
+        }
+    }
+
+    private void setAudioDescriptionVolume(float volumeDb) {
+        if (mAudioTrack != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (volumeDb < AudioUtils.VOLUME_MIN_DB) {
+                volumeDb = AudioUtils.VOLUME_MIN_DB;
+            } else if (volumeDb > AudioUtils.VOLUME_MAX_DB) {
+                volumeDb = AudioUtils.VOLUME_MAX_DB;
+            }
+            mAudioTrack.setAudioDescriptionMixLeveldB(volumeDb);
         }
     }
 

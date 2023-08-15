@@ -65,8 +65,6 @@ JniASPlayer_resumeVideoDecoding_FUNC DynamicJniASPlayerWrapper::ASPlayer_resumeV
 JniASPlayer_stopVideoDecoding_FUNC DynamicJniASPlayerWrapper::ASPlayer_stopVideoDecoding = nullptr;
 JniASPlayer_setAudioVolume_FUNC DynamicJniASPlayerWrapper::ASPlayer_setAudioVolume = nullptr;
 JniASPlayer_getAudioVolume_FUNC DynamicJniASPlayerWrapper::ASPlayer_getAudioVolume = nullptr;
-JniASPlayer_setADVolume_FUNC DynamicJniASPlayerWrapper::ASPlayer_setADVolume = nullptr;
-JniASPlayer_getADVolume_FUNC DynamicJniASPlayerWrapper::ASPlayer_getADVolume = nullptr;
 JniASPlayer_setAudioStereoMode_FUNC DynamicJniASPlayerWrapper::ASPlayer_setAudioStereoMode = nullptr;
 JniASPlayer_getAudioStereoMode_FUNC DynamicJniASPlayerWrapper::ASPlayer_getAudioStereoMode = nullptr;
 JniASPlayer_setAudioMute_FUNC DynamicJniASPlayerWrapper::ASPlayer_setAudioMute = nullptr;
@@ -91,6 +89,8 @@ JniASPlayer_flushDvr_FUNC DynamicJniASPlayerWrapper::ASPlayer_flushDvr = nullptr
 JniASPlayer_setADParams_FUNC DynamicJniASPlayerWrapper::ASPlayer_setADParams = nullptr;
 JniASPlayer_enableADMix_FUNC DynamicJniASPlayerWrapper::ASPlayer_enableADMix = nullptr;
 JniASPlayer_disableADMix_FUNC DynamicJniASPlayerWrapper::ASPlayer_disableADMix = nullptr;
+JniASPlayer_setADVolumeDB_FUNC DynamicJniASPlayerWrapper::ASPlayer_setADVolumeDB = nullptr;
+JniASPlayer_getADVolumeDB_FUNC DynamicJniASPlayerWrapper::ASPlayer_getADVolumeDB = nullptr;
 
 
 static void asplayer_callback(void *user_data, jni_asplayer_event *event) {
@@ -244,10 +244,6 @@ void DynamicJniASPlayerWrapper::initSymbols() {
     CHECK_SYMBOL(ASPlayer_setAudioVolume, "JniASPlayer_setAudioVolume");
     ASPlayer_getAudioVolume = (JniASPlayer_getAudioVolume_FUNC)(dlsym(handle, "JniASPlayer_getAudioVolume"));
     CHECK_SYMBOL(ASPlayer_getAudioVolume, "JniASPlayer_getAudioVolume");
-    ASPlayer_setADVolume = (JniASPlayer_setADVolume_FUNC)(dlsym(handle, "JniASPlayer_setADVolume"));
-    CHECK_SYMBOL(ASPlayer_setADVolume, "JniASPlayer_setADVolume");
-    ASPlayer_getADVolume = (JniASPlayer_getADVolume_FUNC)(dlsym(handle, "JniASPlayer_getADVolume"));
-    CHECK_SYMBOL(ASPlayer_getADVolume, "JniASPlayer_getADVolume");
     ASPlayer_setAudioStereoMode = (JniASPlayer_setAudioStereoMode_FUNC)(dlsym(handle, "JniASPlayer_setAudioStereoMode"));
     CHECK_SYMBOL(ASPlayer_setAudioStereoMode, "JniASPlayer_setAudioStereoMode");
     ASPlayer_getAudioStereoMode = (JniASPlayer_getAudioStereoMode_FUNC)(dlsym(handle, "JniASPlayer_getAudioStereoMode"));
@@ -292,6 +288,10 @@ void DynamicJniASPlayerWrapper::initSymbols() {
     CHECK_SYMBOL(ASPlayer_enableADMix, "JniASPlayer_enableADMix");
     ASPlayer_disableADMix = (JniASPlayer_disableADMix_FUNC)(dlsym(handle, "JniASPlayer_disableADMix"));
     CHECK_SYMBOL(ASPlayer_disableADMix, "JniASPlayer_disableADMix");
+    ASPlayer_setADVolumeDB = (JniASPlayer_setADVolumeDB_FUNC)(dlsym(handle, "JniASPlayer_setADVolumeDB"));
+    CHECK_SYMBOL(ASPlayer_setADVolumeDB, "JniASPlayer_setADVolumeDB");
+    ASPlayer_getADVolumeDB = (JniASPlayer_getADVolumeDB_FUNC)(dlsym(handle, "JniASPlayer_getADVolumeDB"));
+    CHECK_SYMBOL(ASPlayer_getADVolumeDB, "JniASPlayer_getADVolumeDB");
 }
 
 void DynamicJniASPlayerWrapper::closeJniASPlayerSo() {
@@ -1056,6 +1056,52 @@ jni_asplayer_result DynamicJniASPlayerWrapper::disableADMix() {
     }
 
     jni_asplayer_result ret = ASPlayer_disableADMix(handle);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result DynamicJniASPlayerWrapper::setADVolumeDB(float volumeDb) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_setADVolumeDB == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_setADVolumeDB(handle, volumeDb);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result DynamicJniASPlayerWrapper::getADVolumeDB(float *volumeDb) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_getADVolumeDB == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_getADVolumeDB(handle, volumeDb);
     if (ret != JNI_ASPLAYER_OK) {
         LOG_PLAYER_OP_FAILED(ret);
     }

@@ -139,6 +139,10 @@ public:
 
     jni_asplayer_result disableADMix();
 
+    jni_asplayer_result setADVolumeDB(float volumeDB);
+
+    jni_asplayer_result getADVolumeDB(float *volumeDB);
+
     jni_asplayer_result getVideoInfo(jni_asplayer_video_info *videoInfo);
 
 private:

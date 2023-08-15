@@ -69,6 +69,8 @@ struct asplayer_t {
     jmethodID setADParamsMID;
     jmethodID enableADMixMID;
     jmethodID disableADMixMID;
+    jmethodID setADVolumeDBMID;
+    jmethodID getADVolumeDBMID;
     jmethodID getVideoInfoMID;
 };
 
@@ -438,6 +440,8 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
     gASPlayerCtx.setADParamsMID = GetMethodIDOrDie(env, gASPlayerCls, "setADParams", "(Lcom/amlogic/asplayer/api/AudioParams;)I");
     gASPlayerCtx.enableADMixMID = GetMethodIDOrDie(env, gASPlayerCls, "enableADMix", "()I");
     gASPlayerCtx.disableADMixMID = GetMethodIDOrDie(env, gASPlayerCls, "disableADMix", "()I");
+    gASPlayerCtx.setADVolumeDBMID = GetMethodIDOrDie(env, gASPlayerCls, "setADVolumeDB", "(F)I");
+    gASPlayerCtx.getADVolumeDBMID = GetMethodIDOrDie(env, gASPlayerCls, "getADVolumeDB", "()F");
     gASPlayerCtx.getVideoInfoMID = GetMethodIDOrDie(env, gASPlayerCls, "getVideoInfo", "()Landroid/media/MediaFormat;");
 
     // InitParams
@@ -1133,6 +1137,34 @@ jni_asplayer_result JniASPlayer::disableADMix() {
 
     int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.disableADMixMID);
     return static_cast<jni_asplayer_result>(ret);
+}
+
+jni_asplayer_result JniASPlayer::setADVolumeDB(float volumeDB) {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setADVolumeDBMID, volumeDB);
+    return static_cast<jni_asplayer_result>(ret);
+}
+
+jni_asplayer_result JniASPlayer::getADVolumeDB(float *volumeDB) {
+    if (volumeDB == nullptr) {
+        ALOGE("[%s/%d] error, failed to get ad volume in DB, invalid parameter", __func__, __LINE__);
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jfloat volume = env->CallFloatMethod(mJavaPlayer, gASPlayerCtx.getADVolumeDBMID);
+    *volumeDB = volume;
+    return JNI_ASPLAYER_OK;
 }
 
 jni_asplayer_result JniASPlayer::getVideoInfo(jni_asplayer_video_info *videoInfo) {

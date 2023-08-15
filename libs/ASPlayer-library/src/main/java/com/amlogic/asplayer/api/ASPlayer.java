@@ -580,6 +580,27 @@ public class ASPlayer implements IASPlayer {
     }
 
     /**
+     * Set audio description volume (AD volume)
+     *
+     * @param adVolumeDb AD Volume in DB
+     */
+    @Override
+    public int setADVolumeDB(float adVolumeDb) {
+        if (DEBUG) ASPlayerLog.d("%s setADVolumeDB start, volume: %.3f", getTag(), adVolumeDb);
+        return mPlayer.setADVolumeDB(adVolumeDb);
+    }
+
+    /**
+     * Get audio description volume
+     *
+     * @return ad volume in db
+     */
+    @Override
+    public float getADVolumeDB() {
+        return mPlayer.getADVolumeDB();
+    }
+
+    /**
      * Enable audio description mix with master audio
      *
      * @return

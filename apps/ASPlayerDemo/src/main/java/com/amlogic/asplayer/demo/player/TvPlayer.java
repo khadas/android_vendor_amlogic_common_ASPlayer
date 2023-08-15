@@ -33,11 +33,9 @@ import android.view.Surface;
 import com.amlogic.asplayer.api.ASPlayer;
 import com.amlogic.asplayer.api.AudioParams;
 import com.amlogic.asplayer.api.EventMask;
-import com.amlogic.asplayer.api.InitParams;
-import com.amlogic.asplayer.api.InputBufferType;
-import com.amlogic.asplayer.api.InputSourceType;
 import com.amlogic.asplayer.api.IASPlayer;
-import com.amlogic.asplayer.api.StreamType;
+import com.amlogic.asplayer.api.InitParams;
+import com.amlogic.asplayer.api.InputSourceType;
 import com.amlogic.asplayer.api.TsPlaybackListener;
 import com.amlogic.asplayer.api.VideoParams;
 import com.amlogic.asplayer.api.VideoTrickMode;
@@ -689,6 +687,19 @@ public class TvPlayer {
             return mASPlayer.getVideoInfo();
         }
         return null;
+    }
+
+    public void setADVolumeDb(float adVolumeDb) {
+        if (mASPlayer != null) {
+            mASPlayer.setADVolumeDB(adVolumeDb);
+        }
+    }
+
+    public float getADVolumeDb() {
+        if (mASPlayer != null) {
+            return mASPlayer.getADVolumeDB();
+        }
+        return 0.0f;
     }
 
     public void setSpeed(float speed) {

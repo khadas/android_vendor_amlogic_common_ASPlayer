@@ -17,8 +17,6 @@ import com.amlogic.asplayer.core.encapsulation.Metadata;
 class AudioOutputPathV3 extends AudioOutputPath {
     private static final boolean DEBUG = false;
 
-    private float mMixLevel;
-
     private Metadata.TunerMetadata mTunerMetadataMain;
     private Metadata.TunerMetadata mTunerMetadataSub;
     private Metadata.PlacementMetadata mPlacementMetadata;
@@ -166,7 +164,7 @@ class AudioOutputPathV3 extends AudioOutputPath {
         }
         audioCodecRenderer.setAudioFilterId(filterId);
         audioCodecRenderer.setAvSyncHwId(avSyncHwId);
-        audioCodecRenderer.setSubAudioMixLevel(mMixLevel);
+        audioCodecRenderer.setSubAudioVolumeDb(mADVolumeDb);
         audioCodecRenderer.writeMetadata(mPlacementMetadata);
 
         audioCodecRenderer.configure(format, null);

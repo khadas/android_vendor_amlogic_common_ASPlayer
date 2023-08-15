@@ -283,6 +283,26 @@ native_disable_ad_mix(JNIEnv *env, jobject thiz) {
     return result;
 }
 
+static jint
+native_set_ad_volume_db(JNIEnv* env, jobject thiz, jfloat volumeDb) {
+    jni_asplayer_result result = asplayer_set_ad_volume_db(env, thiz, volumeDb);
+
+    return result;
+}
+
+static jfloat
+native_get_ad_volume_db(JNIEnv *env, jobject thiz) {
+    float volume = 0.f;
+
+    jni_asplayer_result result = asplayer_get_ad_volume_db(env, thiz, &volume);
+
+    if (result == JNI_ASPLAYER_OK) {
+        return (jfloat)volume;
+    } else {
+        return 0.f;
+    }
+}
+
 static jobject
 native_get_video_info(JNIEnv *env, jobject thiz) {
     jobject result = asplayer_get_video_info(env, thiz);
@@ -329,6 +349,8 @@ static JNINativeMethod methods[] = {
         {"native_setADParams", "(Lcom/amlogic/asplayer/api/AudioParams;)I", (void*)native_set_ad_params },
         {"native_enableADMix", "()I", (void*)native_enable_ad_mix },
         {"native_disableADMix", "()I", (void*)native_disable_ad_mix },
+        {"native_setADVolumeDB", "(F)I", (void*)native_set_ad_volume_db },
+        {"native_getADVolumeDB", "()F", (void*)native_get_ad_volume_db },
         {"native_getVideoInfo", "()Landroid/media/MediaFormat;", (void*) native_get_video_info },
         {"native_release", "()V", (void*)native_release },
 };

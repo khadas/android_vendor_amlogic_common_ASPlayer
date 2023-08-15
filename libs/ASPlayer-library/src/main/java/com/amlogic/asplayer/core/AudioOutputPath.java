@@ -30,6 +30,7 @@ class AudioOutputPath extends MediaOutputPath {
     protected AudioCaps mAudioCaps;
 
     protected float mGain;
+    protected float mADVolumeDb = 0.f;
     protected boolean mMute = false;
 
     // input buffer shared with extractor
@@ -104,6 +105,17 @@ class AudioOutputPath extends MediaOutputPath {
         if (mAudioCodecRenderer != null) {
             mAudioCodecRenderer.setVolume(volume);
         }
+    }
+
+    void setADVolumeDb(float adVolumeDb) {
+        mADVolumeDb = adVolumeDb;
+        if (mAudioCodecRenderer != null) {
+            mAudioCodecRenderer.setSubAudioVolumeDb(mADVolumeDb);
+        }
+    }
+
+    float getADVolumeDb() {
+        return mADVolumeDb;
     }
 
     void setAudioParams(AudioParams audioParams) {

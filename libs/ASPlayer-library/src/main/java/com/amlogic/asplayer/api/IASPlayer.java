@@ -309,6 +309,20 @@ public interface IASPlayer {
     int setADParams(AudioParams params);
 
     /**
+     * Set audio description volume (AD volume)
+     *
+     * @param adVolumeDb AD Volume in DB
+     */
+    int setADVolumeDB(float adVolumeDb);
+
+    /**
+     * Get audio description volume
+     *
+     * @return ad volume in db
+     */
+    float getADVolumeDB();
+
+    /**
      * Enable audio description mix with master audio
      *
      * @return

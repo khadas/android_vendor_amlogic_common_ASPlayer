@@ -47,8 +47,6 @@ typedef jni_asplayer_result (*JniASPlayer_resumeVideoDecoding_FUNC)(jni_asplayer
 typedef jni_asplayer_result (*JniASPlayer_stopVideoDecoding_FUNC)(jni_asplayer_handle);
 typedef jni_asplayer_result (*JniASPlayer_setAudioVolume_FUNC)(jni_asplayer_handle, int32_t);
 typedef jni_asplayer_result (*JniASPlayer_getAudioVolume_FUNC)(jni_asplayer_handle, int32_t *);
-typedef jni_asplayer_result (*JniASPlayer_setADVolume_FUNC)(jni_asplayer_handle, int32_t);
-typedef jni_asplayer_result (*JniASPlayer_getADVolume_FUNC)(jni_asplayer_handle, int32_t *);
 typedef jni_asplayer_result (*JniASPlayer_setAudioStereoMode_FUNC)(jni_asplayer_handle, jni_asplayer_audio_stereo_mode);
 typedef jni_asplayer_result (*JniASPlayer_getAudioStereoMode_FUNC)(jni_asplayer_handle, jni_asplayer_audio_stereo_mode *);
 typedef jni_asplayer_result (*JniASPlayer_setAudioMute_FUNC)(jni_asplayer_handle, bool_t, bool_t);
@@ -73,6 +71,8 @@ typedef jni_asplayer_result (*JniASPlayer_flushDvr_FUNC)(jni_asplayer_handle);
 typedef jni_asplayer_result (*JniASPlayer_setADParams_FUNC)(jni_asplayer_handle, jni_asplayer_audio_params *);
 typedef jni_asplayer_result (*JniASPlayer_enableADMix_FUNC)(jni_asplayer_handle);
 typedef jni_asplayer_result (*JniASPlayer_disableADMix_FUNC)(jni_asplayer_handle);
+typedef jni_asplayer_result (*JniASPlayer_setADVolumeDB_FUNC)(jni_asplayer_handle, float);
+typedef jni_asplayer_result (*JniASPlayer_getADVolumeDB_FUNC)(jni_asplayer_handle, float *);
 
 class DynamicJniASPlayerWrapper;
 
@@ -121,6 +121,8 @@ public:
     jni_asplayer_result setADParams(jni_asplayer_audio_params *params);
     jni_asplayer_result enableADMix();
     jni_asplayer_result disableADMix();
+    jni_asplayer_result setADVolumeDB(float volumeDb);
+    jni_asplayer_result getADVolumeDB(float *volumeDb);
     jni_asplayer_result getVideoInfo(jni_asplayer_video_info *videoInfo);
     jni_asplayer_result release();
 
@@ -177,8 +179,6 @@ private:
     static JniASPlayer_stopVideoDecoding_FUNC ASPlayer_stopVideoDecoding;
     static JniASPlayer_setAudioVolume_FUNC ASPlayer_setAudioVolume;
     static JniASPlayer_getAudioVolume_FUNC ASPlayer_getAudioVolume;
-    static JniASPlayer_setADVolume_FUNC ASPlayer_setADVolume;
-    static JniASPlayer_getADVolume_FUNC ASPlayer_getADVolume;
     static JniASPlayer_setAudioStereoMode_FUNC ASPlayer_setAudioStereoMode;
     static JniASPlayer_getAudioStereoMode_FUNC ASPlayer_getAudioStereoMode;
     static JniASPlayer_setAudioMute_FUNC ASPlayer_setAudioMute;
@@ -203,6 +203,8 @@ private:
     static JniASPlayer_setADParams_FUNC ASPlayer_setADParams;
     static JniASPlayer_enableADMix_FUNC ASPlayer_enableADMix;
     static JniASPlayer_disableADMix_FUNC ASPlayer_disableADMix;
+    static JniASPlayer_setADVolumeDB_FUNC ASPlayer_setADVolumeDB;
+    static JniASPlayer_getADVolumeDB_FUNC ASPlayer_getADVolumeDB;
 };
 
 

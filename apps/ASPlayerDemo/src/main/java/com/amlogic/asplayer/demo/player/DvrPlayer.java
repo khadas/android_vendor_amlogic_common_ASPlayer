@@ -18,12 +18,11 @@ import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.amlogic.asplayer.api.ASPlayer;
 import com.amlogic.asplayer.api.EventMask;
 import com.amlogic.asplayer.api.InitParams;
 import com.amlogic.asplayer.api.InputBuffer;
-import com.amlogic.asplayer.api.InputBufferType;
 import com.amlogic.asplayer.api.InputSourceType;
-import com.amlogic.asplayer.api.ASPlayer;
 import com.amlogic.asplayer.demo.Constant;
 import com.amlogic.asplayer.demo.utils.TvLog;
 import com.amlogic.asplayer.jni.wrapper.JniASPlayerWrapper;
