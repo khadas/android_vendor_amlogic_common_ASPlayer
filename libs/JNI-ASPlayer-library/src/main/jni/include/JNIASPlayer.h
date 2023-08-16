@@ -219,6 +219,7 @@ typedef struct {
     int32_t pid;                           // Video pid in TS
     int32_t filterId;                      // video track filter id in Tuner
     int32_t avSyncHwId;                    // AvSyncHwId
+    bool scrambled;                        // scrambled or not
     jobject mediaFormat;                   // Video MediaFormat
 } jni_asplayer_video_params;
 
@@ -231,6 +232,7 @@ typedef struct {
     int32_t filterId;                       // Audio track filter id in Tuner
     int32_t avSyncHwId;                     // AvSyncHwId
     int32_t seclevel;                       // Audio security level
+    bool scrambled;                         // scrambled or not
     jobject mediaFormat;                    // Audio MediaFormat
 } jni_asplayer_audio_params;
 

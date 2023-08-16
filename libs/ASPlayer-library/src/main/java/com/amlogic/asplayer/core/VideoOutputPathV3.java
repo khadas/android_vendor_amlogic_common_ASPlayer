@@ -2,6 +2,7 @@ package com.amlogic.asplayer.core;
 
 
 import android.media.MediaCodec;
+import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -215,6 +216,8 @@ class VideoOutputPathV3 extends VideoOutputPath {
             return false;
         }
 
+        ASPlayerLog.i("%s mSecurePlayback: %b", getTag(), mSecurePlayback);
+
         mNbDecodedFrames = 0;
         mFirstFrameDisplayed = false;
         mInputBufferQueue = null;
@@ -268,15 +271,15 @@ class VideoOutputPathV3 extends VideoOutputPath {
                 startTime = System.nanoTime();
                 mediaCodec.configure(format, surface, null,
                         MediaCodec.CONFIGURE_FLAG_USE_BLOCK_MODEL);
-                ASPlayerLog.i("%s configure mediacodec %s, workMode: %d, surface: %s, cost: %d ms",
-                        getTag(), mediaCodec, mTargetWorkMode, surfaceTag, getCostTime(startTime));
+                ASPlayerLog.i("%s configure end, workMode: %d, surface: %s, cost: %d ms, mediacodec: %s",
+                        getTag(), mTargetWorkMode, surfaceTag, getCostTime(startTime), mediaCodec);
             } else {
                 ASPlayerLog.i("%s mediacodec configure before, normal, surface: %s, format: %s",
                         getTag(), surfaceTag, format);
                 startTime = System.nanoTime();
                 mediaCodec.configure(format, surface, null, 0);
-                ASPlayerLog.i("%s [KPI-FCC] configure end mediacodec %s, workMode: %d, surface: %s, cost: %d ms",
-                        getTag(), mediaCodec, mTargetWorkMode, surfaceTag, getCostTime(startTime));
+                ASPlayerLog.i("%s [KPI-FCC] configure end workMode: %d, surface: %s, cost: %d ms, mediacodec: %s",
+                        getTag(), mTargetWorkMode, surfaceTag, getCostTime(startTime), mediaCodec);
             }
 
             ASPlayerLog.i("%s [KPI-FCC] configure mediacodec start before, mediacodec: %s", getTag(), mediaCodec);
@@ -358,13 +361,18 @@ class VideoOutputPathV3 extends VideoOutputPath {
                 | EVENT_FLAGS_FRAME_RATES
         );
 
-        ASPlayerLog.i("%s track filter id: 0x%016x, avSyncHwId: 0x%x", getTag(), mTrackFilterId, mAvSyncHwId);
+        ASPlayerLog.i("%s track filter id: 0x%016x, avSyncHwId: 0x%x, scrambled: %b",
+                getTag(), mTrackFilterId, mAvSyncHwId, mSecurePlayback);
         if (mTrackFilterId >= 0) {
             format.setInteger(KEY_VIDEO_FILTER_ID, mTrackFilterId);
         }
 
         if (mAvSyncHwId >= 0) {
             format.setInteger(KEY_AV_SYNC_HW_ID, mAvSyncHwId);
+        }
+
+        if (mSecurePlayback) {
+            format.setFeatureEnabled(FEATURE_SecurePlayback, true);
         }
     }
 

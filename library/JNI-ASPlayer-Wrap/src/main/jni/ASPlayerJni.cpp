@@ -24,6 +24,7 @@ struct video_param_t {
     jfieldID pid;
     jfieldID trackFilterId;
     jfieldID avSyncHwId;
+    jfieldID scrambled;
     jfieldID mediaFormat;
 };
 
@@ -35,6 +36,7 @@ struct audio_param_t {
     jfieldID trackFilterId;
     jfieldID avSyncHwId;
     jfieldID secLevel;
+    jfieldID scrambled;
     jfieldID mediaFormat;
 };
 
@@ -175,6 +177,7 @@ bool ASPlayerJni::initJni(JNIEnv *env) {
         gVideoParamsCtx.pid = env->GetFieldID(gVideoParamsCls, "mPid", "I");
         gVideoParamsCtx.trackFilterId = env->GetFieldID(gVideoParamsCls, "mTrackFilterId", "I");
         gVideoParamsCtx.avSyncHwId = env->GetFieldID(gVideoParamsCls, "mAvSyncHwId", "I");
+        gVideoParamsCtx.scrambled = env->GetFieldID(gVideoParamsCls, "mScrambled", "Z");
         gVideoParamsCtx.mediaFormat = env->GetFieldID(gVideoParamsCls, "mMediaFormat", "Landroid/media/MediaFormat;");
     }
 
@@ -187,6 +190,7 @@ bool ASPlayerJni::initJni(JNIEnv *env) {
         gAudioParamsCtx.trackFilterId = env->GetFieldID(gAudioParamsCls, "mTrackFilterId", "I");
         gAudioParamsCtx.avSyncHwId = env->GetFieldID(gAudioParamsCls, "mAvSyncHwId", "I");
         gAudioParamsCtx.secLevel = env->GetFieldID(gAudioParamsCls, "mSecLevel", "I");
+        gAudioParamsCtx.scrambled = env->GetFieldID(gAudioParamsCls, "mScrambled", "Z");
         gAudioParamsCtx.mediaFormat = env->GetFieldID(gAudioParamsCls, "mMediaFormat", "Landroid/media/MediaFormat;");
     }
 
@@ -317,6 +321,7 @@ bool ASPlayerJni::convertVideoParams(
     jint pid = env->GetIntField(jVideoParam, gVideoParamsCtx.pid);
     jint filterId = env->GetIntField(jVideoParam, gVideoParamsCtx.trackFilterId);
     jint avSyncHwId = env->GetIntField(jVideoParam, gVideoParamsCtx.avSyncHwId);
+    jboolean scrambled = env->GetBooleanField(jVideoParam, gVideoParamsCtx.scrambled);
     jobject mediaFormat = env->GetObjectField(jVideoParam, gVideoParamsCtx.mediaFormat);
 
     memset(outParams, 0, sizeof(jni_asplayer_video_params));
@@ -336,6 +341,7 @@ bool ASPlayerJni::convertVideoParams(
     outParams->pid = pid;
     outParams->filterId = filterId;
     outParams->avSyncHwId = avSyncHwId;
+    outParams->scrambled = scrambled;
     outParams->mediaFormat = mediaFormat;
 
     LOG_FUNCTION_END();
@@ -356,6 +362,7 @@ bool ASPlayerJni::convertAudioParams(
     jint filterId = env->GetIntField(jAudioParam, gAudioParamsCtx.trackFilterId);
     jint avSyncHwId = env->GetIntField(jAudioParam, gAudioParamsCtx.avSyncHwId);
     jint secLevel = env->GetIntField(jAudioParam, gAudioParamsCtx.secLevel);
+    jboolean scrambled = env->GetBooleanField(jAudioParam, gAudioParamsCtx.scrambled);
     jobject mediaFormat = env->GetObjectField(jAudioParam, gAudioParamsCtx.mediaFormat);
 
     memset(outParams, 0, sizeof(jni_asplayer_audio_params));
@@ -375,6 +382,7 @@ bool ASPlayerJni::convertAudioParams(
     outParams->filterId = filterId;
     outParams->avSyncHwId = avSyncHwId;
     outParams->seclevel = secLevel;
+    outParams->scrambled = scrambled;
     outParams->mediaFormat = mediaFormat;
 
     LOG_FUNCTION_END();

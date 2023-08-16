@@ -51,6 +51,11 @@ public class AudioParams {
     private int mSecLevel;
 
     /**
+     * Audio scrambled or not
+     */
+    private boolean mScrambled;
+
+    /**
      * Audio media format
      */
     private MediaFormat mMediaFormat;
@@ -126,6 +131,14 @@ public class AudioParams {
         this.mSecLevel = secLevel;
     }
 
+    public boolean isScrambled() {
+        return mScrambled;
+    }
+
+    private void setScrambled(boolean scrambled) {
+        mScrambled = scrambled;
+    }
+
     public MediaFormat getMediaFormat() {
         return mMediaFormat;
     }
@@ -145,6 +158,7 @@ public class AudioParams {
         sb.append(", mTrackFilterId=").append(mTrackFilterId);
         sb.append(", mAvSyncHwId=").append(mAvSyncHwId);
         sb.append(", mSecLevel=").append(mSecLevel);
+        sb.append(", mScrambled=").append(mScrambled);
         sb.append(", mMediaFormat=").append(mMediaFormat);
         sb.append("}");
         return sb.toString();
@@ -165,6 +179,8 @@ public class AudioParams {
         private int mAvSyncHwId;
 
         private int mSecLevel;
+
+        private boolean mScrambled;
 
         private MediaFormat mMediaFormat;
 
@@ -198,12 +214,18 @@ public class AudioParams {
             return this;
         }
 
+        public Builder setScrambled(boolean scrambled) {
+            this.mScrambled = scrambled;
+            return this;
+        }
+
         public AudioParams build() {
             AudioParams audioParams = new AudioParams(mMimeType, mSampleRate, mChannelCount);
             audioParams.setPid(mPid);
             audioParams.setTrackFilterId(mTrackFilterId);
             audioParams.setAvSyncHwId(mAvSyncHwId);
             audioParams.setSecLevel(mSecLevel);
+            audioParams.setScrambled(mScrambled);
             audioParams.setMediaFormat(mMediaFormat);
             return audioParams;
         }

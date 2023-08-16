@@ -158,7 +158,8 @@ class AudioOutputPathV3 extends AudioOutputPath {
         audioCodecRenderer.setVolume(mGain);
         int filterId = mAudioParams.getTrackFilterId();
         int avSyncHwId = mAudioParams.getAvSyncHwId();
-        ASPlayerLog.i("%s track filter id: 0x%016x, avSyncHwId: 0x%04x", getTag(), filterId, avSyncHwId);
+        ASPlayerLog.i("%s track filter id: 0x%016x, avSyncHwId: 0x%04x, scrambled: %b",
+                getTag(), filterId, avSyncHwId, mSecurePlayback);
         if (mSecurePlayback) {
             filterId |= (1 << 20);
         }

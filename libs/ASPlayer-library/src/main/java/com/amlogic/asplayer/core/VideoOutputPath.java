@@ -324,10 +324,11 @@ class VideoOutputPath extends MediaOutputPath {
             long beginTime = System.nanoTime();
             long startTime = beginTime;
             if (mMediaCodecStarted) {
-                ASPlayerLog.i("%s [KPI-FCC] switchMediaCodecWorkMode stop before", getTag());
+                ASPlayerLog.i("%s [KPI-FCC] switchMediaCodecWorkMode stop before, workMode: %d",
+                        getTag(), mTargetWorkMode);
                 stopMediaCodec();
-                ASPlayerLog.i("%s [KPI-FCC] switchMediaCodecWorkMode stop end, cost: %d ms",
-                        getTag(), getCostTime(startTime));
+                ASPlayerLog.i("%s [KPI-FCC] switchMediaCodecWorkMode stop end, workMode: %d, cost: %d ms",
+                        getTag(), mTargetWorkMode, getCostTime(startTime));
             }
 
             MediaFormat format = MediaFormat.createVideoFormat(mMimeType, mVideoWidth, mVideoHeight);
@@ -342,6 +343,7 @@ class VideoOutputPath extends MediaOutputPath {
                 surface = mDummySurface;
                 format.setInteger(FccWorkMode.MEDIA_FORMAT_KEY_FCC_WORKMODE, FccWorkMode.MEDIA_FORMAT_FCC_WORKMODE_CACHE);
             }
+
             String surfaceTag = (mDummySurface != null && surface == mDummySurface) ? "dummy surface" : "normal surface";
 
             mMediaCodec.setOnFrameRenderedListener(mMediaCodecOnFrameCallback, getHandler());
@@ -349,11 +351,12 @@ class VideoOutputPath extends MediaOutputPath {
             if (mMediaDescrambler == null) {
                 ASPlayerLog.i("%s configure mediacodec without descrambler, surface: %s, format: %s",
                         getTag(), surfaceTag, format);
-                ASPlayerLog.i("%s [KPI-FCC] switchMediaCodecWorkMode configure before", getTag());
+                ASPlayerLog.i("%s [KPI-FCC] switchMediaCodecWorkMode configure before, workMode: %d",
+                        getTag(), mTargetWorkMode);
                 startTime = System.nanoTime();
                 mMediaCodec.configure(format, surface, null, 0);
-                ASPlayerLog.i("%s [KPI-FCC] switchMediaCodecWorkMode configure end, configure costTime: %d ms",
-                        getTag(), getCostTime(startTime));
+                ASPlayerLog.i("%s [KPI-FCC] switchMediaCodecWorkMode configure end, workMode: %d, configure cost: %d ms",
+                        getTag(), mTargetWorkMode, getCostTime(startTime));
             } else {
                 ASPlayerLog.i("%s switchMediaCodecWorkMode configure mediacodec with descrambler, surface: %s",
                         getTag(), surfaceTag);
@@ -364,16 +367,16 @@ class VideoOutputPath extends MediaOutputPath {
                 }
             }
 
-            ASPlayerLog.i("%s [KPI-FCC] switchMediaCodecWorkMode start before, mediacodec: %s",
-                    getTag(), mMediaCodec);
+            ASPlayerLog.i("%s [KPI-FCC] switchMediaCodecWorkMode start before, workMode: %d, mediacodec: %s",
+                    getTag(), mTargetWorkMode, mMediaCodec);
             startTime = System.nanoTime();
             startMediaCodec();
             long endTime = System.nanoTime();
-            ASPlayerLog.i("%s [KPI-FCC] switchMediaCodecWorkMode start end, cost: %d ms",
-                    getTag(), getCostTime(startTime, endTime));
+            ASPlayerLog.i("%s [KPI-FCC] switchMediaCodecWorkMode start end, workMode: %d, cost: %d ms",
+                    getTag(), mTargetWorkMode, getCostTime(startTime, endTime));
 
-            ASPlayerLog.i("%s [KPI-FCC] switchMediaCodecWorkMode mediacodec: %s, totalTime: %d ms",
-                    getTag(), mMediaCodec, getCostTime(beginTime, endTime));
+            ASPlayerLog.i("%s [KPI-FCC] switchMediaCodecWorkMode workMode: %d, totalTime: %d ms, mediecodec: %s",
+                    getTag(), mTargetWorkMode, getCostTime(beginTime, endTime), mMediaCodec);
             setRequestChangeWorkMode(false);
             mLastWorkMode = mTargetWorkMode;
             return true;
@@ -1001,10 +1004,11 @@ class VideoOutputPath extends MediaOutputPath {
 
     protected void resetWorkMode() {
         if (mMediaCodecStarted) {
+            ASPlayerLog.i("%s [KPI-FCC] resetWorkMode stop start, workMode: %d", getTag(), mLastWorkMode);
             long startTime = System.nanoTime();
             stopMediaCodec();
-            ASPlayerLog.i("%s [KPI-FCC] resetWorkMode stop end, cost: %d ms",
-                    getTag(), getCostTime(startTime));
+            ASPlayerLog.i("%s [KPI-FCC] resetWorkMode stop end, workMode: %d, cost: %d ms",
+                    getTag(), mLastWorkMode, getCostTime(startTime));
         }
     }
 }

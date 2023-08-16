@@ -46,6 +46,11 @@ public class VideoParams {
     private int mAvSyncHwId;
 
     /**
+     * Video scrambled or not
+     */
+    private boolean mScrambled;
+
+    /**
      * Video media format
      */
     private MediaFormat mMediaFormat;
@@ -113,6 +118,14 @@ public class VideoParams {
         this.mAvSyncHwId = avSyncHwId;
     }
 
+    private void setScrambled(boolean scrambled) {
+        mScrambled = scrambled;
+    }
+
+    public boolean isScrambled() {
+        return mScrambled;
+    }
+
     public MediaFormat getMediaFormat() {
         return mMediaFormat;
     }
@@ -131,6 +144,7 @@ public class VideoParams {
         sb.append(", mPid=").append(mPid);
         sb.append(", mTrackFilterId=").append(mTrackFilterId);
         sb.append(", mAvSyncHwId=").append(mAvSyncHwId);
+        sb.append(", mScrambled=").append(mScrambled);
         sb.append(", mMediaFormat=").append(mMediaFormat);
         sb.append("}");
         return sb.toString();
@@ -149,6 +163,8 @@ public class VideoParams {
         private int mTrackFilterId;
 
         private int mAvSyncHwId;
+
+        private boolean mScrambled;
 
         private MediaFormat mMediaFormat;
 
@@ -177,11 +193,17 @@ public class VideoParams {
             return this;
         }
 
+        public Builder setScrambled(boolean scrambled) {
+            this.mScrambled = scrambled;
+            return this;
+        }
+
         public VideoParams build() {
             VideoParams videoParams = new VideoParams(mMimeType, mWidth, mHeight);
             videoParams.setPid(mPid);
             videoParams.setTrackFilterId(mTrackFilterId);
             videoParams.setAvSyncHwId(mAvSyncHwId);
+            videoParams.setScrambled(mScrambled);
             videoParams.setMediaFormat(mMediaFormat);
             return videoParams;
         }

@@ -93,6 +93,7 @@ struct video_param_t {
     jfieldID pid;
     jfieldID trackFilterId;
     jfieldID avSyncHwId;
+    jfieldID scrambled;
     jfieldID mediaFormat;
 };
 
@@ -106,6 +107,7 @@ struct audio_param_t {
     jfieldID trackFilterId;
     jfieldID avSyncHwId;
     jfieldID secLevel;
+    jfieldID scrambled;
     jfieldID mediaFormat;
 };
 
@@ -299,6 +301,7 @@ bool JniASPlayerJNI::createVideoParams(JNIEnv *env, jni_asplayer_video_params *p
     env->SetIntField(videoParams, gVideoParamsCtx.pid, (jint) params->pid);
     env->SetIntField(videoParams, gVideoParamsCtx.trackFilterId, (jint) params->filterId);
     env->SetIntField(videoParams, gVideoParamsCtx.avSyncHwId, (jint) params->avSyncHwId);
+    env->SetBooleanField(videoParams, gVideoParamsCtx.scrambled, (jboolean) params->scrambled);
     env->SetObjectField(videoParams, gVideoParamsCtx.mediaFormat, params->mediaFormat);
 
     *outJVideoParams = videoParams;
@@ -331,6 +334,7 @@ bool JniASPlayerJNI::createAudioParams(JNIEnv *env, jni_asplayer_audio_params *p
     env->SetIntField(audioParams, gAudioParamsCtx.trackFilterId, (jint)params->filterId);
     env->SetIntField(audioParams, gAudioParamsCtx.avSyncHwId, (jint)params->avSyncHwId);
     env->SetIntField(audioParams, gAudioParamsCtx.secLevel, (jint) params->seclevel);
+    env->SetBooleanField(audioParams, gAudioParamsCtx.scrambled, (jboolean) params->scrambled);
     env->SetObjectField(audioParams, gAudioParamsCtx.mediaFormat, params->mediaFormat);
 
     *outJAudioParams = audioParams;
@@ -468,6 +472,7 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
     gVideoParamsCtx.pid = env->GetFieldID(gVideoParamsCls, "mPid", "I");
     gVideoParamsCtx.trackFilterId = env->GetFieldID(gVideoParamsCls, "mTrackFilterId", "I");
     gVideoParamsCtx.avSyncHwId = env->GetFieldID(gVideoParamsCls, "mAvSyncHwId", "I");
+    gVideoParamsCtx.scrambled = env->GetFieldID(gVideoParamsCls, "mScrambled", "Z");
     gVideoParamsCtx.mediaFormat = env->GetFieldID(gVideoParamsCls, "mMediaFormat", "Landroid/media/MediaFormat;");
 
     // AudioParams
@@ -482,6 +487,7 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
     gAudioParamsCtx.trackFilterId = env->GetFieldID(gAudioParamsCls, "mTrackFilterId", "I");
     gAudioParamsCtx.avSyncHwId = env->GetFieldID(gAudioParamsCls, "mAvSyncHwId", "I");
     gAudioParamsCtx.secLevel = env->GetFieldID(gAudioParamsCls, "mSecLevel", "I");
+    gAudioParamsCtx.scrambled = env->GetFieldID(gAudioParamsCls, "mScrambled", "Z");
     gAudioParamsCtx.mediaFormat = env->GetFieldID(gAudioParamsCls, "mMediaFormat", "Landroid/media/MediaFormat;");
 
     // MediaFormat

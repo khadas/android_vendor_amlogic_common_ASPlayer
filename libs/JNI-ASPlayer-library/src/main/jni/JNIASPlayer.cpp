@@ -13,6 +13,7 @@
 #include "JniASPlayerJNI.h"
 #include "log.h"
 
+#define LOG_GET_PLAYER_FAILED() ALOGE("[%s/%d] failed to get player instance", __FUNCTION__, __LINE__)
 
 #ifdef __cplusplus
 extern "C" {

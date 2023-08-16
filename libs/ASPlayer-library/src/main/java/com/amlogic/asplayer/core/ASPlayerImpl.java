@@ -10,6 +10,7 @@ package com.amlogic.asplayer.core;
 
 import android.content.Context;
 import android.media.AudioFormat;
+import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.tv.tuner.Tuner;
 import android.media.tv.tuner.dvr.DvrPlayback;
@@ -385,7 +386,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     @Override
     public int setWorkMode(int mode) {
-        if (DEBUG) ASPlayerLog.d("%s setWorkMode start, work mode: %d", getTag(), mode);
+        if (DEBUG) ASPlayerLog.d("%s [KPI-FCC] setWorkMode start, work mode: %d", getTag(), mode);
 
         if (mPlayerHandler != null && mPlayerThread != null && mPlayerThread.isAlive()) {
 //            ConditionVariable lock = new ConditionVariable();
@@ -597,13 +598,17 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
             setInstanceId(avSyncHwId);
 
-            ASPlayerLog.i("%s setVideoParams pid: 0x%04x, filterId: 0x%016x, avsyncHwId: 0x%x, media format: %s",
-                    getTag(), pid, filterId, avSyncHwId, format);
+            ASPlayerLog.i("%s setVideoParams pid: 0x%04x, filterId: 0x%016x, avsyncHwId: 0x%x, " +
+                            "scrambled: %b, media format: %s",
+                    getTag(), pid, filterId, avSyncHwId, params.isScrambled(), format);
 
             if (format == null) {
                 format = MediaFormat.createVideoFormat(params.getMimeType(), params.getWidth(), params.getHeight());
                 ASPlayerLog.i("%s setVideoParams create MediaFormat, mimetype: %s, width: %d, height: %d",
                         getTag(), params.getMimeType(), params.getWidth(), params.getHeight());
+            }
+            if (params.isScrambled() && !format.containsFeature(MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayback)) {
+                format.setFeatureEnabled(MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayback, true);
             }
             mVideoOutputPath.setMediaFormat(format);
 
@@ -927,14 +932,20 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         MediaFormat mediaFormat = MediaFormat.createAudioFormat(audioParams.getMimeType(),
                 audioParams.getSampleRate(), audioParams.getChannelCount());
 
-        ASPlayerLog.i("%s create audio MediaFormat, mimeType: %s, sampleRate: %d, channelCount: %d",
-                getTag(), audioParams.getMimeType(), audioParams.getSampleRate(), audioParams.getChannelCount());
+        ASPlayerLog.i("%s create audio MediaFormat, mimeType: %s, sampleRate: %d, channelCount: %d, scrambled: %b",
+                getTag(), audioParams.getMimeType(), audioParams.getSampleRate(), audioParams.getChannelCount(),
+                audioParams.isScrambled());
+
+        if (audioParams.isScrambled() && !mediaFormat.containsFeature(MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayback)) {
+            mediaFormat.setFeatureEnabled(MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayback, true);
+        }
 
         AudioParams newParams = new AudioParams.Builder(mediaFormat)
                 .setPid(audioParams.getPid())
                 .setTrackFilterId(audioParams.getTrackFilterId())
                 .setAvSyncHwId(audioParams.getAvSyncHwId())
                 .setSecLevel(audioParams.getSecLevel())
+                .setScrambled(audioParams.isScrambled())
                 .build();
         return newParams;
     }
