@@ -1145,6 +1145,32 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     @Override
+    public int setADMixLevel(int mixLevel) {
+        if (mixLevel < 0 || mixLevel > 100) {
+            ASPlayerLog.w("%s setADMixLevel invalid parameter, volume should in [0, 100], current: %d",
+                    getTag(), mixLevel);
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        }
+
+        if (mPlayerHandler != null) {
+            mPlayerHandler.post(() -> {
+                mAudioOutputPath.setADMixLevel(mixLevel);
+            });
+            return ErrorCode.SUCCESS;
+        } else {
+            ASPlayerLog.i("%s setADMixLevel failed, playerHandler is null", getTag());
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+    }
+
+    @Override
+    public int getADMixLevel() {
+        int mixLevel = mAudioOutputPath.getADMixLevel();
+        ASPlayerLog.i("%s getADMixLevel, mixLevel: %d", getTag(), mixLevel);
+        return mixLevel;
+    }
+
+    @Override
     public int setSubtitlePid(int pid) {
         if (DEBUG) ASPlayerLog.d("%s setSubtitlePid start", getTag());
         return 0;

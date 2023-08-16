@@ -337,6 +337,22 @@ public interface IASPlayer {
     int disableADMix();
 
     /**
+     * Set audio description mix level [0, 100]
+     *
+     * @param mixLevel mix level
+     *
+     * @return
+     */
+    int setADMixLevel(int mixLevel);
+
+    /**
+     * Get audio description mix level
+     *
+     * @return mix level
+     */
+    int getADMixLevel();
+
+    /**
      * Set subtitle pid for ASPlayer instance.
      *
      * @param pid

@@ -299,4 +299,10 @@ public class AudioUtils {
         }
         return (float) (20 * Math.log10(amplification));
     }
+
+    public static float convertADMixLevelToDB(int mixLevel) {
+        // mixLevel in [0, 100]
+        float db = (mixLevel * 64 - 32 * 100) / 100; // [0, 100] mapping to [-32, 32]
+        return db;
+    }
 }

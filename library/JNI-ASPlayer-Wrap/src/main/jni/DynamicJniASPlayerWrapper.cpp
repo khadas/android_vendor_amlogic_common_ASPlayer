@@ -91,6 +91,8 @@ JniASPlayer_enableADMix_FUNC DynamicJniASPlayerWrapper::ASPlayer_enableADMix = n
 JniASPlayer_disableADMix_FUNC DynamicJniASPlayerWrapper::ASPlayer_disableADMix = nullptr;
 JniASPlayer_setADVolumeDB_FUNC DynamicJniASPlayerWrapper::ASPlayer_setADVolumeDB = nullptr;
 JniASPlayer_getADVolumeDB_FUNC DynamicJniASPlayerWrapper::ASPlayer_getADVolumeDB = nullptr;
+JniASPlayer_setADMixLevel_FUNC DynamicJniASPlayerWrapper::ASPlayer_setADMixLevel = nullptr;
+JniASPlayer_getADMixLevel_FUNC DynamicJniASPlayerWrapper::ASPlayer_getADMixLevel = nullptr;
 
 
 static void asplayer_callback(void *user_data, jni_asplayer_event *event) {
@@ -292,6 +294,10 @@ void DynamicJniASPlayerWrapper::initSymbols() {
     CHECK_SYMBOL(ASPlayer_setADVolumeDB, "JniASPlayer_setADVolumeDB");
     ASPlayer_getADVolumeDB = (JniASPlayer_getADVolumeDB_FUNC)(dlsym(handle, "JniASPlayer_getADVolumeDB"));
     CHECK_SYMBOL(ASPlayer_getADVolumeDB, "JniASPlayer_getADVolumeDB");
+    ASPlayer_setADMixLevel = (JniASPlayer_setADMixLevel_FUNC)(dlsym(handle, "JniASPlayer_setADMixLevel"));
+    CHECK_SYMBOL(ASPlayer_setADMixLevel, "JniASPlayer_setADMixLevel");
+    ASPlayer_getADMixLevel = (JniASPlayer_getADMixLevel_FUNC)(dlsym(handle, "JniASPlayer_getADMixLevel"));
+    CHECK_SYMBOL(ASPlayer_getADMixLevel, "JniASPlayer_getADMixLevel");
 }
 
 void DynamicJniASPlayerWrapper::closeJniASPlayerSo() {
@@ -1102,6 +1108,52 @@ jni_asplayer_result DynamicJniASPlayerWrapper::getADVolumeDB(float *volumeDb) {
     }
 
     jni_asplayer_result ret = ASPlayer_getADVolumeDB(handle, volumeDb);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result DynamicJniASPlayerWrapper::setADMixLevel(int32_t mixLevel) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_setADMixLevel == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_setADMixLevel(handle, mixLevel);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result DynamicJniASPlayerWrapper::getADMixLevel(int32_t *mixLevel) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_getADMixLevel == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_getADMixLevel(handle, mixLevel);
     if (ret != JNI_ASPLAYER_OK) {
         LOG_PLAYER_OP_FAILED(ret);
     }

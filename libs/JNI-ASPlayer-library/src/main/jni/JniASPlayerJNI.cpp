@@ -71,6 +71,8 @@ struct asplayer_t {
     jmethodID disableADMixMID;
     jmethodID setADVolumeDBMID;
     jmethodID getADVolumeDBMID;
+    jmethodID setADMixLevelMID;
+    jmethodID getADMixLevelMID;
     jmethodID getVideoInfoMID;
 };
 
@@ -442,6 +444,8 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
     gASPlayerCtx.disableADMixMID = GetMethodIDOrDie(env, gASPlayerCls, "disableADMix", "()I");
     gASPlayerCtx.setADVolumeDBMID = GetMethodIDOrDie(env, gASPlayerCls, "setADVolumeDB", "(F)I");
     gASPlayerCtx.getADVolumeDBMID = GetMethodIDOrDie(env, gASPlayerCls, "getADVolumeDB", "()F");
+    gASPlayerCtx.setADMixLevelMID = GetMethodIDOrDie(env, gASPlayerCls, "setADMixLevel", "(I)I");
+    gASPlayerCtx.getADMixLevelMID = GetMethodIDOrDie(env, gASPlayerCls, "getADMixLevel", "()I");
     gASPlayerCtx.getVideoInfoMID = GetMethodIDOrDie(env, gASPlayerCls, "getVideoInfo", "()Landroid/media/MediaFormat;");
 
     // InitParams
@@ -1164,6 +1168,34 @@ jni_asplayer_result JniASPlayer::getADVolumeDB(float *volumeDB) {
 
     jfloat volume = env->CallFloatMethod(mJavaPlayer, gASPlayerCtx.getADVolumeDBMID);
     *volumeDB = volume;
+    return JNI_ASPLAYER_OK;
+}
+
+jni_asplayer_result JniASPlayer::setADMixLevel(int32_t mixLevel) {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setADMixLevelMID, (jint)mixLevel);
+    return static_cast<jni_asplayer_result>(ret);
+}
+
+jni_asplayer_result JniASPlayer::getADMixLevel(int32_t *mixLevel) {
+    if (mixLevel == nullptr) {
+        ALOGE("[%s/%d] error, failed to get ad mix level, invalid parameter", __func__, __LINE__);
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jint level = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.getADMixLevelMID);
+    *mixLevel = (int32_t)level;
     return JNI_ASPLAYER_OK;
 }
 

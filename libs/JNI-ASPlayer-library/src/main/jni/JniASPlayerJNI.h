@@ -143,6 +143,10 @@ public:
 
     jni_asplayer_result getADVolumeDB(float *volumeDB);
 
+    jni_asplayer_result setADMixLevel(int32_t mixLevel);
+
+    jni_asplayer_result getADMixLevel(int32_t *mixLevel);
+
     jni_asplayer_result getVideoInfo(jni_asplayer_video_info *videoInfo);
 
 private:

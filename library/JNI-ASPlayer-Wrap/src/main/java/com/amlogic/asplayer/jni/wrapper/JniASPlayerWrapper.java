@@ -330,6 +330,16 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
+    public int setADMixLevel(int mixLevel) {
+        return native_setADMixLevel(mixLevel);
+    }
+
+    @Override
+    public int getADMixLevel() {
+        return native_getADMixLevel();
+    }
+
+    @Override
     public int setSubtitlePid(int pid) {
         return 0;
     }
@@ -390,6 +400,8 @@ public class JniASPlayerWrapper implements IASPlayer {
     private native int native_disableADMix();
     private native int native_setADVolumeDB(float volumeDb);
     private native float native_getADVolumeDB();
+    private native int native_setADMixLevel(int mixLevel);
+    private native int native_getADMixLevel();
     private native MediaFormat native_getVideoInfo();
     private native void native_release();
 }

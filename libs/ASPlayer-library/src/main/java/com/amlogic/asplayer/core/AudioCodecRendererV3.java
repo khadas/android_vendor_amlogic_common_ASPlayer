@@ -263,6 +263,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
                 volumeDb = AudioUtils.VOLUME_MAX_DB;
             }
             mAudioTrack.setAudioDescriptionMixLeveldB(volumeDb);
+            ASPlayerLog.i("%s setAudioDescriptionMixLeveldB: %.2f", getTag(), volumeDb);
         }
     }
 

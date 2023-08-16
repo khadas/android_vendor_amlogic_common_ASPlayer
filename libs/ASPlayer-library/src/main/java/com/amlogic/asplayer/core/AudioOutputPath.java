@@ -12,6 +12,8 @@ import java.util.Objects;
 
 class AudioOutputPath extends MediaOutputPath {
 
+    private static final int DEFAULT_AD_MIX_LEVEL = 50; // mix level: 50, ad volume no scale.
+
     interface AudioFormatListener {
         void onAudioFormat(AudioFormat audioFormat);
     }
@@ -31,6 +33,7 @@ class AudioOutputPath extends MediaOutputPath {
 
     protected float mGain;
     protected float mADVolumeDb = 0.f;
+    protected Integer mADMixLevel = null;
     protected boolean mMute = false;
 
     // input buffer shared with extractor
@@ -116,6 +119,22 @@ class AudioOutputPath extends MediaOutputPath {
 
     float getADVolumeDb() {
         return mADVolumeDb;
+    }
+
+    void setADMixLevel(int mixLevel) {
+        mADMixLevel = Integer.valueOf(mixLevel);
+        float db = AudioUtils.convertADMixLevelToDB(mixLevel);
+        ASPlayerLog.i("%s setADMixLevel, mixLevel: %d, db: %.2f", getTag(), mixLevel, db);
+        if (mAudioCodecRenderer != null) {
+            mAudioCodecRenderer.setSubAudioVolumeDb(db);
+        }
+    }
+
+    int getADMixLevel() {
+        if (mADMixLevel != null) {
+            return mADMixLevel.intValue();
+        }
+        return DEFAULT_AD_MIX_LEVEL;
     }
 
     void setAudioParams(AudioParams audioParams) {

@@ -641,6 +641,39 @@ jni_asplayer_result JniASPlayerWrapper::getADVolumeDB(float *volumeDb) {
     return ret;
 }
 
+jni_asplayer_result JniASPlayerWrapper::setADMixLevel(int32_t mixLevel) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+    jni_asplayer_result ret = JniASPlayer_setADMixLevel(handle, mixLevel);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result JniASPlayerWrapper::getADMixLevel(int32_t *mixLevel) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = JniASPlayer_getADMixLevel(handle, mixLevel);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
 jni_asplayer_result JniASPlayerWrapper::getVideoInfo(jni_asplayer_video_info *videoInfo) {
     LOG_FUNCTION_ENTER();
     jni_asplayer_handle handle = mHandle;

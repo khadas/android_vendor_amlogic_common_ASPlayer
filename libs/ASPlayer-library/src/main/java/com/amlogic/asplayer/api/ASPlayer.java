@@ -622,6 +622,17 @@ public class ASPlayer implements IASPlayer {
         return mPlayer.disableADMix();
     }
 
+    @Override
+    public int setADMixLevel(int mixLevel) {
+        ASPlayerLog.i("%s setADMixLevel start, level: %d", getTag(), mixLevel);
+        return mPlayer.setADMixLevel(mixLevel);
+    }
+
+    @Override
+    public int getADMixLevel() {
+        return mPlayer.getADMixLevel();
+    }
+
     /**
      * Set subtitle pid for ASPlayer instance.
      *

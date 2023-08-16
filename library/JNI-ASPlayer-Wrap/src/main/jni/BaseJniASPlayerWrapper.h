@@ -54,6 +54,8 @@ public:
     virtual jni_asplayer_result disableADMix() = 0;
     virtual jni_asplayer_result setADVolumeDB(float volumeDb) = 0;
     virtual jni_asplayer_result getADVolumeDB(float *volumeDb) = 0;
+    virtual jni_asplayer_result setADMixLevel(int32_t mixLevel) = 0;
+    virtual jni_asplayer_result getADMixLevel(int32_t *mixLevel) = 0;
     virtual jni_asplayer_result getVideoInfo(jni_asplayer_video_info *videoInfo) = 0;
     virtual jni_asplayer_result release() = 0;
 

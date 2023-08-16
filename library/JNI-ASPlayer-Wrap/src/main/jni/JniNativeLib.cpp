@@ -746,6 +746,47 @@ asplayer_get_ad_volume_db(JNIEnv *env, jobject jniASPlayerWrapperObj, jfloat *vo
 }
 
 jni_asplayer_result
+asplayer_set_ad_mix_level(JNIEnv *env, jobject jniASPlayerWrapperObj, jint mixLevel) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr) {
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    BaseJniASPlayerWrapper *player = getASPlayer(env, jniASPlayerWrapperObj);
+    if (player == nullptr) {
+        LOG_GET_PLAYER_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jni_asplayer_result ret = player->setADMixLevel((int32_t)mixLevel);
+    return ret;
+}
+
+jni_asplayer_result
+asplayer_get_ad_mix_level(JNIEnv *env, jobject jniASPlayerWrapperObj, jint *mixLevel) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr) {
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    } else if (mixLevel == nullptr) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    BaseJniASPlayerWrapper *player = getASPlayer(env, jniASPlayerWrapperObj);
+    if (player == nullptr) {
+        LOG_GET_PLAYER_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jni_asplayer_result ret = player->getADMixLevel(mixLevel);
+    if (ret != JNI_ASPLAYER_OK) {
+        ALOGE("[%s/%d] failed to get ad mix level, ret: %d", __func__, __LINE__, ret);
+    }
+
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result
 asplayer_set_work_mode(JNIEnv *env, jobject jniASPlayerWrapperObj, jint mode) {
     LOG_FUNCTION_ENTER();
     if (env == nullptr) {

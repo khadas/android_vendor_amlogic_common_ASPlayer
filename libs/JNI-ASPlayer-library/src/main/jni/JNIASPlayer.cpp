@@ -642,6 +642,42 @@ jni_asplayer_result  JniASPlayer_getADVolumeDB(jni_asplayer_handle handle, float
 }
 
 /**
+ *@brief:        Set audio description mix level (ad vol)
+ *@param:        handle        JniASPlayer handle.
+ *@param:        mixLevel      audio description mix level.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_setADMixLevel(jni_asplayer_handle handle, int32_t mixLevel) {
+    LOG_FUNCTION_ENTER();
+    if (handle == 0) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
+    jni_asplayer_result ret = player->setADMixLevel(mixLevel);
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+/**
+ *@brief:        Get audio description mix level (ad vol)
+ *@param:        handle        JniASPlayer handle.
+ *@param:        *mixLevel     audio description mix level.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_getADMixLevel(jni_asplayer_handle handle, int32_t *mixLevel) {
+    LOG_FUNCTION_ENTER();
+    if (handle == 0) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
+    jni_asplayer_result ret = player->getADMixLevel(mixLevel);
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+/**
  *@brief:        Release specified JniASPlayer instance.
  *@param:        handle     JniASPlayer handle.
  *@return:       The JniASPlayer result.

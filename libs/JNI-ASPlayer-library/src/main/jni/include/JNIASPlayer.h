@@ -627,22 +627,6 @@ jni_asplayer_result  JniASPlayer_getAudioVolume(jni_asplayer_handle Handle, int3
 
 /*Audio interface*/
 /**
- *@brief:        Set AD volume to specified JniASPlayer instance .
- *@param:        Handle      JniASPlayer handle.
- *@param:        volume      Volume value.
- *@return:       The JniASPlayer result.
- */
-jni_asplayer_result  JniASPlayer_setADVolume(jni_asplayer_handle Handle, int32_t volume);
-
-/**
- *@brief:        Get AD volume value from specified JniASPlayer instance .
- *@param:        Handle     JniASPlayer handle.
- *@param:        *volume    Volume value.
- *@return:       The JniASPlayer result.
- */
-jni_asplayer_result  JniASPlayer_getADVolume(jni_asplayer_handle Handle, int32_t *volume);
-
-/**
  *@brief:        Set audio stereo mode to specified JniASPlayer instance .
  *@param:        Handle     JniASPlayer handle.
  *@param:        Mode       Stereo mode.
@@ -769,6 +753,22 @@ jni_asplayer_result  JniASPlayer_enableADMix(jni_asplayer_handle handle);
  *@return:       The JniASPlayer result.
  */
 jni_asplayer_result  JniASPlayer_disableADMix(jni_asplayer_handle handle);
+
+/**
+ *@brief:        Set audio description mix level (ad vol)
+ *@param:        handle        JniASPlayer handle.
+ *@param:        mixLevel      audio description mix level.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_setADMixLevel(jni_asplayer_handle handle, int32_t mixLevel);
+
+/**
+ *@brief:        Get audio description mix level (ad vol)
+ *@param:        handle        JniASPlayer handle.
+ *@param:        *mixLevel     audio description mix level.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_getADMixLevel(jni_asplayer_handle Handle, int32_t *mixLevel);
 
 /**
  *@brief:        Get audio description basic info of specified

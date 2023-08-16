@@ -73,6 +73,8 @@ typedef jni_asplayer_result (*JniASPlayer_enableADMix_FUNC)(jni_asplayer_handle)
 typedef jni_asplayer_result (*JniASPlayer_disableADMix_FUNC)(jni_asplayer_handle);
 typedef jni_asplayer_result (*JniASPlayer_setADVolumeDB_FUNC)(jni_asplayer_handle, float);
 typedef jni_asplayer_result (*JniASPlayer_getADVolumeDB_FUNC)(jni_asplayer_handle, float *);
+typedef jni_asplayer_result (*JniASPlayer_setADMixLevel_FUNC)(jni_asplayer_handle, int32_t);
+typedef jni_asplayer_result (*JniASPlayer_getADMixLevel_FUNC)(jni_asplayer_handle, int32_t *);
 
 class DynamicJniASPlayerWrapper;
 
@@ -123,6 +125,8 @@ public:
     jni_asplayer_result disableADMix();
     jni_asplayer_result setADVolumeDB(float volumeDb);
     jni_asplayer_result getADVolumeDB(float *volumeDb);
+    jni_asplayer_result setADMixLevel(int32_t mixLevel);
+    jni_asplayer_result getADMixLevel(int32_t *mixLevel);
     jni_asplayer_result getVideoInfo(jni_asplayer_video_info *videoInfo);
     jni_asplayer_result release();
 
@@ -205,6 +209,8 @@ private:
     static JniASPlayer_disableADMix_FUNC ASPlayer_disableADMix;
     static JniASPlayer_setADVolumeDB_FUNC ASPlayer_setADVolumeDB;
     static JniASPlayer_getADVolumeDB_FUNC ASPlayer_getADVolumeDB;
+    static JniASPlayer_setADMixLevel_FUNC ASPlayer_setADMixLevel;
+    static JniASPlayer_getADMixLevel_FUNC ASPlayer_getADMixLevel;
 };
 
 

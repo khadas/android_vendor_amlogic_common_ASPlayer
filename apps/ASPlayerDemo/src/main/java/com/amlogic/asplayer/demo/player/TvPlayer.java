@@ -702,6 +702,19 @@ public class TvPlayer {
         return 0.0f;
     }
 
+    public void setADMixLevel(int mixLevel) {
+        if (mASPlayer != null) {
+            mASPlayer.setADMixLevel(mixLevel);
+        }
+    }
+
+    public int getADMixLevel() {
+        if (mASPlayer != null) {
+            return mASPlayer.getADMixLevel();
+        }
+        return 0;
+    }
+
     public void setSpeed(float speed) {
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
