@@ -332,7 +332,13 @@ class AudioOutputPath extends MediaOutputPath {
     }
 
     public void flush() {
+        ASPlayerLog.i("%s flush", getTag());
+        super.reset();
+        // maybe one day we will reuse mAudioCodecRenderer, but today it is safer to forget it
+        if (mAudioCodecRenderer != null) mAudioCodecRenderer.release();
+        mAudioCodecRenderer = null;
 
+        mHasAudioFormatChanged = false;
     }
 
     @Override

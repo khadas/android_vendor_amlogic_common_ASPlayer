@@ -523,7 +523,7 @@ class RendererScheduler implements Runnable {
     void flush() {
         ASPlayerLog.i("%s flush start", getTag());
 
-        mAudioOutputPath.reset();
+        mAudioOutputPath.flush();
         mVideoOutputPath.flush();
         mPositionHandler.unsetOrigin();
 
