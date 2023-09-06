@@ -21,7 +21,7 @@ class RendererTrickSmooth extends Renderer {
 
         // stop audio
         if (mAudioOutputPath.hasMediaFormat()) {
-            mAudioOutputPath.reset();
+            mAudioOutputPath.flush();
         }
 
         // configure video for smooth trick mode

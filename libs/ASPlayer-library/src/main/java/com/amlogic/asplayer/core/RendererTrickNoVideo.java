@@ -29,7 +29,7 @@ class RendererTrickNoVideo extends Renderer {
 
         // stop audio
         if (mAudioOutputPath.hasMediaFormat()) {
-            mAudioOutputPath.reset();
+            mAudioOutputPath.flush();
         }
 
         // deactivate tunneling mode

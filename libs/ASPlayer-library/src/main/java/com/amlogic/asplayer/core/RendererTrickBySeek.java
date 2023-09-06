@@ -64,8 +64,7 @@ class RendererTrickBySeek extends Renderer {
 
         // stop audio
         if (mAudioOutputPath.hasMediaFormat()) {
-            // release or flush ?
-            mAudioOutputPath.reset();
+            mAudioOutputPath.flush();
         }
 
         // configure video for trick mode

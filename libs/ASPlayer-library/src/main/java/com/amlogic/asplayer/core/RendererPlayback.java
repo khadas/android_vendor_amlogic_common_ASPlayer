@@ -304,12 +304,12 @@ class RendererPlayback extends Renderer {
             case Renderer.RESET_REASON_NO_DATA:
                 ASPlayerLog.i("%s reset VideoOutputPath, RESET_REASON_NO_DATA", getTag());
                 mVideoOutputPath.reset();
-                mAudioOutputPath.reset();
+                mAudioOutputPath.flush();
                 break;
             case Renderer.RESET_REASON_DISCONTINUITY:
                 ASPlayerLog.i("%s reset VideoOutputPath, RESET_REASON_DISCONTINUITY", getTag());
                 mVideoOutputPath.reset();
-                mAudioOutputPath.reset();
+                mAudioOutputPath.flush();
                 if (mTunneledPlayback)
                     mAudioOutputPath.release();
                 break;

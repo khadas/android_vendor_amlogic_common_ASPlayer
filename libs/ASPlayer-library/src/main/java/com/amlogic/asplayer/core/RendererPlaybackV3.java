@@ -248,7 +248,7 @@ class RendererPlaybackV3 extends Renderer {
             case Renderer.RESET_REASON_BAD_DATA:
             case Renderer.RESET_REASON_NO_DATA:
                 mVideoOutputPath.flush();
-                mAudioOutputPath.reset();
+                mAudioOutputPath.flush();
                 mPositionHandler.unsetOrigin();
                 break;
             case Renderer.RESET_REASON_DISCONTINUITY:
@@ -257,7 +257,7 @@ class RendererPlaybackV3 extends Renderer {
             case Renderer.RESET_REASON_DECODERS_BLOCKED:
                 ASPlayerLog.i("%s release VideoOutputPath", getTag());
                 mVideoOutputPath.reset();
-                mAudioOutputPath.reset();
+                mAudioOutputPath.flush();
                 break;
         }
     }

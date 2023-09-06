@@ -373,7 +373,7 @@ class RendererScheduler implements Runnable {
             mCurrentSpeedTask.stopAudio();
         }
         stopRendererSchedulerIfNeed();
-        mAudioOutputPath.reset();
+        mAudioOutputPath.flush();
         ASPlayerLog.i("%s stopAudioDecoding end", getTag());
     }
 
