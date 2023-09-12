@@ -380,11 +380,11 @@ jni_asplayer_result  JniASPlayer_getVersion(uint32_t *versionM,
 
 /**
  *@brief:        Get the instance number of specified JniASPlayer.
- *@param:        Handle    JniASPlayer handle.
- *@param:        *Numb     JniASPlayer instance number.
+ *@param:        handle    JniASPlayer handle.
+ *@param:        *numb     JniASPlayer instance number.
  *@return:       The JniASPlayer result.
  */
-jni_asplayer_result  JniASPlayer_getInstansNo(jni_asplayer_handle Handle, uint32_t *Numb);
+jni_asplayer_result  JniASPlayer_getInstanceNo(jni_asplayer_handle handle, int32_t *numb);
 
 /**
  *@brief:        Get the sync instance number of specified JniASPlayer .

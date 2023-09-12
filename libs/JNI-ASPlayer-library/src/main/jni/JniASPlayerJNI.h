@@ -73,6 +73,8 @@ public:
 
     jni_asplayer_result prepare();
 
+    jni_asplayer_result getInstanceNo(int32_t *numb);
+
     jni_asplayer_result getSyncInstanceNo(int32_t *numb);
 
     jni_asplayer_result addPlaybackListener(jobject listener);

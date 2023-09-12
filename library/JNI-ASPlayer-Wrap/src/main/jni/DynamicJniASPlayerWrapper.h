@@ -19,7 +19,7 @@ typedef jni_asplayer_result (*JniASPlayer_registerJNI_FUNC)(JNIEnv*);
 typedef jni_asplayer_result (*JniASPlayer_create_FUNC)(jni_asplayer_init_params, void *, jni_asplayer_handle *);
 typedef jni_asplayer_result (*JniASPlayer_getJavaASPlayer_FUNC)(jni_asplayer_handle, jobject*);
 typedef jni_asplayer_result (*JniASPlayer_getVersion_FUNC)(uint32_t *, uint32_t *);
-typedef jni_asplayer_result (*JniASPlayer_getInstanceNo_FUNC)(jni_asplayer_handle, uint32_t *);
+typedef jni_asplayer_result (*JniASPlayer_getInstanceNo_FUNC)(jni_asplayer_handle, int32_t *);
 typedef jni_asplayer_result (*JniASPlayer_getSyncInstanceNo_FUNC)(jni_asplayer_handle, int32_t *);
 typedef jni_asplayer_result (*JniASPlayer_prepare_FUNC)(jni_asplayer_handle);
 typedef jni_asplayer_result (*JniASPlayer_registerCb_FUNC)(jni_asplayer_handle, event_callback, void*);
@@ -93,6 +93,7 @@ public:
     jni_asplayer_result create(jni_asplayer_init_params &params, void *jTuner, jni_asplayer_handle *handle);
     jni_asplayer_result getJavaASPlayer(jobject *pPlayer);
     jni_asplayer_result prepare();
+    jni_asplayer_result getInstanceNo(int32_t *numb);
     jni_asplayer_result getSyncInstanceNo(int32_t *numb);
     jni_asplayer_result addPlaybackListener(JNIEnv *env, jobject listener);
     jni_asplayer_result removePlaybackListener(JNIEnv *env, jobject listener);

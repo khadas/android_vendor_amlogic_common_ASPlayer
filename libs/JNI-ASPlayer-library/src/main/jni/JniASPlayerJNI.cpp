@@ -37,6 +37,7 @@ struct asplayer_t {
 
     jmethodID constructorMID;
     jmethodID prepareMID;
+    jmethodID getInstanceNoMID;
     jmethodID getSyncInstanceNoMID;
     jmethodID startVideoDecodingMID;
     jmethodID pauseVideoDecodingMID;
@@ -415,6 +416,7 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
     gASPlayerCtx.context = GetFieldIDOrDie(env, gASPlayerCls, "mNativeContext", "J");
     gASPlayerCtx.constructorMID = GetMethodIDOrDie(env, gASPlayerCls, "<init>", "(Lcom/amlogic/asplayer/api/InitParams;Landroid/media/tv/tuner/Tuner;Landroid/os/Looper;)V");
     gASPlayerCtx.prepareMID = GetMethodIDOrDie(env, gASPlayerCls, "prepare", "()I");
+    gASPlayerCtx.getInstanceNoMID = GetMethodIDOrDie(env, gASPlayerCls, "getInstanceNo", "()I");
     gASPlayerCtx.getSyncInstanceNoMID = GetMethodIDOrDie(env, gASPlayerCls, "getSyncInstanceNo", "()I");
     gASPlayerCtx.startVideoDecodingMID = GetMethodIDOrDie(env, gASPlayerCls, "startVideoDecoding", "()I");
     gASPlayerCtx.stopVideoDecodingMID = GetMethodIDOrDie(env, gASPlayerCls, "stopVideoDecoding", "()I");
@@ -668,6 +670,23 @@ jni_asplayer_result JniASPlayer::prepare() {
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.prepareMID);
     LOG_FUNCTION_INT_END(result);
     return static_cast<jni_asplayer_result>(result);
+}
+
+jni_asplayer_result JniASPlayer::getInstanceNo(int32_t *numb) {
+    if (!numb) {
+        ALOGE("[%s/%d] error, failed to getInstanceNo, invalid parameter", __func__, __LINE__);
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jint instanceNo = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.getInstanceNoMID);
+    *numb = instanceNo;
+    return JNI_ASPLAYER_OK;
 }
 
 jni_asplayer_result JniASPlayer::getSyncInstanceNo(int32_t *numb) {

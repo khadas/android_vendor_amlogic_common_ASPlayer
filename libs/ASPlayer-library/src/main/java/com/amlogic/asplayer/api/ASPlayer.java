@@ -36,7 +36,7 @@ public class ASPlayer implements IASPlayer {
 
     // Mainly for debug
     private final int mId;
-    private static AtomicInteger sId = new AtomicInteger(0);
+    private static final AtomicInteger sId = new AtomicInteger(0);
     private int mSyncInstanceId = Constant.INVALID_SYNC_INSTANCE_ID;
 
     private ASPlayerConfig mConfig;
@@ -134,11 +134,8 @@ public class ASPlayer implements IASPlayer {
      * Get the instance number of specified ASPlayer
      */
     @Override
-    public int getInstancesNumber() {
-        if (DEBUG) ASPlayerLog.d("%s getInstancesNumber start", getTag());
-        ASPlayerLog.e("%s getInstancesNumber Not Implementation", getTag());
-//        throw new RuntimeException("Not Implementation");
-        return 0;
+    public int getInstanceNo() {
+        return mId;
     }
 
     /**

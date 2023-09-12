@@ -149,6 +149,12 @@ public class LocalTvPlayerActivity extends Activity implements TsPlaybackListene
         } else if (event instanceof VideoFirstFrameEvent) {
             VideoFirstFrameEvent ev = (VideoFirstFrameEvent) event;
             TvLog.i("onPlaybackEvent VideoFirstFrameEvent, pts: %d", ev.getPositionMs());
+
+            int instanceNo = mDvrPlayer.getInstanceNo();
+            int syncInstanceNo = mDvrPlayer.getSyncInstanceNo();
+            TvLog.i("getInstanceNo: %d, 0x%04x", instanceNo, instanceNo);
+            TvLog.i("getSyncInstanceNo: %d, 0x%04x", syncInstanceNo, syncInstanceNo);
+
         } else if (event instanceof AudioFirstFrameEvent) {
             AudioFirstFrameEvent ev = (AudioFirstFrameEvent) event;
             TvLog.i("onPlaybackEvent AudioFirstFrameEvent, pts: %d", ev.getPositionMs());

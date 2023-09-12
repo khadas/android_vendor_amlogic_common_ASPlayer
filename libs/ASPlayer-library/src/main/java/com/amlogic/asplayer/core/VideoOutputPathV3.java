@@ -35,6 +35,8 @@ class VideoOutputPathV3 extends VideoOutputPath {
     public static final String KEY_VIDEO_FILTER_ID = "vendor.tunerhal.video-filter-id";
     public static final String KEY_AV_SYNC_HW_ID = "vendor.tunerhal." + KEY_HARDWARE_AV_SYNC_ID;
 
+    public static final String KEY_INSTANCE_NO = "vendor.tunerhal.passthrough.instance-no";
+
     /*
         trick modes
      */
@@ -374,6 +376,9 @@ class VideoOutputPathV3 extends VideoOutputPath {
         if (mSecurePlayback) {
             format.setFeatureEnabled(FEATURE_SecurePlayback, true);
         }
+
+        // set player instance no
+        format.setInteger(KEY_INSTANCE_NO, mId);
     }
 
     @Override

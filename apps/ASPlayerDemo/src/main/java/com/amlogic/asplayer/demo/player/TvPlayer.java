@@ -145,6 +145,10 @@ public class TvPlayer {
         });
     }
 
+    public int getInstanceNo() {
+        return mASPlayer != null ? mASPlayer.getInstanceNo() : -1;
+    }
+
     public int getSyncInstanceNo() {
         if (mASPlayer != null) {
             return mASPlayer.getSyncInstanceNo();

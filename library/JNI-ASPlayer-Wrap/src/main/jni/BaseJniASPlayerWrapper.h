@@ -22,6 +22,7 @@ public:
     virtual jni_asplayer_result create(jni_asplayer_init_params &params, void *jTuner, jni_asplayer_handle *handle) = 0;
     virtual jni_asplayer_result getJavaASPlayer(jobject *pPlayer) = 0;
     virtual jni_asplayer_result prepare() = 0;
+    virtual jni_asplayer_result getInstanceNo(int32_t *numb) = 0;
     virtual jni_asplayer_result getSyncInstanceNo(int32_t *numb) = 0;
     virtual jni_asplayer_result addPlaybackListener(JNIEnv *env, jobject listener) = 0;
     virtual jni_asplayer_result removePlaybackListener(JNIEnv *env, jobject listener) = 0;

@@ -220,9 +220,8 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     @Override
-    public int getInstancesNumber() {
-        if (DEBUG) ASPlayerLog.d("%s getInstancesNumber start", getTag());
-        return 0;
+    public int getInstanceNo() {
+        return mId;
     }
 
     @Override

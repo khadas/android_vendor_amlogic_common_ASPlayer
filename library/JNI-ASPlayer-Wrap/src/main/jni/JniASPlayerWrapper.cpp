@@ -119,6 +119,23 @@ jni_asplayer_result JniASPlayerWrapper::prepare() {
     return ret;
 }
 
+jni_asplayer_result JniASPlayerWrapper::getInstanceNo(int32_t *numb) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = JniASPlayer_getInstanceNo(handle, numb);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
 jni_asplayer_result JniASPlayerWrapper::getSyncInstanceNo(int32_t *numb) {
     LOG_FUNCTION_ENTER();
     jni_asplayer_handle handle = mHandle;

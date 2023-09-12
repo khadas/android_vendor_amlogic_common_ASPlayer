@@ -186,8 +186,8 @@ void DynamicJniASPlayerWrapper::initSymbols() {
     CHECK_SYMBOL(ASPlayer_create, "JniASPlayer_create");
     ASPlayer_getVersion = (JniASPlayer_getVersion_FUNC)(dlsym(handle, "JniASPlayer_getVersion"));
     CHECK_SYMBOL(ASPlayer_getVersion, "JniASPlayer_getVersion");
-    ASPlayer_getInstanceNo = (JniASPlayer_getInstanceNo_FUNC)(dlsym(handle, "JniASPlayer_getInstansNo"));
-    CHECK_SYMBOL(ASPlayer_getInstanceNo, "JniASPlayer_getInstansNo");
+    ASPlayer_getInstanceNo = (JniASPlayer_getInstanceNo_FUNC)(dlsym(handle, "JniASPlayer_getInstanceNo"));
+    CHECK_SYMBOL(ASPlayer_getInstanceNo, "JniASPlayer_getInstanceNo");
     ASPlayer_getSyncInstanceNo = (JniASPlayer_getSyncInstanceNo_FUNC)(dlsym(handle, "JniASPlayer_getSyncInstanceNo"));
     CHECK_SYMBOL(ASPlayer_getSyncInstanceNo, "JniASPlayer_getSyncInstanceNo");
     ASPlayer_getJavaASPlayer = (JniASPlayer_getJavaASPlayer_FUNC)(dlsym(handle, "JniASPlayer_getJavaASPlayer"));
@@ -387,6 +387,29 @@ jni_asplayer_result DynamicJniASPlayerWrapper::prepare() {
         return ret;
     }
 
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result DynamicJniASPlayerWrapper::getInstanceNo(int32_t *numb) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_getInstanceNo == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_getInstanceNo(handle, numb);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
     LOG_FUNCTION_INT_END(ret);
     return ret;
 }

@@ -69,6 +69,20 @@ native_prepare(JNIEnv* env, jobject thiz) {
 }
 
 static jint
+native_get_instance_no(JNIEnv* env, jobject thiz) {
+    jni_asplayer_result result = JNI_ASPLAYER_OK;
+    int32_t numb = -1;
+
+    result = asplayer_get_instance_no(env, thiz, &numb);
+
+    if (result == JNI_ASPLAYER_OK) {
+        return (jint) numb;
+    } else {
+        return -1;
+    }
+}
+
+static jint
 native_get_sync_instance_no(JNIEnv* env, jobject thiz) {
     jni_asplayer_result result = JNI_ASPLAYER_OK;
     int32_t numb = -1;
@@ -355,6 +369,7 @@ static JNINativeMethod methods[] = {
         {"native_addPlaybackListener", "(Lcom/amlogic/asplayer/api/TsPlaybackListener;)V", (void*)native_add_playback_listener },
         {"native_removePlaybackListener", "(Lcom/amlogic/asplayer/api/TsPlaybackListener;)V", (void*)native_remove_playback_listener },
         {"native_prepare", "()I", (void*)native_prepare },
+        {"native_getInstanceNo", "()I", (void*)native_get_instance_no },
         {"native_getSyncInstanceNo", "()I", (void*)native_get_sync_instance_no },
         {"native_startVideoDecoding", "()I", (void*)native_start_video_decoding },
         {"native_stopVideoDecoding", "()I", (void*)native_stop_video_decoding },

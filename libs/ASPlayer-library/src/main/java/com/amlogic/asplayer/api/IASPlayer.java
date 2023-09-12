@@ -44,7 +44,7 @@ public interface IASPlayer {
     /**
      * Get the instance number of specified ASPlayer
      */
-    int getInstancesNumber();
+    int getInstanceNo();
 
     /**
      * Get the sync instance number of specified ASPlayer
