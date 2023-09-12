@@ -188,8 +188,8 @@ void DynamicJniASPlayerWrapper::initSymbols() {
     CHECK_SYMBOL(ASPlayer_getVersion, "JniASPlayer_getVersion");
     ASPlayer_getInstanceNo = (JniASPlayer_getInstanceNo_FUNC)(dlsym(handle, "JniASPlayer_getInstansNo"));
     CHECK_SYMBOL(ASPlayer_getInstanceNo, "JniASPlayer_getInstansNo");
-    ASPlayer_getSyncInstanceNo = (JniASPlayer_getSyncInstanceNo_FUNC)(dlsym(handle, "JniASPlayer_getSyncInstansNo"));
-    CHECK_SYMBOL(ASPlayer_getSyncInstanceNo, "JniASPlayer_getSyncInstansNo");
+    ASPlayer_getSyncInstanceNo = (JniASPlayer_getSyncInstanceNo_FUNC)(dlsym(handle, "JniASPlayer_getSyncInstanceNo"));
+    CHECK_SYMBOL(ASPlayer_getSyncInstanceNo, "JniASPlayer_getSyncInstanceNo");
     ASPlayer_getJavaASPlayer = (JniASPlayer_getJavaASPlayer_FUNC)(dlsym(handle, "JniASPlayer_getJavaASPlayer"));
     CHECK_SYMBOL(ASPlayer_getJavaASPlayer, "JniASPlayer_getJavaASPlayer");
     ASPlayer_prepare = (JniASPlayer_prepare_FUNC)(dlsym(handle, "JniASPlayer_prepare"));
@@ -225,9 +225,9 @@ void DynamicJniASPlayerWrapper::initSymbols() {
     ASPlayer_setSurface = (JniASPlayer_setSurface_FUNC)(dlsym(handle, "JniASPlayer_setSurface"));
     CHECK_SYMBOL(ASPlayer_setSurface, "JniASPlayer_setSurface");
     ASPlayer_flush = (JniASPlayer_flush_FUNC)(dlsym(handle, "JniASPlayer_flush"));
-    CHECK_SYMBOL(ASPlayer_flush, "ASPlayer_flush");
+    CHECK_SYMBOL(ASPlayer_flush, "JniASPlayer_flush");
     ASPlayer_flushDvr = (JniASPlayer_flush_FUNC)(dlsym(handle, "JniASPlayer_flushDvr"));
-    CHECK_SYMBOL(ASPlayer_flushDvr, "ASPlayer_flushDvr");
+    CHECK_SYMBOL(ASPlayer_flushDvr, "JniASPlayer_flushDvr");
     ASPlayer_setVideoParams = (JniASPlayer_setVideoParams_FUNC)(dlsym(handle, "JniASPlayer_setVideoParams"));
     CHECK_SYMBOL(ASPlayer_setVideoParams, "JniASPlayer_setVideoParams");
     ASPlayer_setTransitionModeBefore = (JniASPlayer_setTransitionModeBefore_FUNC)(dlsym(handle, "JniASPlayer_setTransitionModeBefore"));
@@ -387,6 +387,29 @@ jni_asplayer_result DynamicJniASPlayerWrapper::prepare() {
         return ret;
     }
 
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result DynamicJniASPlayerWrapper::getSyncInstanceNo(int32_t *numb) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_getSyncInstanceNo == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_getSyncInstanceNo(handle, numb);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
     LOG_FUNCTION_INT_END(ret);
     return ret;
 }

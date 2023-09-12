@@ -35,6 +35,7 @@ import com.amlogic.asplayer.api.VideoFormat;
 import com.amlogic.asplayer.api.VideoParams;
 import com.amlogic.asplayer.api.IASPlayer;
 import com.amlogic.asplayer.api.WorkMode;
+import com.amlogic.asplayer.core.utils.Utils;
 
 import java.util.Locale;
 
@@ -86,13 +87,14 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     private VideoSizeInfo mVideoSizeInfo;
 
     private final int mId;
-    private int mInstanceId = Constant.INVALID_INSTANCE_ID;
+    private int mSyncInstanceId = Constant.INVALID_SYNC_INSTANCE_ID;
+    private int mAvSyncHwId = Constant.INVALID_AV_SYNC_ID;
 
-    public interface OnGetInstanceIdListener {
-        void onGetInstanceId(int instanceId);
+    public interface OnGetSyncInstanceIdListener {
+        void onGetSyncInstanceId(int syncInstanceId);
     }
 
-    private OnGetInstanceIdListener mOnGetInstanceIdListener;
+    private OnGetSyncInstanceIdListener mOnGetSyncInstanceIdListener;
 
     public ASPlayerImpl(int id, Context context, Tuner tuner, ASPlayerConfig config, Looper looper) {
         mId = id;
@@ -117,8 +119,8 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         mEventNotifier.mPlaybackListeners.remove(listener);
     }
 
-    public void setOnGetInstanceIdListener(OnGetInstanceIdListener listener) {
-        mOnGetInstanceIdListener = listener;
+    public void setOnGetSyncInstanceIdListener(OnGetSyncInstanceIdListener listener) {
+        mOnGetSyncInstanceIdListener = listener;
     }
 
     @Override
@@ -224,9 +226,8 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     @Override
-    public int getSyncInstancesNumber() {
-        if (DEBUG) ASPlayerLog.d("%s getSyncInstancesNumber start", getTag());
-        return 0;
+    public int getSyncInstanceNo() {
+        return mAvSyncHwId;
     }
 
     @Override
@@ -246,6 +247,9 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             }
         });
         lock.block();
+
+        mAvSyncHwId = Constant.INVALID_AV_SYNC_ID;
+        mSyncInstanceId = Constant.INVALID_SYNC_INSTANCE_ID;
 
         mPlayerThread.quitSafely();
         mPlayerThread = null;
@@ -596,7 +600,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             int filterId = params.getTrackFilterId();
             int avSyncHwId = params.getAvSyncHwId();
 
-            setInstanceId(avSyncHwId);
+            setSyncInstanceIdByAvSyncId(avSyncHwId);
 
             ASPlayerLog.i("%s setVideoParams pid: 0x%04x, filterId: 0x%016x, avsyncHwId: 0x%x, " +
                             "scrambled: %b, media format: %s",
@@ -618,7 +622,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
                 outputPathV3.setAvSyncHwId(avSyncHwId);
             }
 
-            mVideoOutputPath.setInstanceId(getInstanceIdBySyncId(avSyncHwId));
+            mVideoOutputPath.setSyncInstanceId(getSyncInstanceIdByAvSyncId(avSyncHwId));
 
             mRendererScheduler.onSetVideoParams(true);
         } else {
@@ -629,38 +633,36 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
                 outputPathV3.setAvSyncHwId(MediaContainerExtractor.INVALID_AV_SYNC_HW_ID);
             }
 
-            mVideoOutputPath.setInstanceId(Constant.INVALID_INSTANCE_ID);
+            mVideoOutputPath.setSyncInstanceId(Constant.INVALID_SYNC_INSTANCE_ID);
 
             mRendererScheduler.onSetVideoParams(false);
         }
     }
 
-    private void setInstanceId(int avSyncHwId) {
-        int instanceId = getInstanceIdBySyncId(avSyncHwId);
+    private void setSyncInstanceIdByAvSyncId(int avSyncHwId) {
+        mAvSyncHwId = avSyncHwId;
+        int instanceId = getSyncInstanceIdByAvSyncId(avSyncHwId);
 
-        if (instanceId != mInstanceId) {
-            ASPlayerLog.i("%s setInstanceId change instanceId %d to %d", getTag(), mInstanceId, instanceId);
+        if (instanceId != mSyncInstanceId) {
+            ASPlayerLog.i("%s setInstanceId change instanceId %d to %d", getTag(), mSyncInstanceId, instanceId);
         } else {
-            ASPlayerLog.i("%s setInstanceId %d", getTag(), mInstanceId);
+            ASPlayerLog.i("%s setInstanceId %d", getTag(), mSyncInstanceId);
         }
-        mInstanceId = instanceId;
+        mSyncInstanceId = instanceId;
 
         if (mTsPlayback != null) {
-            mTsPlayback.setInstanceId(mInstanceId);
+            mTsPlayback.setSyncInstanceId(mSyncInstanceId);
         }
-        mRendererScheduler.setInstanceId(mInstanceId);
+        mRendererScheduler.setSyncInstanceId(mSyncInstanceId);
+        mEventNotifier.setSyncInstanceId(mSyncInstanceId);
 
-        if (mOnGetInstanceIdListener != null) {
-            mOnGetInstanceIdListener.onGetInstanceId(mInstanceId);
+        if (mOnGetSyncInstanceIdListener != null) {
+            mOnGetSyncInstanceIdListener.onGetSyncInstanceId(mSyncInstanceId);
         }
     }
 
-    private int getInstanceIdBySyncId(int avSyncHwId) {
-        if (avSyncHwId < 0) {
-            return Constant.INVALID_INSTANCE_ID;
-        }
-
-        return avSyncHwId & 0x00FF;
+    private int getSyncInstanceIdByAvSyncId(int avSyncHwId) {
+        return Utils.getSyncInstanceIdByAvSyncId(avSyncHwId);
     }
 
     @Override
@@ -896,7 +898,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             int filterId = params.getTrackFilterId();
             int avSyncHwId = params.getAvSyncHwId();
 
-            setInstanceId(avSyncHwId);
+            setSyncInstanceIdByAvSyncId(avSyncHwId);
 
             ASPlayerLog.i("%s setAudioParams pid: 0x%04x, filterId: 0x%016x, avSyncHwId: 0x%x, format: %s",
                     getTag(), pid, filterId, avSyncHwId, mediaFormat);
@@ -907,14 +909,14 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
             mAudioOutputPath.setAudioParams(params);
 
-            mAudioOutputPath.setInstanceId(getInstanceIdBySyncId(avSyncHwId));
+            mAudioOutputPath.setSyncInstanceId(getSyncInstanceIdByAvSyncId(avSyncHwId));
 
             mRendererScheduler.onSetAudioParams(true);
         } else {
             ASPlayerLog.i("%s setAudioParams params is null", getTag());
             mAudioOutputPath.setAudioParams(null);
 
-            mAudioOutputPath.setInstanceId(Constant.INVALID_INSTANCE_ID);
+            mAudioOutputPath.setSyncInstanceId(Constant.INVALID_SYNC_INSTANCE_ID);
 
             mRendererScheduler.onSetAudioParams(false);
         }
@@ -989,7 +991,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             int filterId = params.getTrackFilterId();
             int avSyncHwId = params.getAvSyncHwId();
 
-            setInstanceId(avSyncHwId);
+            setSyncInstanceIdByAvSyncId(avSyncHwId);
 
             ASPlayerLog.i("%s switchAudioTrack pid: 0x%04x, filterId: 0x%016x, avSyncHwId: 0x%x, format: %s",
                     getTag(), pid, filterId, avSyncHwId, mediaFormat);
@@ -1000,14 +1002,14 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
             mAudioOutputPath.switchAudioTrack(params);
 
-            mAudioOutputPath.setInstanceId(getInstanceIdBySyncId(avSyncHwId));
+            mAudioOutputPath.setSyncInstanceId(getSyncInstanceIdByAvSyncId(avSyncHwId));
 
             mRendererScheduler.onSetAudioParams(true);
         } else {
             ASPlayerLog.i("%s switchAudioTrack params is null", getTag());
             mAudioOutputPath.switchAudioTrack(null);
 
-            mAudioOutputPath.setInstanceId(Constant.INVALID_INSTANCE_ID);
+            mAudioOutputPath.setSyncInstanceId(Constant.INVALID_SYNC_INSTANCE_ID);
 
             mRendererScheduler.onSetAudioParams(false);
         }
@@ -1212,6 +1214,6 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     private String getTag() {
-        return String.format("[No-%d]-[%d]ASPlayer", mInstanceId, mId);
+        return String.format("[No-%d]-[%d]ASPlayer", mSyncInstanceId, mId);
     }
 }

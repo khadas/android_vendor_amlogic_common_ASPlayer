@@ -31,7 +31,7 @@ public class TsPlayback {
     private DvrPlayback mDvrPlayback;
 
     private int mId;
-    private int mInstanceId = Constant.INVALID_INSTANCE_ID;
+    private int mSyncInstanceId = Constant.INVALID_SYNC_INSTANCE_ID;
 
     public TsPlayback(int id, Tuner tuner, long bufferSize) {
         mId = id;
@@ -54,12 +54,12 @@ public class TsPlayback {
         });
     }
 
-    protected void setInstanceId(int instanceId) {
-        mInstanceId = instanceId;
+    protected void setSyncInstanceId(int syncInstanceId) {
+        mSyncInstanceId = syncInstanceId;
     }
 
     private String getTag() {
-        return String.format("[No-%d]-[%d]TsPlayback", mInstanceId, mId);
+        return String.format("[No-%d]-[%d]TsPlayback", mSyncInstanceId, mId);
     }
 
     public int attachFilter(Filter filter) {

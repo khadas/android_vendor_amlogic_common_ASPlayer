@@ -36,7 +36,7 @@ abstract class Renderer {
     protected double mSpeed;
 
     private int mId;
-    protected int mInstanceId = Constant.INVALID_INSTANCE_ID;
+    protected int mSyncInstanceId = Constant.INVALID_SYNC_INSTANCE_ID;
 
     Renderer(int id, RendererScheduler rendererScheduler) {
         mId = id;
@@ -47,7 +47,7 @@ abstract class Renderer {
     }
 
     protected String getTag() {
-        return String.format("[No-%d]-[%d]%s", mInstanceId, mId, getName());
+        return String.format("[No-%d]-[%d]%s", mSyncInstanceId, mId, getName());
     }
 
     protected abstract String getName();
@@ -56,8 +56,8 @@ abstract class Renderer {
 
     void release() {}
 
-    void setInstanceId(int instanceId) {
-        mInstanceId = instanceId;
+    void setSyncInstanceId(int syncInstanceId) {
+        mSyncInstanceId = syncInstanceId;
     }
 
     void startVideo() {

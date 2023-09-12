@@ -48,7 +48,7 @@ class EventNotifier {
     }
 
     private int mId;
-    private int mInstanceId = Constant.INVALID_INSTANCE_ID;
+    private int mSyncInstanceId = Constant.INVALID_SYNC_INSTANCE_ID;
 
     EventNotifier(int id, Looper looper) {
         mId = id;
@@ -56,12 +56,12 @@ class EventNotifier {
         mEventHandler = new WeakHandler(this, looper);
     }
 
-    void setInstanceId(int instanceId) {
-        mInstanceId = instanceId;
+    void setSyncInstanceId(int syncInstanceId) {
+        mSyncInstanceId = syncInstanceId;
     }
 
     private String getTag() {
-        return String.format("[No-%d]-[%d]EventNotifier", mInstanceId, mId);
+        return String.format("[No-%d]-[%d]EventNotifier", mSyncInstanceId, mId);
     }
 
     void release() {

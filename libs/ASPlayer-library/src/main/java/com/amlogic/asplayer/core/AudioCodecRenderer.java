@@ -225,7 +225,7 @@ interface AudioCodecRenderer {
 
     boolean setWorkMode(int workMode);
 
-    void setInstanceId(int instanceId);
+    void setSyncInstanceId(int syncInstanceId);
 
     boolean setPIPMode(int pipMode);
 

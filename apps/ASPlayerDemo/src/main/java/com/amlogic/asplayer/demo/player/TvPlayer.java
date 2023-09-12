@@ -145,6 +145,13 @@ public class TvPlayer {
         });
     }
 
+    public int getSyncInstanceNo() {
+        if (mASPlayer != null) {
+            return mASPlayer.getSyncInstanceNo();
+        }
+        return -1;
+    }
+
     private void handlePrepare() {
     }
 

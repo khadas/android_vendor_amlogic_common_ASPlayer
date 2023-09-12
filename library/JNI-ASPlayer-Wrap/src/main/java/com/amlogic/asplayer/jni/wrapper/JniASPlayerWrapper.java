@@ -95,8 +95,8 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
-    public int getSyncInstancesNumber() {
-        return 0;
+    public int getSyncInstanceNo() {
+        return native_getSyncInstanceNo();
     }
 
     @Override
@@ -370,6 +370,7 @@ public class JniASPlayerWrapper implements IASPlayer {
     private native void native_addPlaybackListener(TsPlaybackListener listener);
     private native void native_removePlaybackListener(TsPlaybackListener listener);
     private native int native_prepare();
+    private native int native_getSyncInstanceNo();
     private native int native_startVideoDecoding();
     private native int native_stopVideoDecoding();
     private native int native_pauseVideoDecoding();

@@ -49,7 +49,7 @@ public interface IASPlayer {
     /**
      * Get the sync instance number of specified ASPlayer
      */
-    int getSyncInstancesNumber();
+    int getSyncInstanceNo();
 
     /**
      * Release specified ASPlayer instance

@@ -150,6 +150,30 @@ asplayer_prepare(JNIEnv* env, jobject jniASPlayerWrapperObj) {
 }
 
 jni_asplayer_result
+asplayer_get_sync_instance_no(JNIEnv *env, jobject jniASPlayerWrapperObj, int32_t *numb) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr) {
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    } else if (numb == nullptr) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    BaseJniASPlayerWrapper *player = getASPlayer(env, jniASPlayerWrapperObj);
+    if (player == nullptr) {
+        LOG_GET_PLAYER_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jni_asplayer_result ret = player->getSyncInstanceNo(numb);
+    if (ret != JNI_ASPLAYER_OK) {
+        ALOGE("[%s/%d] failed to get SyncInstancesNo, ret: %d", __func__, __LINE__, ret);
+    }
+
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result
 asplayer_add_playback_listener(JNIEnv* env, jobject jniASPlayerWrapperObj, jobject jListener) {
     LOG_FUNCTION_ENTER();
     if (env == nullptr) {

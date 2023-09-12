@@ -90,6 +90,26 @@ jni_asplayer_result  JniASPlayer_prepare(jni_asplayer_handle handle) {
 }
 
 /**
+ *@brief:        Get the sync instance number of specified JniASPlayer .
+ *@param:        handle    JniASPlayer handle.
+ *@param:        *Numb     JniASPlayer instance number.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_getSyncInstanceNo(jni_asplayer_handle handle, int32_t *numb) {
+    LOG_FUNCTION_ENTER();
+    if (handle == 0) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    } else if (!numb) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
+    jni_asplayer_result ret = player->getSyncInstanceNo(numb);
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+/**
  *@brief:        Get video basic info of specified JniASPlayer instance.
  *@param:        Handle      JniASPlayer handle.
  *@param:        *pInfo      The ptr of video basic info struct .

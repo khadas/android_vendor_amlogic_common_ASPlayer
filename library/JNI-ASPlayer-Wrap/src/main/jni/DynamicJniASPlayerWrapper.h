@@ -93,6 +93,7 @@ public:
     jni_asplayer_result create(jni_asplayer_init_params &params, void *jTuner, jni_asplayer_handle *handle);
     jni_asplayer_result getJavaASPlayer(jobject *pPlayer);
     jni_asplayer_result prepare();
+    jni_asplayer_result getSyncInstanceNo(int32_t *numb);
     jni_asplayer_result addPlaybackListener(JNIEnv *env, jobject listener);
     jni_asplayer_result removePlaybackListener(JNIEnv *env, jobject listener);
     jni_asplayer_result startVideoDecoding();

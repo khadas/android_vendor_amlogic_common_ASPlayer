@@ -37,7 +37,7 @@ public class ASPlayer implements IASPlayer {
     // Mainly for debug
     private final int mId;
     private static AtomicInteger sId = new AtomicInteger(0);
-    private int mInstanceId = Constant.INVALID_INSTANCE_ID;
+    private int mSyncInstanceId = Constant.INVALID_SYNC_INSTANCE_ID;
 
     private ASPlayerConfig mConfig;
     private ASPlayerImpl mPlayer;
@@ -56,7 +56,7 @@ public class ASPlayer implements IASPlayer {
             looper = Looper.getMainLooper();
         }
         mPlayer = new ASPlayerImpl(mId, appContext, tuner, mConfig, looper);
-        mPlayer.setOnGetInstanceIdListener(this::onGetInstanceId);
+        mPlayer.setOnGetSyncInstanceIdListener(this::onGetSyncInstanceId);
 
         logVersionInfo();
     }
@@ -90,12 +90,12 @@ public class ASPlayer implements IASPlayer {
         mPlayer.removePlaybackListener(listener);
     }
 
-    private void onGetInstanceId(int instanceId) {
-        mInstanceId = instanceId;
+    private void onGetSyncInstanceId(int syncInstanceId) {
+        mSyncInstanceId = syncInstanceId;
     }
 
     private String getTag() {
-        return String.format("[No-%d]-[%d]ASPlayer", mInstanceId, mId);
+        return String.format("[No-%d]-[%d]ASPlayer", mSyncInstanceId, mId);
     }
 
     /**
@@ -145,9 +145,9 @@ public class ASPlayer implements IASPlayer {
      * Get the sync instance number of specified ASPlayer
      */
     @Override
-    public int getSyncInstancesNumber() {
-        if (DEBUG) ASPlayerLog.d("%s getSyncInstancesNumber start", getTag());
-        throw new RuntimeException("Not Implementation");
+    public int getSyncInstanceNo() {
+        if (DEBUG) ASPlayerLog.d("%s getSyncInstanceNo start", getTag());
+        return mPlayer.getSyncInstanceNo();
     }
 
     /**

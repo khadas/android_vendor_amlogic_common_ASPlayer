@@ -50,7 +50,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
     private int mLastWorkMode = -1;
     private int mTargetWorkMode = mLastWorkMode;
-    private int mInstanceId = Constant.INVALID_INSTANCE_ID;
+    private int mSyncInstanceId = Constant.INVALID_SYNC_INSTANCE_ID;
 
     private int mLastPIPMode = -1;
     private int mTargetPIPMode = mLastPIPMode;
@@ -69,8 +69,8 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     }
 
     @Override
-    public void setInstanceId(int instanceId) {
-        mInstanceId = instanceId;
+    public void setSyncInstanceId(int syncInstanceId) {
+        mSyncInstanceId = syncInstanceId;
     }
 
     @Override
@@ -590,6 +590,6 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     }
 
     private String getTag() {
-        return String.format("[No-%d]-[%d]AudioCodecRendererV3", mInstanceId, mId);
+        return String.format("[No-%d]-[%d]AudioCodecRendererV3", mSyncInstanceId, mId);
     }
 }

@@ -30,6 +30,9 @@ jni_asplayer_result
 asplayer_prepare(JNIEnv *env, jobject jniASPlayerWrapperObj);
 
 jni_asplayer_result
+asplayer_get_sync_instance_no(JNIEnv *env, jobject jniASPlayerWrapperObj, int32_t *numb);
+
+jni_asplayer_result
 asplayer_add_playback_listener(JNIEnv *env, jobject jniASPlayerWrapperObj, jobject jListener);
 
 jni_asplayer_result

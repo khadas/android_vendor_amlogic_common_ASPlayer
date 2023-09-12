@@ -87,8 +87,8 @@ abstract class MediaOutputPath {
     protected int mTargetPIPMode = PIPMode.NORMAL;
     protected int mLastPIPMode = -1;
 
-    protected int mId;
-    protected int mInstanceId = Constant.INVALID_INSTANCE_ID;
+    protected final int mId;
+    protected int mSyncInstanceId = Constant.INVALID_SYNC_INSTANCE_ID;
 
     MediaOutputPath(int id) {
         mId = id;
@@ -100,8 +100,8 @@ abstract class MediaOutputPath {
 
     abstract String getCodecName();
 
-    void setInstanceId(int syncId) {
-        mInstanceId = syncId;
+    void setSyncInstanceId(int syncInstanceId) {
+        mSyncInstanceId = syncInstanceId;
     }
 
     void setHandler(Handler handler) {
@@ -417,6 +417,6 @@ abstract class MediaOutputPath {
     }
 
     protected String getTag() {
-        return String.format("[No-%d]-[%d]%s", mInstanceId, mId, getName());
+        return String.format("[No-%d]-[%d]%s", mSyncInstanceId, mId, getName());
     }
 }

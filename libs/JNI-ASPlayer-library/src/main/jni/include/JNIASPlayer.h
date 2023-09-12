@@ -388,11 +388,11 @@ jni_asplayer_result  JniASPlayer_getInstansNo(jni_asplayer_handle Handle, uint32
 
 /**
  *@brief:        Get the sync instance number of specified JniASPlayer .
- *@param:        Handle    JniASPlayer handle.
+ *@param:        handle    JniASPlayer handle.
  *@param:        *Numb     JniASPlayer instance number.
  *@return:       The JniASPlayer result.
  */
-jni_asplayer_result  JniASPlayer_getSyncInstansNo(jni_asplayer_handle Handle, int32_t *Numb);
+jni_asplayer_result  JniASPlayer_getSyncInstanceNo(jni_asplayer_handle handle, int32_t *numb);
 
 /**
  *@brief:        Register event callback to specified JniASPlayer

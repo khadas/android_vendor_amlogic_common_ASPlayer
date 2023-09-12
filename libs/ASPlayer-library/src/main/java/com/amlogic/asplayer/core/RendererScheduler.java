@@ -32,7 +32,7 @@ class RendererScheduler implements Runnable {
 
     // for identification
     private int mId;
-    private int mInstanceId = Constant.INVALID_INSTANCE_ID;
+    private int mSyncInstanceId = Constant.INVALID_SYNC_INSTANCE_ID;
 
     private Handler mHandler;
 
@@ -102,12 +102,12 @@ class RendererScheduler implements Runnable {
         mNoVideoSpeedTask = new RendererTrickNoVideo(mId, this);
     }
 
-    void setInstanceId(int instanceId) {
-        mInstanceId = instanceId;
-        mPlaybackTask.setInstanceId(instanceId);
-        mSmoothSpeedTask.setInstanceId(instanceId);
-        mSpeedBySeekTask.setInstanceId(instanceId);
-        mNoVideoSpeedTask.setInstanceId(instanceId);
+    void setSyncInstanceId(int syncInstanceId) {
+        mSyncInstanceId = syncInstanceId;
+        mPlaybackTask.setSyncInstanceId(syncInstanceId);
+        mSmoothSpeedTask.setSyncInstanceId(syncInstanceId);
+        mSpeedBySeekTask.setSyncInstanceId(syncInstanceId);
+        mNoVideoSpeedTask.setSyncInstanceId(syncInstanceId);
     }
 
     IASPlayer getASPlayer() {
@@ -536,6 +536,6 @@ class RendererScheduler implements Runnable {
     }
 
     private String getTag() {
-        return String.format("[No-%d]-[%d]RendererScheduler", mInstanceId, mId);
+        return String.format("[No-%d]-[%d]RendererScheduler", mSyncInstanceId, mId);
     }
 }

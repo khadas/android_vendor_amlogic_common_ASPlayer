@@ -73,10 +73,10 @@ class AudioOutputPath extends MediaOutputPath {
     }
 
     @Override
-    void setInstanceId(int syncId) {
-        super.setInstanceId(syncId);
+    void setSyncInstanceId(int syncInstanceId) {
+        super.setSyncInstanceId(syncInstanceId);
         if (mAudioCodecRenderer != null) {
-            mAudioCodecRenderer.setInstanceId(syncId);
+            mAudioCodecRenderer.setSyncInstanceId(syncInstanceId);
         }
     }
 
