@@ -123,9 +123,12 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
     @Override
     public void setVolume(float gain) {
+        ASPlayerLog.i("%s setVolume: %.3f", getTag(), gain);
         mGain = gain;
-        if (mAudioTrack != null)
+        if (mAudioTrack != null) {
+            ASPlayerLog.i("%s audioTrack: %s, setVolume: %.3f", getTag(), mAudioTrack, gain);
             mAudioTrack.setVolume(gain);
+        }
     }
 
     @Override

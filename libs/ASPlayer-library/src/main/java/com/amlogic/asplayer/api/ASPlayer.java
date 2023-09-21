@@ -457,7 +457,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public void setAudioStereoMode(int audioStereoMode) {
-        if (DEBUG) ASPlayerLog.d("%s setAudioStereoMode start", getTag());
+        if (DEBUG) ASPlayerLog.d("%s setAudioStereoMode start, audioStereoMode: %d", getTag(), audioStereoMode);
         throw new RuntimeException("Not Implementation");
     }
 
@@ -478,7 +478,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int setAudioMute(boolean analogMute, boolean digitalMute) {
-        if (DEBUG) ASPlayerLog.d("%s setAudioMute start", getTag());
+        if (DEBUG) ASPlayerLog.d("%s setAudioMute start, mute: %b, %b", getTag(), analogMute, digitalMute);
         return mPlayer.setAudioMute(analogMute, digitalMute);
     }
 
@@ -637,7 +637,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int setSubtitlePid(int pid) {
-        if (DEBUG) ASPlayerLog.d("%s setSubtitlePid start", getTag());
+        if (DEBUG) ASPlayerLog.d("%s setSubtitlePid start, pid: %d", getTag(), pid);
         throw new RuntimeException("Not Implementation");
     }
 
@@ -677,7 +677,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public long getFirstPts(int streamType) {
-        if (DEBUG) ASPlayerLog.d("%s getFirstPts start", getTag());
+        if (DEBUG) ASPlayerLog.d("%s getFirstPts start, streamType: %d", getTag(), streamType);
         throw new RuntimeException("Not Implementation");
     }
 }

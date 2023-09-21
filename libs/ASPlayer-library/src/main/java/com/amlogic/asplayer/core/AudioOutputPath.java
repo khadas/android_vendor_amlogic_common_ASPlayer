@@ -81,6 +81,7 @@ class AudioOutputPath extends MediaOutputPath {
     }
 
     void setMuted(boolean muted) {
+        ASPlayerLog.i("%s setMuted: %b", getTag(), muted);
         if (muted) {
             mGain = 0.f;
             mMute = true;
