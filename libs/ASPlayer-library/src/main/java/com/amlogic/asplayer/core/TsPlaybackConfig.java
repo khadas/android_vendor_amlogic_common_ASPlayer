@@ -19,6 +19,6 @@ public class TsPlaybackConfig {
     public static final int TRACK_MARGIN_US = 200000;
     public static final int INVALID_VALUE = -1;
     public static final long MAX_PLAYBACK_BUFFER_TIME_MS = 1000;
-    public static final long PLAYBACK_BUFFER_SIZE = TS_PACKET_SIZE * 32768;
+    public static final long PLAYBACK_BUFFER_SIZE = TS_PACKET_SIZE * 1000;
     public static final long THRESHOLD_POSITION_DIFF = 1000;
 }
