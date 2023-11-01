@@ -27,7 +27,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ASPlayer implements IASPlayer {
 
     private static final boolean DEBUG = true;
-    private static final String TAG = "ASPlayer";
 
     public static final int INFO_ERROR_RETRY = ErrorCode.ERROR_RETRY;
     public static final int INFO_BUSY = ErrorCode.ERROR_BUSY;
@@ -78,6 +77,10 @@ public class ASPlayer implements IASPlayer {
         }
     }
 
+    protected String getName() {
+        return "ASPlayer";
+    }
+
     @Override
     public void addPlaybackListener(TsPlaybackListener listener) {
         ASPlayerLog.i("%s addPlaybackListener start", getTag());
@@ -95,7 +98,7 @@ public class ASPlayer implements IASPlayer {
     }
 
     private String getTag() {
-        return String.format("[No-%d]-[%d]ASPlayer", mSyncInstanceId, mId);
+        return String.format("[No-%d]-[%d]%s", mSyncInstanceId, mId, getName());
     }
 
     /**

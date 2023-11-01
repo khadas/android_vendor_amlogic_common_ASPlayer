@@ -265,7 +265,6 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     private void handleRelease() {
         handleStop();
-        mRendererScheduler.setDataListener(null);
         mRendererScheduler.setVideoFormatListener(null);
         mRendererScheduler.setAudioFormatListener(null);
         mRendererScheduler.release();
@@ -377,6 +376,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
                 mTsPlayback.flush();
                 mTsPlayback.start();
                 lock.open();
+                ASPlayerLog.i("%s flushDvr success", getTag());
             });
             lock.block();
             return ErrorCode.SUCCESS;

@@ -99,7 +99,8 @@ class VideoOutputPathV3 extends VideoOutputPath {
             }
             notifyFrameDisplayed(presentationTimeUs, nanoTime / 1000);
             if (!mFirstFrameDisplayed) {
-                ASPlayerLog.i("%s [KPI-FCC] onFrameRendered", getTag());
+                ASPlayerLog.i("%s [KPI-FCC] onFrameRendered pts: %d, nanoTime: %d",
+                        getTag(), presentationTimeUs, nanoTime);
             }
             mLastRenderedTimeUs = presentationTimeUs;
             mFirstFrameDisplayed = true;
@@ -231,6 +232,11 @@ class VideoOutputPathV3 extends VideoOutputPath {
                 mediaCodec = mMediaCodec;
             } else {
                 mediaCodec = MediaCodecUtils.findMediaCodec(format, mTunneledPlayback, mSecurePlayback);
+            }
+
+            if (mediaCodec == null) {
+                ASPlayerLog.i("%s can not create mediacodec", getTag());
+                return false;
             }
 
             if (mTunneledPlayback) {

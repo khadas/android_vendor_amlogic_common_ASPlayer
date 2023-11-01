@@ -42,7 +42,6 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     private static final int AUDIO_BUFFER_SIZE = 256;
     private OutputBufferListener mOutputBufferListener;
     private AudioTimestamp timestamp = new AudioTimestamp();
-    private long mLastRenderedTimeUs;
     private final ByteBuffer mEmptyPacket = ByteBuffer.allocate(AUDIO_BUFFER_SIZE);
     private final ByteBuffer mMetadataPacket = ByteBuffer.allocate(AUDIO_BUFFER_SIZE);
     private final List<Metadata> mMetadata = new ArrayList<>();
@@ -396,7 +395,9 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
     @Override
     public void pause() {
+        ASPlayerLog.i("%s pause start", getTag());
         if (mAudioTrack != null) {
+            ASPlayerLog.i("%s pause AudioTrack: %s", getTag(), mAudioTrack);
             mAudioTrack.pause();
         }
         mPaused = true;
@@ -404,8 +405,10 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
     @Override
     public void resume() {
+        ASPlayerLog.i("%s resume start", getTag());
         if (mPaused) {
             if (mAudioTrack != null) {
+                ASPlayerLog.i("%s resume AudioTrack: %s", getTag(), mAudioTrack);
                 mAudioTrack.play();
             }
             mPaused = false;
@@ -545,7 +548,10 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
         ASPlayerLog.i("%s switchAudioTrackMode type: %s", getTag(), cache ? "cache" : "normal");
         if (cache) {
             ASPlayerLog.i("%s AudioTrack.setVolume(0)", getTag());
-            mAudioTrack.setVolume(0.f);
+            int ret = mAudioTrack.setVolume(0.f);
+            if (ret != AudioTrack.SUCCESS) {
+                ASPlayerLog.e("%s AudioTrack.setVolume(0) failed, ret: %d", getTag(), ret);
+            }
             ASPlayerLog.i("%s AudioTrack.stop", getTag());
             mAudioTrack.stop();
             mErrorMessage = null;
@@ -553,7 +559,10 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
             releaseDecoderThread();
         } else {
             ASPlayerLog.i("%s AudioTrack.setVolume: %.2f", getTag(), mGain);
-            mAudioTrack.setVolume(mGain);
+            int ret = mAudioTrack.setVolume(mGain);
+            if (ret != AudioTrack.SUCCESS) {
+                ASPlayerLog.e("%s AudioTrack.setVolume: %.2f failed", getTag(), mGain);
+            }
             ASPlayerLog.i("%s AudioTrack.play", getTag());
             mAudioTrack.play();
             mErrorMessage = null;

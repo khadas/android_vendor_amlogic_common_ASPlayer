@@ -22,14 +22,19 @@ class PositionHandler {
     private long mPositionUs;
 
     final int mId;
+    private int mSyncInstanceId = Constant.INVALID_SYNC_INSTANCE_ID;
 
     PositionHandler(int id) {
         mId = id;
         mTimeFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
+    void setSyncInstanceId(int syncInstanceId) {
+        mSyncInstanceId = syncInstanceId;
+    }
+
     synchronized void reset() {
-        ASPlayerLog.i("PositionHandler-%d reset", mId);
+        ASPlayerLog.i("%s reset", getTag());
         mOriginSet = false;
         mPositionUs = 0;
 
@@ -38,7 +43,7 @@ class PositionHandler {
     }
 
     synchronized void unsetOrigin() {
-        ASPlayerLog.i("PositionHandler-%d unsetOrigin", mId);
+        ASPlayerLog.i("%s unsetOrigin", getTag());
         mOriginSet = false;
     }
 
@@ -57,7 +62,7 @@ class PositionHandler {
     }
 
     synchronized void setPositionUs(long positionUs) {
-        if (DEBUG) ASPlayerLog.i("PositionHandler-%d positionUs: %d", mId, positionUs);
+        if (DEBUG) ASPlayerLog.i("%s positionUs: %d", getTag(), positionUs);
         mPositionUs = positionUs;
     }
 
@@ -70,11 +75,15 @@ class PositionHandler {
     }
 
     private void logPosition() {
-        ASPlayerLog.i(String.format("PositionHandler-%d current: %d, %s",
-                mId, mPositionUs, formatTime(mPositionUs / 1000)));
+        ASPlayerLog.i(String.format("%s current: %d, %s",
+                getTag(), mPositionUs, formatTime(mPositionUs / 1000)));
     }
 
     private String formatTime(long timeMs) {
         return mTimeFormat.format(timeMs);
+    }
+
+    private String getTag() {
+        return String.format("[No-%d]-[%d]PositionHandler", mSyncInstanceId, mId);
     }
 }

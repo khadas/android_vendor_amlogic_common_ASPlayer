@@ -321,12 +321,14 @@ class AudioOutputPath extends MediaOutputPath {
     }
 
     public void pause() {
+        ASPlayerLog.i("%s pause start", getTag());
         if (mAudioCodecRenderer != null) {
             mAudioCodecRenderer.pause();
         }
     }
 
     public void resume() {
+        ASPlayerLog.i("%s resume start", getTag());
         if (mAudioCodecRenderer != null) {
             mAudioCodecRenderer.resume();
         }

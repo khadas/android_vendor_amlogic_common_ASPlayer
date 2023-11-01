@@ -108,6 +108,7 @@ class RendererScheduler implements Runnable {
         mSmoothSpeedTask.setSyncInstanceId(syncInstanceId);
         mSpeedBySeekTask.setSyncInstanceId(syncInstanceId);
         mNoVideoSpeedTask.setSyncInstanceId(syncInstanceId);
+        mPositionHandler.setSyncInstanceId(syncInstanceId);
     }
 
     IASPlayer getASPlayer() {
@@ -326,6 +327,7 @@ class RendererScheduler implements Runnable {
     }
 
     void pauseVideoDecoding() {
+        ASPlayerLog.i("%s pauseVideoDecoding start", getTag());
         mVideoStarted = false;
         mFirstVideoFrameDisplayed = false;
         if (mCurrentSpeedTask != null) {
@@ -340,6 +342,7 @@ class RendererScheduler implements Runnable {
     }
 
     void resumeVideoDecoding() {
+        ASPlayerLog.i("%s resumeVideoDecoding start", getTag());
         mVideoStarted = true;
         mFirstVideoFrameDisplayed = false;
         stopRendererTask();
@@ -378,6 +381,7 @@ class RendererScheduler implements Runnable {
     }
 
     void pauseAudioDecoding() {
+        ASPlayerLog.i("%s pauseAudioDecoding start", getTag());
         mAudioStarted = false;
         mFirstAudioFrameDisplayed = false;
         if (mCurrentSpeedTask != null) {
@@ -388,6 +392,7 @@ class RendererScheduler implements Runnable {
     }
 
     void resumeAudioDecoding() {
+        ASPlayerLog.i("%s resumeAudioDecoding start", getTag());
         mAudioStarted = true;
         mFirstAudioFrameDisplayed = false;
         stopRendererTask();
@@ -426,7 +431,6 @@ class RendererScheduler implements Runnable {
     }
 
     private void onMediaFrame(MediaOutputPath outputPath, long presentationTimeUs, long renderTime) {
-//        ASPlayerLog.i("RendererScheduler-%d onMediaFrame", mId);
         if (mPositionHandler.isUpdateNeeded()) {
             mPositionHandler.setPresentationTimestampUs(presentationTimeUs);
         }

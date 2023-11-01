@@ -171,7 +171,7 @@ jni_asplayer_result JniASPlayerWrapper::addPlaybackListener(JNIEnv *env, jobject
 jni_asplayer_result JniASPlayerWrapper::removePlaybackListener(JNIEnv *env, jobject listener) {
     LOG_FUNCTION_ENTER();
     std::lock_guard<std::mutex> lock(mEventMutex);
-    // 删除所有相同的callback
+    // remove callback
     for (std::list<PlaybackListenerWrapper*>::iterator it = mPlaybackListeners.begin(); it != mPlaybackListeners.end(); ) {
         PlaybackListenerWrapper *listenerWrapper = (*it);
         if (env->IsSameObject(listenerWrapper->getJavaListener(), listener)) {

@@ -24,7 +24,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 class EventNotifier {
 
     // Should be careful enabling this since may produce many traces!
-    private static final boolean LOCAL_LOG_NOTIFICATIONS = true;
+    private static final boolean LOG_NOTIFICATIONS = true;
 
     private final Handler mEventHandler;
 
@@ -124,7 +124,7 @@ class EventNotifier {
         switch (eventType) {
             case EventType.EVENT_TYPE_VIDEO_CHANGED: {
                 MediaFormat videoFormat = (MediaFormat) msg.obj;
-                if (LOCAL_LOG_NOTIFICATIONS) {
+                if (LOG_NOTIFICATIONS) {
                     ASPlayerLog.d("%s notifyEvent: VideoFormatChangeEvent(%s)", getTag(), videoFormat);
                 }
                 for (TsPlaybackListener listener : mPlaybackListeners) {
@@ -134,7 +134,7 @@ class EventNotifier {
                 break;
             case EventType.EVENT_TYPE_AUDIO_CHANGED: {
                 MediaFormat audioFormat= (MediaFormat) msg.obj;
-                if (LOCAL_LOG_NOTIFICATIONS) {
+                if (LOG_NOTIFICATIONS) {
                     ASPlayerLog.d("%s notifyEvent: AudioFormatChangeEvent(%s)", getTag(), audioFormat);
                 }
                 for (TsPlaybackListener listener : mPlaybackListeners) {
@@ -144,7 +144,7 @@ class EventNotifier {
                 break;
             case EventType.EVENT_TYPE_RENDER_FIRST_FRAME_VIDEO: {
                 VideoFirstFrameEvent event = (VideoFirstFrameEvent) msg.obj;
-                if (LOCAL_LOG_NOTIFICATIONS) {
+                if (LOG_NOTIFICATIONS) {
                     ASPlayerLog.d("%s notifyEvent: VideoFirstFrameEvent(%s)", getTag(), event);
                 }
                 notifyPlaybackEvent(event);
@@ -152,7 +152,7 @@ class EventNotifier {
                 break;
             case EventType.EVENT_TYPE_RENDER_FIRST_FRAME_AUDIO: {
                 AudioFirstFrameEvent event = (AudioFirstFrameEvent) msg.obj;
-                if (LOCAL_LOG_NOTIFICATIONS) {
+                if (LOG_NOTIFICATIONS) {
                     ASPlayerLog.d("%s notifyEvent: AudioFirstFrameEvent(%s)", getTag(), event);
                 }
                 notifyPlaybackEvent(event);
@@ -160,7 +160,7 @@ class EventNotifier {
                 break;
             case EventType.EVENT_TYPE_DECODE_FIRST_FRAME_VIDEO: {
                 DecodeFirstVideoFrameEvent event = (DecodeFirstVideoFrameEvent) msg.obj;
-                if (LOCAL_LOG_NOTIFICATIONS) {
+                if (LOG_NOTIFICATIONS) {
                     ASPlayerLog.d("%s notifyEvent: DecodeFirstVideoFrameEvent(%s)", getTag(), event);
                 }
                 notifyPlaybackEvent(event);
@@ -168,7 +168,7 @@ class EventNotifier {
                 break;
             case EventType.EVENT_TYPE_DECODE_FIRST_FRAME_AUDIO: {
                 DecodeFirstAudioFrameEvent event = (DecodeFirstAudioFrameEvent) msg.obj;
-                if (LOCAL_LOG_NOTIFICATIONS) {
+                if (LOG_NOTIFICATIONS) {
                     ASPlayerLog.d("%s notifyEvent: DecodeFirstAudioFrameEvent(%s)", getTag(), event);
                 }
                 notifyPlaybackEvent(event);

@@ -57,7 +57,7 @@ class VideoOutputPath extends MediaOutputPath {
 
         @Override
         public void onOutputFormatChanged(MediaCodec codec, MediaFormat format) {
-            ASPlayerLog.i("VideoOutputPath-%d onOutputFormatChanged, format: %s", mId, format);
+            ASPlayerLog.i("%s onOutputFormatChanged, format: %s", getTag(), format);
             if (mMediaCodecStarter != null)
                 return;
             onMediaCodecOutputFormatChanged(codec, format);
@@ -70,9 +70,8 @@ class VideoOutputPath extends MediaOutputPath {
             if (mTimestampKeeper.isEmpty())
                 return;
             mTimestampKeeper.removeTimestamp(presentationTimeUs);
-//            ASPlayerLog.i("VideoOutputPath-%d onFrameRendered pts: %d, nanoTime: %d",
-//                    mId, presentationTimeUs, nanoTime);
-            ASPlayerLog.i("%s [KPI-FCC] onFrameRendered", getTag());
+            ASPlayerLog.i("%s [KPI-FCC] onFrameRendered pts: %d, nanoTime: %d",
+                    getTag(), presentationTimeUs, nanoTime);
             notifyFrameDisplayed(presentationTimeUs, nanoTime / 1000);
         }
     }
@@ -81,7 +80,7 @@ class VideoOutputPath extends MediaOutputPath {
         @Override
         public void run() {
             if (mMediaCodec != null) {
-                ASPlayerLog.i("VideoOutputPath-%d start mediacodec: %s", mId, mMediaCodec);
+                ASPlayerLog.i("%s start mediacodec: %s", getTag(), mMediaCodec);
                 startMediaCodec();
             }
             mMediaCodecStarter = null;
@@ -894,7 +893,7 @@ class VideoOutputPath extends MediaOutputPath {
     }
 
     private void discardOutstandingCallbacksAndStart() {
-        ASPlayerLog.i("VideoOutputPath-%d discardOutstandingCallbacksAndStart mediacodec: %s", mId, mMediaCodec);
+        ASPlayerLog.i("%s discardOutstandingCallbacksAndStart mediacodec: %s", getTag(), mMediaCodec);
         if (mMediaCodecStarter != null)
             getHandler().removeCallbacks(mMediaCodecStarter);
         else

@@ -21,4 +21,9 @@ public class JniASPlayer extends ASPlayer {
     public JniASPlayer(InitParams initParams, Tuner tuner, Looper looper) {
         super(initParams, tuner, looper);
     }
+
+    @Override
+    protected String getName() {
+        return "JniASPlayer";
+    }
 }

@@ -276,7 +276,6 @@ class RendererPlaybackV3 extends Renderer {
 
     @Override
     long doSomeWork() {
-//        if (DEBUG) ASPlayerLog.i("RendererPlaybackV3-%d ", mId);
         initLoop();
         // sort tasks
         // - prioritize task
