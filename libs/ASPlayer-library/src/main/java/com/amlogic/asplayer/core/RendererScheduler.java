@@ -18,7 +18,7 @@ import android.util.Log;
 import com.amlogic.asplayer.api.IASPlayer;
 import com.amlogic.asplayer.api.VideoTrickMode;
 
-class RendererScheduler implements Runnable {
+class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener {
 
     private static final boolean DEBUG = false;
 
@@ -82,6 +82,7 @@ class RendererScheduler implements Runnable {
         MediaOutputPath.FrameListener frameListener = this::onMediaFrame;
         mAudioOutputPath.setFrameListener(frameListener);
         mVideoOutputPath.setFrameListener(frameListener);
+        mVideoOutputPath.setDecoderListener(this);
 
         mPositionHandler = new PositionHandler(mId);
 
@@ -152,8 +153,7 @@ class RendererScheduler implements Runnable {
 
     void release() {
         mPlaybackTask.release();
-        mVideoOutputPath.release();
-        mAudioOutputPath.release();
+        mVideoOutputPath.setDecoderListener(null);
         setHandler(null);
     }
 
@@ -463,6 +463,13 @@ class RendererScheduler implements Runnable {
 
         if (mConfig.isPtsEventEnabled()) {
             mEventNotifier.notifyAudioFrameRendered(presentationTimeUs, renderTime);
+        }
+    }
+
+    @Override
+    public void onDecoderInitCompleted(MediaOutputPath outputPath) {
+        if (mVideoOutputPath != null && outputPath == mVideoOutputPath) {
+            mEventNotifier.notifyVideoDecoderInitCompleted();
         }
     }
 

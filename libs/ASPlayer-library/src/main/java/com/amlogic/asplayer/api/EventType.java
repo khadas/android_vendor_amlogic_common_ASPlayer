@@ -72,4 +72,9 @@ public class EventType {
      * av sync done
      */
     public static final int EVENT_TYPE_AV_SYNC_DONE = EVENT_TYPE_RENDER_FIRST_FRAME_AUDIO + 1;
+
+    /**
+     * The video decoder init completed
+     */
+    public static final int EVENT_TYPE_VIDEO_DECODER_INIT_COMPLETED = EVENT_TYPE_AV_SYNC_DONE + 1;
 }

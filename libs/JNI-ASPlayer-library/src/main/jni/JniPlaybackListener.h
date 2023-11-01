@@ -52,6 +52,8 @@ private:
 
     void handlePtsEvent(JNIEnv *env, jobject jEvent);
 
+    void handlePlaybackInfoEvent(JNIEnv *env, jobject jEvent);
+
     void notifyCallbackEvent(jni_asplayer_event *event);
 
 private:

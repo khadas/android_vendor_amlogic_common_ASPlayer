@@ -37,6 +37,10 @@ abstract class MediaOutputPath {
         void onFirstData(MediaOutputPath outputPath);
     }
 
+    interface DecoderListener {
+        void onDecoderInitCompleted(MediaOutputPath outputPath);
+    }
+
     // the handler in which all stuff must be done
     private Handler mHandler;
 
@@ -67,6 +71,7 @@ abstract class MediaOutputPath {
     // listeners
     private FrameListener mFrameListener;
     private DataListener mDataListener;
+    private DecoderListener mDecoderListener;
 
     // critical error : no decode for any reason
     // TODO : la gestion des erreurs, comment integrer
@@ -331,6 +336,16 @@ abstract class MediaOutputPath {
 
     void setDataListener(DataListener listener) {
         mDataListener = listener;
+    }
+
+    void setDecoderListener(DecoderListener listener) {
+        mDecoderListener = listener;
+    }
+
+    void notifyDecoderInitCompleted() {
+        if (mDecoderListener != null) {
+            mDecoderListener.onDecoderInitCompleted(this);
+        }
     }
 
     void notifyFrameDisplayed(long presentationTimeUs, long renderTime) {

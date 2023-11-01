@@ -19,7 +19,7 @@
 
 static void asplayer_callback(void *user_data, jni_asplayer_event *event) {
     if (event && event->type != JNI_ASPLAYER_EVENT_TYPE_PTS) {
-        ALOGI("%s[%d] event type: %d", __FUNCTION__, __LINE__, event ? event->type : -1);
+        ALOGI("[%s/%d] event type: %d", __FUNCTION__, __LINE__, event->type);
     }
 
     asplayer_callback_userdata_t *data = static_cast<asplayer_callback_userdata_t *>(user_data);
@@ -38,6 +38,7 @@ static void asplayer_callback(void *user_data, jni_asplayer_event *event) {
         case JNI_ASPLAYER_EVENT_TYPE_DECODE_FIRST_FRAME_VIDEO:
         case JNI_ASPLAYER_EVENT_TYPE_DECODE_FIRST_FRAME_AUDIO:
         case JNI_ASPLAYER_EVENT_TYPE_PTS:
+        case JNI_ASPLAYER_EVENT_TYPE_VIDEO_DECODER_INIT_COMPLETED:
             player->notifyPlaybackListeners(event);
             break;
         default:

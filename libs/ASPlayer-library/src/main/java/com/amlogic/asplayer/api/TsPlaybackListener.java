@@ -12,7 +12,18 @@ import android.media.MediaFormat;
 
 public interface TsPlaybackListener {
 
-    static abstract class PlaybackEvent {
+    abstract class PlaybackEvent {
+        private final int mEventType;
+
+        public PlaybackEvent(int eventType) {
+            mEventType = eventType;
+        }
+
+        public final int getEventType() {
+            return mEventType;
+        }
+
+        public abstract String getEventName();
     }
 
     /**
@@ -22,7 +33,13 @@ public interface TsPlaybackListener {
         private final MediaFormat mVideoFormat;
 
         public VideoFormatChangeEvent(MediaFormat videoFormat) {
+            super(EventType.EVENT_TYPE_VIDEO_CHANGED);
             this.mVideoFormat = videoFormat;
+        }
+
+        @Override
+        public String getEventName() {
+            return "VideoFormatChangeEvent";
         }
 
         public MediaFormat getVideoFormat() {
@@ -37,7 +54,13 @@ public interface TsPlaybackListener {
         private final MediaFormat mAudioFormat;
 
         public AudioFormatChangeEvent(MediaFormat audioFormat) {
+            super(EventType.EVENT_TYPE_AUDIO_CHANGED);
             mAudioFormat = audioFormat;
+        }
+
+        @Override
+        public String getEventName() {
+            return "AudioFormatChangeEvent";
         }
 
         public MediaFormat getAudioFormat() {
@@ -52,7 +75,8 @@ public interface TsPlaybackListener {
     public static abstract class FirstFrameEvent extends PlaybackEvent {
         protected final long mPositionMs;
 
-        public FirstFrameEvent(long positionMs) {
+        public FirstFrameEvent(int eventType, long positionMs) {
+            super(eventType);
             mPositionMs = positionMs;
         }
 
@@ -66,7 +90,12 @@ public interface TsPlaybackListener {
      */
     public static class VideoFirstFrameEvent extends FirstFrameEvent {
         public VideoFirstFrameEvent(long positionMs) {
-            super(positionMs);
+            super(EventType.EVENT_TYPE_RENDER_FIRST_FRAME_VIDEO, positionMs);
+        }
+
+        @Override
+        public String getEventName() {
+            return "VideoFirstFrameEvent";
         }
     }
 
@@ -75,7 +104,12 @@ public interface TsPlaybackListener {
      */
     public static class AudioFirstFrameEvent extends FirstFrameEvent {
         public AudioFirstFrameEvent(long positionMs) {
-            super(positionMs);
+            super(EventType.EVENT_TYPE_RENDER_FIRST_FRAME_AUDIO, positionMs);
+        }
+
+        @Override
+        public String getEventName() {
+            return "AudioFirstFrameEvent";
         }
     }
 
@@ -84,7 +118,12 @@ public interface TsPlaybackListener {
      */
     public static class DecodeFirstVideoFrameEvent extends FirstFrameEvent {
         public DecodeFirstVideoFrameEvent(long positionMs) {
-            super(positionMs);
+            super(EventType.EVENT_TYPE_DECODE_FIRST_FRAME_VIDEO, positionMs);
+        }
+
+        @Override
+        public String getEventName() {
+            return "DecodeFirstVideoFrameEvent";
         }
     }
 
@@ -93,7 +132,12 @@ public interface TsPlaybackListener {
      */
     public static class DecodeFirstAudioFrameEvent extends FirstFrameEvent {
         public DecodeFirstAudioFrameEvent(long positionMs) {
-            super(positionMs);
+            super(EventType.EVENT_TYPE_DECODE_FIRST_FRAME_AUDIO, positionMs);
+        }
+
+        @Override
+        public String getEventName() {
+            return "DecodeFirstAudioFrameEvent";
         }
     }
 
@@ -106,9 +150,42 @@ public interface TsPlaybackListener {
         public final long mRenderTime;
 
         public PtsEvent(int streamType, long pts, long renderTime) {
+            super(EventType.EVENT_TYPE_PTS);
             this.mStreamType = streamType;
             this.mPts = pts;
             this.mRenderTime = renderTime;
+        }
+
+        @Override
+        public String getEventName() {
+            return "PtsEvent";
+        }
+    }
+
+    class PlaybackInfoEvent extends PlaybackEvent {
+
+        public PlaybackInfoEvent(int eventType) {
+            super(eventType);
+        }
+
+        @Override
+        public String getEventName() {
+            return "PlaybackInfoEvent";
+        }
+    }
+
+    /**
+     * Video decoder init completed event
+     */
+    public static class VideoDecoderInitCompletedEvent extends PlaybackInfoEvent {
+
+        public VideoDecoderInitCompletedEvent() {
+            super(EventType.EVENT_TYPE_VIDEO_DECODER_INIT_COMPLETED);
+        }
+
+        @Override
+        public String getEventName() {
+            return "VideoDecoderInitCompletedEvent";
         }
     }
 

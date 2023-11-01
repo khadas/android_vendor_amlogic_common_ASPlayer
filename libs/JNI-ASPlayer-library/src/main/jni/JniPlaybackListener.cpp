@@ -15,6 +15,11 @@
 
 static const char *JNI_PLAYBACK_LISTENER_CLASS_NAME = "com/amlogic/jniasplayer/JniPlaybackListener";
 
+// PlaybackEvent
+struct playback_event_t {
+    jfieldID eventType;
+};
+
 // VideoFormatChangeEvent
 struct video_format_change_event_t {
     jfieldID videoFormat;
@@ -46,6 +51,9 @@ struct jni_tsplayback_listener_t {
 static jclass gJniTsPlaybackListenerCls;
 static jni_tsplayback_listener_t gJniTsPlaybackListenerCtx;
 
+static jclass gPlaybackEventCls;
+static playback_event_t gPlaybackEventCtx;
+
 static jclass gVideoFormatChangeEventCls;
 static video_format_change_event_t gVideoFormatChangeEventCtx;
 
@@ -61,6 +69,8 @@ static jclass gDecodeFirstAudioFrameEventCls;
 
 static jclass gPtsEventCls;
 static pts_event_t gPtsEventCtx;
+
+static jclass gPlaybackInfoEventCls;
 
 bool JniPlaybackListener::gInited = false;
 
@@ -112,44 +122,69 @@ bool JniPlaybackListener::init(JNIEnv *env) {
     }
 
     // JniPlaybackListener
-    if (makeClassGlobalRef(&gJniTsPlaybackListenerCls, env, JNI_PLAYBACK_LISTENER_CLASS_NAME)) {
-        gJniTsPlaybackListenerCtx.constructorMID = env->GetMethodID(gJniTsPlaybackListenerCls, "<init>", "()V");
-        gJniTsPlaybackListenerCtx.context = env->GetFieldID(gJniTsPlaybackListenerCls, "mNativeContext", "J");
+    if (makeClassGlobalRef(&gJniTsPlaybackListenerCls, env,
+                           JNI_PLAYBACK_LISTENER_CLASS_NAME)) {
+        gJniTsPlaybackListenerCtx.constructorMID = env->GetMethodID(
+                gJniTsPlaybackListenerCls, "<init>", "()V");
+        gJniTsPlaybackListenerCtx.context = env->GetFieldID(
+                gJniTsPlaybackListenerCls, "mNativeContext", "J");
+    }
+
+    // PlaybackEvent
+    if (makeClassGlobalRef(&gPlaybackEventCls, env,
+                           "com/amlogic/asplayer/api/TsPlaybackListener$PlaybackEvent")) {
+        gPlaybackEventCtx.eventType = env->GetFieldID(
+                gPlaybackEventCls, "mEventType", "I");
     }
 
     // VideoFormatChangeEvent
-    if (makeClassGlobalRef(&gVideoFormatChangeEventCls, env, "com/amlogic/asplayer/api/TsPlaybackListener$VideoFormatChangeEvent")) {
-        gVideoFormatChangeEventCtx.videoFormat = env->GetFieldID(gVideoFormatChangeEventCls, "mVideoFormat","Landroid/media/MediaFormat;");
+    if (makeClassGlobalRef(&gVideoFormatChangeEventCls, env,
+                           "com/amlogic/asplayer/api/TsPlaybackListener$VideoFormatChangeEvent")) {
+        gVideoFormatChangeEventCtx.videoFormat = env->GetFieldID(
+                gVideoFormatChangeEventCls, "mVideoFormat","Landroid/media/MediaFormat;");
     }
 
     // AudioFormatChangeEvent
-    if (makeClassGlobalRef(&gAudioFormatChangeEventCls, env, "com/amlogic/asplayer/api/TsPlaybackListener$AudioFormatChangeEvent")) {
-        gAudioFormatChangeEventCtx.audioFormat = env->GetFieldID(gAudioFormatChangeEventCls, "mAudioFormat", "Landroid/media/MediaFormat;");
+    if (makeClassGlobalRef(&gAudioFormatChangeEventCls, env,
+                           "com/amlogic/asplayer/api/TsPlaybackListener$AudioFormatChangeEvent")) {
+        gAudioFormatChangeEventCtx.audioFormat = env->GetFieldID(
+                gAudioFormatChangeEventCls, "mAudioFormat", "Landroid/media/MediaFormat;");
     }
 
     // FirstFrameEvent
-    if (makeClassGlobalRef(&gFirstFrameEventCls, env, "com/amlogic/asplayer/api/TsPlaybackListener$FirstFrameEvent")) {
-        gFirstFrameEventCtx.pts = env->GetFieldID(gFirstFrameEventCls, "mPositionMs", "J");
+    if (makeClassGlobalRef(&gFirstFrameEventCls, env,
+                           "com/amlogic/asplayer/api/TsPlaybackListener$FirstFrameEvent")) {
+        gFirstFrameEventCtx.pts = env->GetFieldID(
+                gFirstFrameEventCls, "mPositionMs", "J");
     }
 
     // VideoFirstFrameEvent
-    makeClassGlobalRef(&gVideoFirstFrameEventCls, env, "com/amlogic/asplayer/api/TsPlaybackListener$VideoFirstFrameEvent");
+    makeClassGlobalRef(&gVideoFirstFrameEventCls, env,
+                       "com/amlogic/asplayer/api/TsPlaybackListener$VideoFirstFrameEvent");
 
     // AudioFirstFrameEvent
-    makeClassGlobalRef(&gAudioFirstFrameEventCls, env, "com/amlogic/asplayer/api/TsPlaybackListener$AudioFirstFrameEvent");
+    makeClassGlobalRef(&gAudioFirstFrameEventCls, env,
+                       "com/amlogic/asplayer/api/TsPlaybackListener$AudioFirstFrameEvent");
 
     // DecodeFirstVideoFrameEvent
-    makeClassGlobalRef(&gDecodeFirstVideoFrameEventCls, env, "com/amlogic/asplayer/api/TsPlaybackListener$DecodeFirstVideoFrameEvent");
+    makeClassGlobalRef(&gDecodeFirstVideoFrameEventCls, env,
+                       "com/amlogic/asplayer/api/TsPlaybackListener$DecodeFirstVideoFrameEvent");
 
     // DecodeFirstAudioFrameEvent
-    makeClassGlobalRef(&gDecodeFirstAudioFrameEventCls, env, "com/amlogic/asplayer/api/TsPlaybackListener$DecodeFirstAudioFrameEvent");
+    makeClassGlobalRef(&gDecodeFirstAudioFrameEventCls, env,
+                       "com/amlogic/asplayer/api/TsPlaybackListener$DecodeFirstAudioFrameEvent");
 
     // PtsEvent
-    if (makeClassGlobalRef(&gPtsEventCls, env, "com/amlogic/asplayer/api/TsPlaybackListener$PtsEvent")) {
+    if (makeClassGlobalRef(&gPtsEventCls, env,
+                           "com/amlogic/asplayer/api/TsPlaybackListener$PtsEvent")) {
         gPtsEventCtx.streamType = env->GetFieldID(gPtsEventCls, "mStreamType", "I");
         gPtsEventCtx.pts = env->GetFieldID(gPtsEventCls, "mPts", "J");
         gPtsEventCtx.renderTime = env->GetFieldID(gPtsEventCls, "mRenderTime", "J");
     }
+
+    // PlaybackInfoEvent
+    makeClassGlobalRef(&gPlaybackInfoEventCls, env,
+                       "com/amlogic/asplayer/api/TsPlaybackListener$PlaybackInfoEvent");
 
     int ret = NativeHelper::registerNativeMethods(env, JNI_PLAYBACK_LISTENER_CLASS_NAME, gJniPlaybackListenerMethods, NELEM(gJniPlaybackListenerMethods));
     if (ret != JNI_TRUE) {
@@ -239,6 +274,10 @@ void JniPlaybackListener::notifyPlaybackEvent(JNIEnv *env, jobject jEvent) {
     } else if (env->IsInstanceOf(jEvent, gPtsEventCls)) {
         // PtsEvent
         handlePtsEvent(env, jEvent);
+    } else if (env->IsInstanceOf(jEvent, gPlaybackInfoEventCls)) {
+        // PlaybackInfoEvent
+        ALOGI("[%s/%d] PlaybackInfoEvent", __FUNCTION__, __LINE__);
+        handlePlaybackInfoEvent(env, jEvent);
     } else {
         ALOGE("[%s/%d] notifyPlaybackEvent unknown event", __FUNCTION__, __LINE__);
     }
@@ -442,6 +481,23 @@ void JniPlaybackListener::handlePtsEvent(JNIEnv *env, jobject jEvent) {
     jni_asplayer_event event = {
         .type = JNI_ASPLAYER_EVENT_TYPE_PTS,
         .event = { .pts = pts, },
+    };
+
+    notifyCallbackEvent(&event);
+}
+
+void JniPlaybackListener::handlePlaybackInfoEvent(JNIEnv *env, jobject jEvent) {
+    if (env == nullptr || jEvent == nullptr) {
+        return;
+    }
+
+    jint jEventType = env->GetIntField(jEvent, gPlaybackEventCtx.eventType);
+
+    ALOGI("[%s/%d] handlePlaybackInfoEvent, eventType: %d", __func__, __LINE__, jEventType);
+
+    jni_asplayer_event event = {
+            .type = static_cast<jni_asplayer_event_type>(jEventType),
+            .event = { .bufptr = nullptr, },
     };
 
     notifyCallbackEvent(&event);

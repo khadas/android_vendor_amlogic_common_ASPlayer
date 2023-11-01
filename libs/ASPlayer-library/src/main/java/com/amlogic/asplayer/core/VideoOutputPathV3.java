@@ -307,6 +307,7 @@ class VideoOutputPathV3 extends VideoOutputPath {
             ASPlayerLog.i("%s change last WorkMode to %d", getTag(), mLastWorkMode);
             configured = true;
             setRequestChangeWorkMode(false);
+            notifyDecoderInitCompleted();
         } catch (Exception exception) {
             ASPlayerLog.w("%s can't create mediacodec error:%s", getTag(), exception.getMessage());
             if (mediaCodec != null) {

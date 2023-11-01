@@ -30,7 +30,8 @@ typedef enum {
     JNI_ASPLAYER_EVENT_TYPE_DECODE_FIRST_FRAME_AUDIO, //The audio decoder outputs the first frame
     JNI_ASPLAYER_EVENT_TYPE_RENDER_FIRST_FRAME_VIDEO, //The video decoder render the first frame
     JNI_ASPLAYER_EVENT_TYPE_RENDER_FIRST_FRAME_AUDIO, //The audio decoder render the first frame
-    JNI_ASPLAYER_EVENT_TYPE_AV_SYNC_DONE     //Av sync done
+    JNI_ASPLAYER_EVENT_TYPE_AV_SYNC_DONE,       //Av sync done
+    JNI_ASPLAYER_EVENT_TYPE_VIDEO_DECODER_INIT_COMPLETED        // The video decoder init completed
 } jni_asplayer_event_type;
 
 

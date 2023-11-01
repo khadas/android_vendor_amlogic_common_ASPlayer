@@ -24,6 +24,8 @@ import com.amlogic.asplayer.api.TsPlaybackListener;
 import com.amlogic.asplayer.api.ASPlayer;
 import com.amlogic.asplayer.api.VideoParams;
 
+import java.util.ArrayList;
+import java.util.List;
 
 public class JniASPlayerWrapper implements IASPlayer {
 
@@ -32,6 +34,9 @@ public class JniASPlayerWrapper implements IASPlayer {
     private long mNativeContext;
 
     private ASPlayer mRealASPlayer = null;
+
+    private List<JniTsPlaybackListenerWrapper> mPlaybackListeners = new ArrayList<>();
+    private Object mListenersLock = new Object();
 
     static {
         // JniASPlayerWrapper built in app
@@ -66,12 +71,36 @@ public class JniASPlayerWrapper implements IASPlayer {
 
     @Override
     public void addPlaybackListener(TsPlaybackListener listener) {
-        native_addPlaybackListener(listener);
+        synchronized (mListenersLock) {
+            for (JniTsPlaybackListenerWrapper wrapper : mPlaybackListeners) {
+                if (wrapper.mRealPlaybackListener == listener) {
+                    // listener exists
+                    return;
+                }
+            }
+
+            JniTsPlaybackListenerWrapper listenerWrapper = new JniTsPlaybackListenerWrapper(listener);
+            native_addPlaybackListener(listenerWrapper);
+            mPlaybackListeners.add(listenerWrapper);
+        }
     }
 
     @Override
-    public void removePlaybackListener(TsPlaybackListener listener) {
-        native_removePlaybackListener(listener);
+    public synchronized void removePlaybackListener(TsPlaybackListener listener) {
+        synchronized (mListenersLock) {
+            JniTsPlaybackListenerWrapper listenerWrapper = null;
+            for (JniTsPlaybackListenerWrapper wrapper : mPlaybackListeners) {
+                if (wrapper.mRealPlaybackListener == listener) {
+                    listenerWrapper = wrapper;
+                    break;
+                }
+            }
+
+            if (listenerWrapper != null) {
+                native_removePlaybackListener(listenerWrapper);
+                mPlaybackListeners.remove(listenerWrapper);
+            }
+        }
     }
 
     @Override
@@ -101,6 +130,10 @@ public class JniASPlayerWrapper implements IASPlayer {
 
     @Override
     public void release() {
+        for (JniTsPlaybackListenerWrapper listenerWrapper : mPlaybackListeners) {
+            native_removePlaybackListener(listenerWrapper);
+        }
+        mPlaybackListeners.clear();
         native_release();
         mRealASPlayer = null;
     }

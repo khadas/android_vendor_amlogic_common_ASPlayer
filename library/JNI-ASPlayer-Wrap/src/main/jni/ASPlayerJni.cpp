@@ -94,6 +94,10 @@ struct pts_event_t {
     jfieldID renderTime;
 };
 
+struct playback_info_event_t {
+    jmethodID constructor;
+};
+
 struct playback_listener_t {
     jmethodID onPlaybackEvent;
 };
@@ -126,6 +130,8 @@ static jclass gDecodeFirstAudioFrameEventCls;
 static decode_first_audio_frame_event_t gDecodeFirstAudioFrameEventCtx;
 static jclass gPtsEventCls;
 static pts_event_t gPtsEventCtx;
+static jclass gPlaybackInfoEventCls;
+static playback_info_event_t gPlaybackInfoEventCtx;
 
 static jclass gPlaybackListenerCls;
 static playback_listener_t gPlaybackListenerCtx;
@@ -163,50 +169,75 @@ bool ASPlayerJni::initJni(JNIEnv *env) {
     }
 
     // init InitParams
-    if (makeClassGlobalRef(&gInitParamsCls, env, "com/amlogic/asplayer/api/InitParams")) {
-        gInitParamsCtx.playbackMode = env->GetFieldID(gInitParamsCls, "mPlaybackMode", "I");
-        gInitParamsCtx.inputSourceType = env->GetFieldID(gInitParamsCls, "mInputSourceType", "I");
-        gInitParamsCtx.eventMask = env->GetFieldID(gInitParamsCls, "mEventMask", "J");
+    if (makeClassGlobalRef(&gInitParamsCls, env,
+                           "com/amlogic/asplayer/api/InitParams")) {
+        gInitParamsCtx.playbackMode = env->GetFieldID(
+                gInitParamsCls, "mPlaybackMode", "I");
+        gInitParamsCtx.inputSourceType = env->GetFieldID(
+                gInitParamsCls, "mInputSourceType", "I");
+        gInitParamsCtx.eventMask = env->GetFieldID(
+                gInitParamsCls, "mEventMask", "J");
     }
 
     // init VideoParams
-    if (makeClassGlobalRef(&gVideoParamsCls, env, "com/amlogic/asplayer/api/VideoParams")) {
-        gVideoParamsCtx.mimeType = env->GetFieldID(gVideoParamsCls, "mMimeType", "Ljava/lang/String;");
+    if (makeClassGlobalRef(&gVideoParamsCls, env,
+                           "com/amlogic/asplayer/api/VideoParams")) {
+        gVideoParamsCtx.mimeType = env->GetFieldID(
+                gVideoParamsCls, "mMimeType", "Ljava/lang/String;");
         gVideoParamsCtx.width = env->GetFieldID(gVideoParamsCls, "mWidth", "I");
         gVideoParamsCtx.height = env->GetFieldID(gVideoParamsCls, "mHeight", "I");
         gVideoParamsCtx.pid = env->GetFieldID(gVideoParamsCls, "mPid", "I");
-        gVideoParamsCtx.trackFilterId = env->GetFieldID(gVideoParamsCls, "mTrackFilterId", "I");
-        gVideoParamsCtx.avSyncHwId = env->GetFieldID(gVideoParamsCls, "mAvSyncHwId", "I");
-        gVideoParamsCtx.scrambled = env->GetFieldID(gVideoParamsCls, "mScrambled", "Z");
-        gVideoParamsCtx.mediaFormat = env->GetFieldID(gVideoParamsCls, "mMediaFormat", "Landroid/media/MediaFormat;");
+        gVideoParamsCtx.trackFilterId = env->GetFieldID(
+                gVideoParamsCls, "mTrackFilterId", "I");
+        gVideoParamsCtx.avSyncHwId = env->GetFieldID(
+                gVideoParamsCls, "mAvSyncHwId", "I");
+        gVideoParamsCtx.scrambled = env->GetFieldID(
+                gVideoParamsCls, "mScrambled", "Z");
+        gVideoParamsCtx.mediaFormat = env->GetFieldID(
+                gVideoParamsCls, "mMediaFormat", "Landroid/media/MediaFormat;");
     }
 
     // init AudioParams
-    if (makeClassGlobalRef(&gAudioParamsCls, env, "com/amlogic/asplayer/api/AudioParams")) {
-        gAudioParamsCtx.mimeType = env->GetFieldID(gAudioParamsCls, "mMimeType", "Ljava/lang/String;");
-        gAudioParamsCtx.sampleRate = env->GetFieldID(gAudioParamsCls, "mSampleRate", "I");
-        gAudioParamsCtx.channelCount = env->GetFieldID(gAudioParamsCls, "mChannelCount", "I");
-        gAudioParamsCtx.pid = env->GetFieldID(gAudioParamsCls, "mPid", "I");
-        gAudioParamsCtx.trackFilterId = env->GetFieldID(gAudioParamsCls, "mTrackFilterId", "I");
-        gAudioParamsCtx.avSyncHwId = env->GetFieldID(gAudioParamsCls, "mAvSyncHwId", "I");
-        gAudioParamsCtx.secLevel = env->GetFieldID(gAudioParamsCls, "mSecLevel", "I");
-        gAudioParamsCtx.scrambled = env->GetFieldID(gAudioParamsCls, "mScrambled", "Z");
-        gAudioParamsCtx.mediaFormat = env->GetFieldID(gAudioParamsCls, "mMediaFormat", "Landroid/media/MediaFormat;");
+    if (makeClassGlobalRef(&gAudioParamsCls, env,
+                           "com/amlogic/asplayer/api/AudioParams")) {
+        gAudioParamsCtx.mimeType = env->GetFieldID(
+                gAudioParamsCls, "mMimeType", "Ljava/lang/String;");
+        gAudioParamsCtx.sampleRate = env->GetFieldID(
+                gAudioParamsCls, "mSampleRate", "I");
+        gAudioParamsCtx.channelCount = env->GetFieldID(
+                gAudioParamsCls, "mChannelCount", "I");
+        gAudioParamsCtx.pid = env->GetFieldID(
+                gAudioParamsCls, "mPid", "I");
+        gAudioParamsCtx.trackFilterId = env->GetFieldID(
+                gAudioParamsCls, "mTrackFilterId", "I");
+        gAudioParamsCtx.avSyncHwId = env->GetFieldID(
+                gAudioParamsCls, "mAvSyncHwId", "I");
+        gAudioParamsCtx.secLevel = env->GetFieldID(
+                gAudioParamsCls, "mSecLevel", "I");
+        gAudioParamsCtx.scrambled = env->GetFieldID(
+                gAudioParamsCls, "mScrambled", "Z");
+        gAudioParamsCtx.mediaFormat = env->GetFieldID(
+                gAudioParamsCls, "mMediaFormat", "Landroid/media/MediaFormat;");
     }
 
     // init InputBuffer
-    if (makeClassGlobalRef(&gInputBufferCls, env, "com/amlogic/asplayer/api/InputBuffer")) {
+    if (makeClassGlobalRef(&gInputBufferCls, env,
+                           "com/amlogic/asplayer/api/InputBuffer")) {
         gInputBufferCtx.buffer = env->GetFieldID(gInputBufferCls, "mBuffer", "[B");
         gInputBufferCtx.offset = env->GetFieldID(gInputBufferCls, "mOffset", "I");
-        gInputBufferCtx.bufferSize = env->GetFieldID(gInputBufferCls, "mBufferSize", "I");
+        gInputBufferCtx.bufferSize = env->GetFieldID(
+                gInputBufferCls, "mBufferSize", "I");
     }
 
     // init MediaFormat
     if (makeClassGlobalRef(&gMediaFormatCls, env, "android/media/MediaFormat")) {
         gMediaFormatCtx.constructor = env->GetMethodID(gMediaFormatCls, "<init>", "()V");
-        gMediaFormatCtx.setInteger = env->GetMethodID(gMediaFormatCls, "setInteger", "(Ljava/lang/String;I)V");
-        gMediaFormatCtx.setFloat = env->GetMethodID(gMediaFormatCls, "setFloat", "(Ljava/lang/String;F)V");
-        gMediaFormatCtx.setLong = env->GetMethodID(gMediaFormatCls, "setLong", "(Ljava/lang/String;J)V");
+        gMediaFormatCtx.setInteger = env->GetMethodID(
+                gMediaFormatCls, "setInteger", "(Ljava/lang/String;I)V");
+        gMediaFormatCtx.setFloat = env->GetMethodID(
+                gMediaFormatCls, "setFloat", "(Ljava/lang/String;F)V");
+        gMediaFormatCtx.setLong = env->GetMethodID(
+                gMediaFormatCls, "setLong", "(Ljava/lang/String;J)V");
     }
 
     // init VideoFormatChangeEvent
@@ -273,6 +304,13 @@ bool ASPlayerJni::initJni(JNIEnv *env) {
         gPtsEventCtx.streamType = env->GetFieldID(gPtsEventCls, "mStreamType", "I");
         gPtsEventCtx.pts = env->GetFieldID(gPtsEventCls, "mPts", "J");
         gPtsEventCtx.renderTime = env->GetFieldID(gPtsEventCls, "mRenderTime", "J");
+    }
+
+    // PlaybackInfoEvent
+    if (makeClassGlobalRef(&gPlaybackInfoEventCls, env,
+                           "com/amlogic/asplayer/api/TsPlaybackListener$PlaybackInfoEvent")) {
+        gPlaybackInfoEventCtx.constructor = env->GetMethodID(
+                gPlaybackInfoEventCls, "<init>", "(I)V");
     }
 
     // init PlaybackListener
@@ -415,11 +453,7 @@ bool ASPlayerJni::convertInputBuffer(
 }
 
 bool ASPlayerJni::createPtsEvent(JNIEnv *env, jni_asplayer_event *event, jobject *jEvent) {
-    if (env == nullptr) {
-        return false;
-    } else if (event == nullptr) {
-        return false;
-    } else if (jEvent == nullptr) {
+    if (env == nullptr || event == nullptr || jEvent == nullptr) {
         return false;
     }
 
@@ -435,11 +469,7 @@ bool ASPlayerJni::createPtsEvent(JNIEnv *env, jni_asplayer_event *event, jobject
 
 bool ASPlayerJni::createVideoFormatChangeEvent(
         JNIEnv *env, jni_asplayer_event *event, jobject *jEvent) {
-    if (env == nullptr) {
-        return false;
-    } else if (event == nullptr) {
-        return false;
-    } else if (jEvent == nullptr) {
+    if (env == nullptr || event == nullptr || jEvent == nullptr) {
         return false;
     }
 
@@ -588,6 +618,20 @@ bool ASPlayerJni::createMediaFormat(JNIEnv *env, jni_asplayer_video_info *videoI
     env->DeleteLocalRef(aspectRadio);
 
     *jMediaFormat = mediaFormat;
+    return true;
+}
+
+bool ASPlayerJni::createPlaybackInfoEvent(JNIEnv *env, jni_asplayer_event *event,
+                                                       jobject *jEvent) {
+    if (env == nullptr || event == nullptr || jEvent == nullptr) {
+        return false;
+    }
+
+    jobject playbackInfoEvent = env->NewObject(gPlaybackInfoEventCls,
+                                               gPlaybackInfoEventCtx.constructor,
+                                               event->type);
+    *jEvent = playbackInfoEvent;
+
     return true;
 }
 

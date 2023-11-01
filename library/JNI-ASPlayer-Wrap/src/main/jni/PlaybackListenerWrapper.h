@@ -35,6 +35,7 @@ private:
     void notifyAudioFirstFrameEvent(jni_asplayer_event *event);
     void notifyDecodeFirstVideoFrameEvent(jni_asplayer_event *event);
     void notifyDecodeFirstAudioFrameEvent(jni_asplayer_event *event);
+    void notifyPlaybackInfoEvent(jni_asplayer_event *event);
 
 private:
     jobject mJavaListener;

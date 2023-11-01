@@ -58,6 +58,9 @@ void PlaybackListenerWrapper::notifyPlaybackEvent(jni_asplayer_event *event) {
         case JNI_ASPLAYER_EVENT_TYPE_DECODE_FIRST_FRAME_AUDIO:
             notifyDecodeFirstAudioFrameEvent(event);
             break;
+        case JNI_ASPLAYER_EVENT_TYPE_VIDEO_DECODER_INIT_COMPLETED:
+            notifyPlaybackInfoEvent(event);
+            break;
         default:
             break;
     }
@@ -215,6 +218,28 @@ void PlaybackListenerWrapper::notifyDecodeFirstAudioFrameEvent(jni_asplayer_even
     ASPlayerJni::notifyPlaybackEvent(env, mJavaListener, decodeFirstAudioFrameEvent);
 
     env->DeleteLocalRef(decodeFirstAudioFrameEvent);
+}
+
+void PlaybackListenerWrapper::notifyPlaybackInfoEvent(jni_asplayer_event *event) {
+    if (event == nullptr) {
+        return;
+    }
+
+    JNIEnv *env = AutoEnv::GetJniEnv();
+    if (env == nullptr) {
+        ALOGE("[%s/%d] error, failed to get JNIEnv", __func__, __LINE__);
+        return;
+    }
+
+    jobject playbackInfoEvent = nullptr;
+    if (!ASPlayerJni::createPlaybackInfoEvent(env, event, &playbackInfoEvent)) {
+        ALOGE("[%s/%d] error, failed to create java PlaybackInfoEvent", __func__, __LINE__);
+        return;
+    }
+
+    ASPlayerJni::notifyPlaybackEvent(env, mJavaListener, playbackInfoEvent);
+
+    env->DeleteLocalRef(playbackInfoEvent);
 }
 
 void PlaybackListenerWrapper::release() {
