@@ -77,4 +77,14 @@ public class EventType {
      * The video decoder init completed
      */
     public static final int EVENT_TYPE_VIDEO_DECODER_INIT_COMPLETED = EVENT_TYPE_AV_SYNC_DONE + 1;
+
+    /**
+     * Decoder data loss
+     */
+    public static final int EVENT_TYPE_DECODER_DATA_LOSS = EVENT_TYPE_VIDEO_DECODER_INIT_COMPLETED + 1;
+
+    /**
+     * Decoder data resume
+     */
+    public static final int EVENT_TYPE_DECODER_DATA_RESUME = EVENT_TYPE_DECODER_DATA_LOSS + 1;
 }

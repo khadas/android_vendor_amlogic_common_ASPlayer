@@ -82,7 +82,11 @@ class RendererPlaybackV3 extends Renderer {
         long run() {
             mAudioOutputPath.checkErrors();
             mAudioOutputPath.pushInputBuffer();
-            return 100000;
+            if (!mAudioOutputPath.isConfigured()) {
+                return 10000;
+            } else {
+                return 100000;
+            }
         }
     }
 
@@ -94,7 +98,11 @@ class RendererPlaybackV3 extends Renderer {
         long run() {
             mVideoOutputPath.checkErrors();
             mVideoOutputPath.pushInputBuffer();
-            return 100000;
+            if (!mVideoOutputPath.isConfigured()) {
+                return 10000;
+            } else {
+                return 100000;
+            }
         }
     }
 

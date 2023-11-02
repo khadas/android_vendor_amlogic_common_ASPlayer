@@ -276,7 +276,6 @@ void JniPlaybackListener::notifyPlaybackEvent(JNIEnv *env, jobject jEvent) {
         handlePtsEvent(env, jEvent);
     } else if (env->IsInstanceOf(jEvent, gPlaybackInfoEventCls)) {
         // PlaybackInfoEvent
-        ALOGI("[%s/%d] PlaybackInfoEvent", __FUNCTION__, __LINE__);
         handlePlaybackInfoEvent(env, jEvent);
     } else {
         ALOGE("[%s/%d] notifyPlaybackEvent unknown event", __FUNCTION__, __LINE__);

@@ -35,6 +35,8 @@ abstract class MediaOutputPath {
 
     interface DataListener {
         void onFirstData(MediaOutputPath outputPath);
+        void onDecoderDataLoss(MediaOutputPath outputPath);
+        void onDecoderDataResume(MediaOutputPath outputPath);
     }
 
     interface DecoderListener {
@@ -364,6 +366,18 @@ abstract class MediaOutputPath {
 
     boolean atLeastOneBufferPushed() {
         return mAtLeastOneBufferPushed;
+    }
+
+    void notifyDecoderDataLoss() {
+        if (mDataListener != null) {
+            mDataListener.onDecoderDataLoss(this);
+        }
+    }
+
+    void notifyDecoderDataResume() {
+        if (mDataListener != null) {
+            mDataListener.onDecoderDataResume(this);
+        }
     }
 
     void timestampInputBufferQueueFullIfNeeded() {

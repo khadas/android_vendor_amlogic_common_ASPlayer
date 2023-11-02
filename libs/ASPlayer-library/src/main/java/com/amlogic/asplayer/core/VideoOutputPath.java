@@ -151,6 +151,8 @@ class VideoOutputPath extends MediaOutputPath {
 
     protected boolean mChangeWorkMode = false;
     protected boolean mMediaCodecStarted = false;
+    protected long mMediaCodecStartTimeMillisecond = -1;
+
 
     VideoOutputPath(int id) {
         super(id);
@@ -555,6 +557,9 @@ class VideoOutputPath extends MediaOutputPath {
         }
         mFirstFrameDisplayed = false;
 
+        mMediaCodecStarted = false;
+        mMediaCodecStartTimeMillisecond = -1;
+
         if (mMediaCodecStarter != null)
             getHandler().removeCallbacks(mMediaCodecStarter);
         mMediaCodecStarter = null;
@@ -588,7 +593,13 @@ class VideoOutputPath extends MediaOutputPath {
         if (mMediaCodec != null) {
             startMediaCodec(mMediaCodec);
             mMediaCodecStarted = true;
+            mMediaCodecStartTimeMillisecond = System.nanoTime() / 1000000;
+            onMediaCodecStarted();
         }
+    }
+
+    protected void onMediaCodecStarted() {
+
     }
 
     protected void stopMediaCodec(MediaCodec mediaCodec) {
@@ -608,7 +619,13 @@ class VideoOutputPath extends MediaOutputPath {
         if (mMediaCodec != null) {
             stopMediaCodec(mMediaCodec);
         }
+        onMediaCodecStopped();
         mMediaCodecStarted = false;
+        mMediaCodecStartTimeMillisecond = -1;
+    }
+
+    protected void onMediaCodecStopped() {
+
     }
 
     protected void releaseMediaCodec(MediaCodec mediaCodec) {
@@ -628,8 +645,13 @@ class VideoOutputPath extends MediaOutputPath {
         if (mMediaCodec != null) {
             releaseMediaCodec(mMediaCodec);
         }
+        onMediaCodecReleased();
         mMediaCodecStarted = false;
         mMediaCodec = null;
+    }
+
+    protected void onMediaCodecReleased() {
+
     }
 
     @Override

@@ -18,7 +18,8 @@ import android.util.Log;
 import com.amlogic.asplayer.api.IASPlayer;
 import com.amlogic.asplayer.api.VideoTrickMode;
 
-class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener {
+class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
+        MediaOutputPath.DataListener {
 
     private static final boolean DEBUG = false;
 
@@ -82,7 +83,8 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener {
         MediaOutputPath.FrameListener frameListener = this::onMediaFrame;
         mAudioOutputPath.setFrameListener(frameListener);
         mVideoOutputPath.setFrameListener(frameListener);
-        mVideoOutputPath.setDecoderListener(this);
+        setDecoderListener(this);
+        setDataListener(this);
 
         mPositionHandler = new PositionHandler(mId);
 
@@ -153,7 +155,8 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener {
 
     void release() {
         mPlaybackTask.release();
-        mVideoOutputPath.setDecoderListener(null);
+        setDecoderListener(null);
+        setDataListener(null);
         setHandler(null);
     }
 
@@ -165,6 +168,11 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener {
         mHandler = handler;
         mAudioOutputPath.setHandler(handler);
         mVideoOutputPath.setHandler(handler);
+    }
+
+    void setDecoderListener(MediaOutputPath.DecoderListener listener) {
+        mVideoOutputPath.setDecoderListener(listener);
+        mAudioOutputPath.setDecoderListener(listener);
     }
 
     void setDataListener(MediaOutputPath.DataListener listener) {
@@ -470,6 +478,24 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener {
     public void onDecoderInitCompleted(MediaOutputPath outputPath) {
         if (mVideoOutputPath != null && outputPath == mVideoOutputPath) {
             mEventNotifier.notifyVideoDecoderInitCompleted();
+        }
+    }
+
+    @Override
+    public void onFirstData(MediaOutputPath outputPath) {
+    }
+
+    @Override
+    public void onDecoderDataLoss(MediaOutputPath outputPath) {
+        if (mVideoOutputPath != null && outputPath == mVideoOutputPath) {
+            mEventNotifier.notifyDecoderDataLoss();
+        }
+    }
+
+    @Override
+    public void onDecoderDataResume(MediaOutputPath outputPath) {
+        if (mVideoOutputPath != null && outputPath == mVideoOutputPath) {
+            mEventNotifier.notifyDecoderDataResume();
         }
     }
 

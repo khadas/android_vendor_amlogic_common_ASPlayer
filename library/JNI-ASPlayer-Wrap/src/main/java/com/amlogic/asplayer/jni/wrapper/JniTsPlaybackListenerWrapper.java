@@ -29,6 +29,12 @@ public class JniTsPlaybackListenerWrapper implements TsPlaybackListener {
                 case EventType.EVENT_TYPE_VIDEO_DECODER_INIT_COMPLETED:
                     ev = new VideoDecoderInitCompletedEvent();
                     break;
+                case EventType.EVENT_TYPE_DECODER_DATA_LOSS:
+                    ev = new DecoderDataLossEvent();
+                    break;
+                case EventType.EVENT_TYPE_DECODER_DATA_RESUME:
+                    ev = new DecoderDataResumeEvent();
+                    break;
                 default:
                     Log.d(TAG, "unknown PlaybackInfoEvent");
                     break;

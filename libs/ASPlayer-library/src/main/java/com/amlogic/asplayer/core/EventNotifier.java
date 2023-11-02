@@ -17,7 +17,8 @@ import static com.amlogic.asplayer.api.TsPlaybackListener.VideoFirstFrameEvent;
 import static com.amlogic.asplayer.api.TsPlaybackListener.VideoFormatChangeEvent;
 import static com.amlogic.asplayer.api.TsPlaybackListener.PtsEvent;
 import static com.amlogic.asplayer.api.TsPlaybackListener.VideoDecoderInitCompletedEvent;
-import static com.amlogic.asplayer.api.TsPlaybackListener.PlaybackEvent;
+import static com.amlogic.asplayer.api.TsPlaybackListener.DecoderDataLossEvent;
+import static com.amlogic.asplayer.api.TsPlaybackListener.DecoderDataResumeEvent;
 import static com.amlogic.asplayer.api.TsPlaybackListener.PlaybackInfoEvent;
 
 import java.lang.ref.WeakReference;
@@ -121,6 +122,14 @@ class EventNotifier {
         postEvent(EventType.EVENT_TYPE_VIDEO_DECODER_INIT_COMPLETED, new VideoDecoderInitCompletedEvent());
     }
 
+    void notifyDecoderDataLoss() {
+        postEvent(EventType.EVENT_TYPE_DECODER_DATA_LOSS, new DecoderDataLossEvent());
+    }
+
+    void notifyDecoderDataResume() {
+        postEvent(EventType.EVENT_TYPE_DECODER_DATA_RESUME, new DecoderDataResumeEvent());
+    }
+
     private void postEvent(int eventType, Object object) {
         mEventHandler.obtainMessage(eventType, object).sendToTarget();
     }
@@ -168,7 +177,9 @@ class EventNotifier {
                 notifyPlaybackEvent(event);
             }
                 break;
-            case EventType.EVENT_TYPE_VIDEO_DECODER_INIT_COMPLETED: {
+            case EventType.EVENT_TYPE_VIDEO_DECODER_INIT_COMPLETED:
+            case EventType.EVENT_TYPE_DECODER_DATA_LOSS:
+            case EventType.EVENT_TYPE_DECODER_DATA_RESUME: {
                 PlaybackInfoEvent event = (PlaybackInfoEvent) msg.obj;
                 logPlaybackEvent(event, null);
                 notifyPlaybackEvent(event);
@@ -237,6 +248,12 @@ class EventNotifier {
                 break;
             case EventType.EVENT_TYPE_VIDEO_DECODER_INIT_COMPLETED:
                 eventName = "EVENT_TYPE_VIDEO_DECODER_INIT_COMPLETED";
+                break;
+            case EventType.EVENT_TYPE_DECODER_DATA_LOSS:
+                eventName = "EVENT_TYPE_DECODER_DATA_LOSS";
+                break;
+            case EventType.EVENT_TYPE_DECODER_DATA_RESUME:
+                eventName = "EVENT_TYPE_DECODER_DATA_RESUME";
                 break;
             default:
                 eventName = "UNKNOWN_EVENT_TYPE";

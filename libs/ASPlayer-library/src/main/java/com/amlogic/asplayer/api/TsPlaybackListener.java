@@ -189,5 +189,33 @@ public interface TsPlaybackListener {
         }
     }
 
+    /**
+     * Decoder data Loss event
+     */
+    class DecoderDataLossEvent extends PlaybackInfoEvent {
+        public DecoderDataLossEvent() {
+            super(EventType.EVENT_TYPE_DECODER_DATA_LOSS);
+        }
+
+        @Override
+        public String getEventName() {
+            return "DecoderDataLossEvent";
+        }
+    }
+
+    /**
+     * Decoder data resume event
+     */
+    class DecoderDataResumeEvent extends PlaybackInfoEvent {
+        public DecoderDataResumeEvent() {
+            super(EventType.EVENT_TYPE_DECODER_DATA_RESUME);
+        }
+
+        @Override
+        public String getEventName() {
+            return "DecoderDataResumeEvent";
+        }
+    }
+
     void onPlaybackEvent(PlaybackEvent event);
 }

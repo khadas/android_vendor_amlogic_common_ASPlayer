@@ -59,6 +59,8 @@ void PlaybackListenerWrapper::notifyPlaybackEvent(jni_asplayer_event *event) {
             notifyDecodeFirstAudioFrameEvent(event);
             break;
         case JNI_ASPLAYER_EVENT_TYPE_VIDEO_DECODER_INIT_COMPLETED:
+        case JNI_ASPLAYER_EVENT_TYPE_DECODER_DATA_LOSS:
+        case JNI_ASPLAYER_EVENT_TYPE_DECODER_DATA_RESUME:
             notifyPlaybackInfoEvent(event);
             break;
         default:
