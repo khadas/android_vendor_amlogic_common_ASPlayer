@@ -139,6 +139,7 @@ class VideoOutputPath extends MediaOutputPath {
     protected int mVideoHeight;
     protected int mFrameRate;
     protected byte mActiveFormat;
+    protected Integer mVFType;
 
     protected long mNbDecodedFrames;
     private int mNbSuspiciousTimestamps;
@@ -282,6 +283,14 @@ class VideoOutputPath extends MediaOutputPath {
 
     public int getPixelAspectRatio() {
         return mPixelAspectRatio;
+    }
+
+    public byte getAFD() {
+        return mActiveFormat;
+    }
+
+    public int getVFType() {
+        return mVFType != null ? mVFType.intValue() : 0;
     }
 
     @Override
@@ -511,18 +520,31 @@ class VideoOutputPath extends MediaOutputPath {
     }
 
     protected void updateVideoFrameRateInfo(int frameRate) {
-        if (mVideoFormatListener != null && frameRate != mActiveFormat) {
+        if (frameRate != mFrameRate) {
             mFrameRate = frameRate;
             ASPlayerLog.i("%s frameRate: %d", getTag(), frameRate);
-            mVideoFormatListener.onFrameRateChanged(frameRate);
+
+            if (mVideoFormatListener != null) {
+                mVideoFormatListener.onFrameRateChanged(mFrameRate);
+            }
         }
     }
 
     protected void updateAfdInfo(byte activeFormat) {
-        if (mVideoFormatListener != null && activeFormat > 0 && activeFormat != mActiveFormat) {
+        if (activeFormat > 0 && activeFormat != mActiveFormat) {
             mActiveFormat = activeFormat;
             ASPlayerLog.i("%s active format:%02x", getTag(), activeFormat);
-            mVideoFormatListener.onAfdInfoChanged(activeFormat);
+
+            if (mVideoFormatListener != null) {
+                mVideoFormatListener.onAfdInfoChanged(activeFormat);
+            }
+        }
+    }
+
+    protected void updateVFTypeInfo(int vfType) {
+        if (mVFType == null || vfType != mVFType.intValue()) {
+            mVFType = new Integer(vfType);
+            ASPlayerLog.i("%s vf_type: %d", getTag(), vfType);
         }
     }
 
@@ -573,6 +595,7 @@ class VideoOutputPath extends MediaOutputPath {
         mPixelAspectRatio = 0;
         mFrameRate = 0;
         mActiveFormat = 0;
+        mVFType = null;
 
         mTrickModeSpeed = 0;
 

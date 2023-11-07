@@ -12,6 +12,7 @@ public class VideoMediaFormatEvent {
     public static final int EVENT_TYPE_ASPECT_RATIO = 2;
     public static final int EVENT_TYPE_AFD = 3;
     public static final int EVENT_TYPE_FRAME_RATES = 4;
+    public static final int EVENT_TYPE_VIDEO_VF_TYPE = 5;
 
     public static final float EVENT_VALUE_DECIMAL_SCALE_FACTOR = 10000;
 
@@ -20,6 +21,7 @@ public class VideoMediaFormatEvent {
     public static final long EVENT_FLAGS_PIXEL_ASPECT_RATIO =   0x1 << EVENT_TYPE_ASPECT_RATIO;
     public static final long EVENT_FLAGS_AFD =                  0x1 << EVENT_TYPE_AFD;
     public static final long EVENT_FLAGS_FRAME_RATES =          0x1 << EVENT_TYPE_FRAME_RATES;
+    public static final long EVENT_FLAGS_VIDEO_VF_TYPE =        0x1 << EVENT_TYPE_VIDEO_VF_TYPE;
 
     int type;
 
@@ -40,7 +42,7 @@ public class VideoMediaFormatEvent {
             parser.readInt(2, "sync bits");
             int eventType = parser.readInt(6, "sync bits");
             parser.readInt(24, "reserved");
-            ASPlayerLog.i("event type: " + eventType);
+            ASPlayerLog.i("VideoMediaFormatEvent event type: %d", eventType);
 
             switch (eventType) {
                 case EVENT_TYPE_RESOLUTION:
@@ -51,8 +53,10 @@ public class VideoMediaFormatEvent {
                     return new AfdEvent(parser);
                 case EVENT_TYPE_FRAME_RATES:
                     return new FrameRateEvent(parser);
+                case EVENT_TYPE_VIDEO_VF_TYPE:
+                    return new VideoVFTypeEvent(parser);
                 default:
-                    ASPlayerLog.w("not defined event type: " + eventType);
+                    ASPlayerLog.w("not defined event type: %d", eventType);
                     break;
             }
         } catch (Exception e) {
@@ -68,7 +72,7 @@ public class VideoMediaFormatEvent {
             super(EVENT_TYPE_RESOLUTION);
             width = parser.readInt(16, "width");
             height = parser.readInt(16, "height");
-            if (DEBUG) ASPlayerLog.i("width: " + width + ", height: " + height);
+            if (DEBUG) ASPlayerLog.i("width: %d, height: %d", width, height);
         }
     }
 
@@ -78,7 +82,7 @@ public class VideoMediaFormatEvent {
             super(EVENT_TYPE_FRAME_RATES);
             long eventValue = parser.readInt(32, "frame rate") & 0xFFFFFFFFL;
             frameRate = (int)eventValue;
-            if (DEBUG) ASPlayerLog.i("frameRate: " + frameRate);
+            if (DEBUG) ASPlayerLog.i("frameRate: %d", frameRate);
         }
     }
 
@@ -88,7 +92,7 @@ public class VideoMediaFormatEvent {
             super(EVENT_TYPE_ASPECT_RATIO);
             long eventValue = parser.readInt(32, "aspect ratio") & 0xFFFFFFFFL;
             aspectRatio = (int)eventValue;
-            if (DEBUG) ASPlayerLog.i("aspectRatio: " + aspectRatio);
+            if (DEBUG) ASPlayerLog.i("aspectRatio: %d", aspectRatio);
         }
     }
 
@@ -106,6 +110,16 @@ public class VideoMediaFormatEvent {
                         .readInt(4, "active_format") & 0B1111);
             }
             if (DEBUG) ASPlayerLog.i("AFD: %s", Integer.toBinaryString(activeFormat));
+        }
+    }
+
+    static class VideoVFTypeEvent extends VideoMediaFormatEvent {
+        int vfType;
+        private VideoVFTypeEvent(BufferParser parser) {
+            super(EVENT_TYPE_VIDEO_VF_TYPE);
+            long eventValue = parser.readInt(32, "vf_type") & 0xFFFFFFFFL;
+            vfType = (int)eventValue;
+            if (DEBUG) ASPlayerLog.i("vf_type: %d, 0x%08x", vfType, vfType);
         }
     }
 }

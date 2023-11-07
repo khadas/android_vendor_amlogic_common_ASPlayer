@@ -617,6 +617,10 @@ bool ASPlayerJni::createMediaFormat(JNIEnv *env, jni_asplayer_video_info *videoI
     env->CallVoidMethod(mediaFormat, gMediaFormatCtx.setInteger, aspectRadio,videoInfo->aspectRatio);
     env->DeleteLocalRef(aspectRadio);
 
+    jstring vfType = env->NewStringUTF("vf-type");
+    env->CallVoidMethod(mediaFormat, gMediaFormatCtx.setInteger, vfType, videoInfo->vfType);
+    env->DeleteLocalRef(vfType);
+
     *jMediaFormat = mediaFormat;
     return true;
 }

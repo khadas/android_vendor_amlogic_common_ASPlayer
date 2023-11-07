@@ -1263,11 +1263,13 @@ jni_asplayer_result JniASPlayer::getVideoInfo(jni_asplayer_video_info *videoInfo
     int32_t height = JniMediaFormat::getInteger(env, jVideoMediaFormat, "height", 0);
     int32_t frameRate = JniMediaFormat::getInteger(env, jVideoMediaFormat, "frame-rate", 0);
     int32_t aspectRatio = JniMediaFormat::getInteger(env, jVideoMediaFormat, "aspect-ratio", 0);
+    int32_t vfType = JniMediaFormat::getInteger(env, jVideoMediaFormat, "vf-type", 0);
 
     videoInfo->width = (uint32_t)width;
     videoInfo->height = (uint32_t)height;
     videoInfo->framerate = (uint32_t)frameRate;
     videoInfo->aspectRatio = (uint32_t)aspectRatio;
+    videoInfo->vfType = (uint32_t)vfType;
 
     env->DeleteLocalRef(jVideoMediaFormat);
 

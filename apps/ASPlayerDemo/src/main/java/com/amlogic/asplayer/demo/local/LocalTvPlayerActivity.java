@@ -238,7 +238,8 @@ public class LocalTvPlayerActivity extends Activity implements TsPlaybackListene
         int height = format.getInteger(VideoFormat.KEY_HEIGHT);
         int frameRate = format.getInteger(VideoFormat.KEY_FRAME_RATE);
         int aspectRatio = format.getInteger(VideoFormat.KEY_ASPECT_RATIO);
-        TvLog.i("videoInfo: %d x %d, framerate: %d, aspectRatio: %d",
-                width, height, frameRate, aspectRatio);
+        int vfType = format.getInteger(VideoFormat.KEY_VF_TYPE);
+        TvLog.i("videoInfo: %d x %d, framerate: %d, aspectRatio: %d, vfType: %d",
+                width, height, frameRate, aspectRatio, vfType);
     }
 }

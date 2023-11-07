@@ -70,13 +70,13 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     private EventNotifier mEventNotifier;
 
-    private static class VideoSizeInfo {
+    private static class VideoInfo {
         private int mWidth;
         private int mHeight;
         private int mAspectRatio;
         private int mFrameRate;
 
-        private VideoSizeInfo(int width, int height, int aspectRatio) {
+        private VideoInfo(int width, int height, int aspectRatio) {
             mWidth = width;
             mHeight = height;
             mAspectRatio = aspectRatio;
@@ -84,7 +84,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         }
     }
 
-    private VideoSizeInfo mVideoSizeInfo;
+    private VideoInfo mVideoInfo;
 
     private final int mId;
     private int mSyncInstanceId = Constant.INVALID_SYNC_INSTANCE_ID;
@@ -151,13 +151,13 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     @Override
     public void onVideoSizeInfoChanged(int width, int height, int pixelAspectRatio) {
-        if (mVideoSizeInfo == null) {
-            mVideoSizeInfo = new VideoSizeInfo(width, height, pixelAspectRatio);
+        if (mVideoInfo == null) {
+            mVideoInfo = new VideoInfo(width, height, pixelAspectRatio);
             tryNotifyVideoFormatChanged();
-        } else if (mVideoSizeInfo != null &&
-                (width != mVideoSizeInfo.mWidth || height != mVideoSizeInfo.mHeight ||
-                        pixelAspectRatio != mVideoSizeInfo.mAspectRatio)) {
-            mVideoSizeInfo = new VideoSizeInfo(width, height, pixelAspectRatio);
+        } else if (mVideoInfo != null &&
+                (width != mVideoInfo.mWidth || height != mVideoInfo.mHeight ||
+                        pixelAspectRatio != mVideoInfo.mAspectRatio)) {
+            mVideoInfo = new VideoInfo(width, height, pixelAspectRatio);
             tryNotifyVideoFormatChanged();
         }
     }
@@ -171,20 +171,20 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     public void onFrameRateChanged(int frameRate) {
         MediaFormat format = MediaFormat.createVideoFormat("", 0, 0);
         format.setInteger(MediaFormat.KEY_FRAME_RATE, (int) frameRate);
-        if (mVideoSizeInfo != null && frameRate != mVideoSizeInfo.mFrameRate) {
-            mVideoSizeInfo.mFrameRate = (int)frameRate;
+        if (mVideoInfo != null && frameRate != mVideoInfo.mFrameRate) {
+            mVideoInfo.mFrameRate = (int)frameRate;
             tryNotifyVideoFormatChanged();
         }
     }
 
     private void tryNotifyVideoFormatChanged() {
-        if (mVideoSizeInfo != null && mVideoSizeInfo.mWidth > 0 && mVideoSizeInfo.mHeight > 0
-            && mVideoSizeInfo.mAspectRatio > 0 && mVideoSizeInfo.mFrameRate > 0) {
+        if (mVideoInfo != null && mVideoInfo.mWidth > 0 && mVideoInfo.mHeight > 0
+            && mVideoInfo.mAspectRatio > 0 && mVideoInfo.mFrameRate > 0) {
             MediaFormat mediaFormat = new MediaFormat();
-            mediaFormat.setInteger(VideoFormat.KEY_WIDTH, mVideoSizeInfo.mWidth);
-            mediaFormat.setInteger(VideoFormat.KEY_HEIGHT, mVideoSizeInfo.mHeight);
-            mediaFormat.setInteger(VideoFormat.KEY_FRAME_RATE, mVideoSizeInfo.mFrameRate);
-            mediaFormat.setInteger(VideoFormat.KEY_ASPECT_RATIO, mVideoSizeInfo.mAspectRatio);
+            mediaFormat.setInteger(VideoFormat.KEY_WIDTH, mVideoInfo.mWidth);
+            mediaFormat.setInteger(VideoFormat.KEY_HEIGHT, mVideoInfo.mHeight);
+            mediaFormat.setInteger(VideoFormat.KEY_FRAME_RATE, mVideoInfo.mFrameRate);
+            mediaFormat.setInteger(VideoFormat.KEY_ASPECT_RATIO, mVideoInfo.mAspectRatio);
 
             mEventNotifier.notifyVideoFormatChange(mediaFormat);
         }
@@ -692,6 +692,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         mediaFormat.setInteger(VideoFormat.KEY_HEIGHT, mVideoOutputPath.getVideoHeight());
         mediaFormat.setInteger(VideoFormat.KEY_FRAME_RATE, mVideoOutputPath.getFrameRate());
         mediaFormat.setInteger(VideoFormat.KEY_ASPECT_RATIO, mVideoOutputPath.getPixelAspectRatio());
+        mediaFormat.setInteger(VideoFormat.KEY_VF_TYPE, mVideoOutputPath.getVFType());
 
         return mediaFormat;
     }

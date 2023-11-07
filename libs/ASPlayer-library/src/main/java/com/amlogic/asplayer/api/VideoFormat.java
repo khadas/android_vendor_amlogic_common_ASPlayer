@@ -11,8 +11,9 @@ package com.amlogic.asplayer.api;
 
 public class VideoFormat {
 
-    public static final String KEY_WIDTH = "width";
-    public static final String KEY_HEIGHT = "height";
-    public static final String KEY_FRAME_RATE = "frame-rate";
-    public static final String KEY_ASPECT_RATIO = "aspect-ratio";
+    public static final String KEY_WIDTH = "width"; // video width, type: int
+    public static final String KEY_HEIGHT = "height"; // video height, type: int
+    public static final String KEY_FRAME_RATE = "frame-rate"; // video frame rate, type: int
+    public static final String KEY_ASPECT_RATIO = "aspect-ratio"; // video aspect ratio, type: int
+    public static final String KEY_VF_TYPE = "vf-type"; // video vf_type, type: int
 }

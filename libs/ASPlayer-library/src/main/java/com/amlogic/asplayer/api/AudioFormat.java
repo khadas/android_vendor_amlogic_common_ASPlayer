@@ -9,7 +9,7 @@
 package com.amlogic.asplayer.api;
 
 public class AudioFormat {
-    public static final String KEY_SAMPLE_RATE = "sample-rate";
-    public static final String KEY_CHANNEL_COUNT = "channel-count";
-    public static final String KEY_CHANNEL_MASK = "channel-mask";
+    public static final String KEY_SAMPLE_RATE = "sample-rate"; // audio sample rate, type: int
+    public static final String KEY_CHANNEL_COUNT = "channel-count"; // audio channel count, type: int
+    public static final String KEY_CHANNEL_MASK = "channel-mask"; // audio channel mask, type: int
 }

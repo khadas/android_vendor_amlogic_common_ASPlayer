@@ -22,10 +22,12 @@ import static com.amlogic.asplayer.core.VideoMediaFormatEvent.EVENT_FLAGS_AFD;
 import static com.amlogic.asplayer.core.VideoMediaFormatEvent.EVENT_FLAGS_FRAME_RATES;
 import static com.amlogic.asplayer.core.VideoMediaFormatEvent.EVENT_FLAGS_PIXEL_ASPECT_RATIO;
 import static com.amlogic.asplayer.core.VideoMediaFormatEvent.EVENT_FLAGS_RESOLUTION;
+import static com.amlogic.asplayer.core.VideoMediaFormatEvent.EVENT_FLAGS_VIDEO_VF_TYPE;
 import static com.amlogic.asplayer.core.VideoMediaFormatEvent.EVENT_TYPE_AFD;
 import static com.amlogic.asplayer.core.VideoMediaFormatEvent.EVENT_TYPE_ASPECT_RATIO;
 import static com.amlogic.asplayer.core.VideoMediaFormatEvent.EVENT_TYPE_FRAME_RATES;
 import static com.amlogic.asplayer.core.VideoMediaFormatEvent.EVENT_TYPE_RESOLUTION;
+import static com.amlogic.asplayer.core.VideoMediaFormatEvent.EVENT_TYPE_VIDEO_VF_TYPE;
 import static com.amlogic.asplayer.core.VideoMediaFormatEvent.KEY_EVENT_FLAGS;
 
 
@@ -137,6 +139,11 @@ class VideoOutputPathV3 extends VideoOutputPath {
                     case EVENT_TYPE_FRAME_RATES:
                         handleFrameRateEvent((VideoMediaFormatEvent.FrameRateEvent) event);
                         break;
+                    case EVENT_TYPE_VIDEO_VF_TYPE:
+                        handleVideoVFTypeEvent((VideoMediaFormatEvent.VideoVFTypeEvent) event);
+                        break;
+                    default:
+                        break;
                 }
             }
         }
@@ -162,6 +169,12 @@ class VideoOutputPathV3 extends VideoOutputPath {
         private void handleAfdEvent(VideoMediaFormatEvent.AfdEvent afdEvent) {
             if (afdEvent != null) {
                 updateAfdInfo(afdEvent.activeFormat);
+            }
+        }
+
+        private void handleVideoVFTypeEvent(VideoMediaFormatEvent.VideoVFTypeEvent vfTypeEvent) {
+            if (vfTypeEvent != null) {
+                updateVFTypeInfo(vfTypeEvent.vfType);
             }
         }
     }
@@ -384,6 +397,7 @@ class VideoOutputPathV3 extends VideoOutputPath {
                 | EVENT_FLAGS_PIXEL_ASPECT_RATIO
                 | EVENT_FLAGS_AFD
                 | EVENT_FLAGS_FRAME_RATES
+                | EVENT_FLAGS_VIDEO_VF_TYPE
         );
 
         ASPlayerLog.i("%s track filter id: 0x%016x, avSyncHwId: 0x%x, scrambled: %b",
