@@ -38,6 +38,7 @@ import com.amlogic.asplayer.api.WorkMode;
 import com.amlogic.asplayer.core.utils.Utils;
 
 import java.util.Locale;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import static com.amlogic.asplayer.api.ASPlayer.INFO_BUSY;
 import static com.amlogic.asplayer.api.ASPlayer.INFO_ERROR_RETRY;
@@ -53,6 +54,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     private static final String TAG = Constant.LOG_TAG;
 
     private Tuner mTuner;
+    private Context mContext;
 
     private ASPlayerConfig mConfig;
 
@@ -69,6 +71,9 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     private Surface mFccDummySurface;
 
     private EventNotifier mEventNotifier;
+    private Looper mEventLooper;
+    private HandlerThread mEventThread;
+    private CopyOnWriteArraySet<TsPlaybackListener> mPendingPlaybackListeners;
 
     private static class VideoInfo {
         private int mWidth;
@@ -98,25 +103,32 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     public ASPlayerImpl(int id, Context context, Tuner tuner, ASPlayerConfig config, Looper looper) {
         mId = id;
+        mContext = context;
         mTuner = tuner;
         mConfig = config;
+        mEventLooper = looper;
 
-        mEventNotifier = new EventNotifier(id, looper);
         mVideoOutputPath = new VideoOutputPathV3(mId, ASPlayerConfig.PLAYBACK_MODE_PASSTHROUGH);
         mAudioOutputPath = new AudioOutputPathV3(mId);
 
-        mRendererScheduler = new RendererScheduler(mId, context, this, mConfig,
-                mVideoOutputPath, mAudioOutputPath, mEventNotifier);
+        mPendingPlaybackListeners = new CopyOnWriteArraySet<>();
     }
 
     @Override
     public void addPlaybackListener(TsPlaybackListener listener) {
-        mEventNotifier.mPlaybackListeners.add(listener);
+        if (mEventNotifier != null) {
+            mEventNotifier.mPlaybackListeners.add(listener);
+        } else {
+            mPendingPlaybackListeners.add(listener);
+        }
     }
 
     @Override
     public void removePlaybackListener(TsPlaybackListener listener) {
-        mEventNotifier.mPlaybackListeners.remove(listener);
+        if (mEventNotifier != null) {
+            mEventNotifier.mPlaybackListeners.remove(listener);
+        }
+        mPendingPlaybackListeners.remove(listener);
     }
 
     public void setOnGetSyncInstanceIdListener(OnGetSyncInstanceIdListener listener) {
@@ -134,11 +146,28 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
                 Process.THREAD_PRIORITY_AUDIO);
         mPlayerThread.start();
         mPlayerHandler = new Handler(mPlayerThread.getLooper());
-        mPlayerHandler.post(this::handlePrepare);
 
         if (needTsPlayback()) {
             prepareTsPlayback();
         }
+
+        if (mEventLooper != null) {
+            mEventNotifier = new EventNotifier(mId, mEventLooper);
+        } else {
+            // no event looper, notify events on sub thread
+            mEventThread = new HandlerThread(String.format(Locale.US, "AsPlayer-ev:%d", mId));
+            mEventThread.start();
+            mEventNotifier = new EventNotifier(mId, mEventThread.getLooper());
+            mEventLooper = mEventThread.getLooper();
+        }
+
+        mEventNotifier.mPlaybackListeners.addAll(mPendingPlaybackListeners);
+        mPendingPlaybackListeners.clear();
+
+        mRendererScheduler = new RendererScheduler(mId, mContext, this, mConfig,
+                mVideoOutputPath, mAudioOutputPath, mEventNotifier);
+
+        mPlayerHandler.post(this::handlePrepare);
 
         return ErrorCode.SUCCESS;
     }
@@ -250,6 +279,20 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         mAvSyncHwId = Constant.INVALID_AV_SYNC_ID;
         mSyncInstanceId = Constant.INVALID_SYNC_INSTANCE_ID;
 
+        mPendingPlaybackListeners.clear();
+
+        if (mEventNotifier != null) {
+            mEventNotifier.release();
+            mEventNotifier = null;
+        }
+
+        if (mEventThread != null) {
+            mEventThread.quitSafely();
+            mEventThread = null;
+        }
+
+        mEventLooper = null;
+
         mPlayerThread.quitSafely();
         mPlayerThread = null;
 
@@ -257,6 +300,8 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
         mVideoOutputPath = null;
         mAudioOutputPath = null;
+
+        mRendererScheduler = null;
 
         mTuner = null;
         mFccDummySurfaceControl = null;

@@ -70,12 +70,7 @@ class EventNotifier {
 
     void release() {
         mEventHandler.removeCallbacksAndMessages(null);
-    }
-
-    void start() {
-    }
-
-    void stop() {
+        mPlaybackListeners.clear();
     }
 
     void notifyVideoFormatChange(MediaFormat videoFormat) {

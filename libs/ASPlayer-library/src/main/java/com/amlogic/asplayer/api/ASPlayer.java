@@ -51,13 +51,13 @@ public class ASPlayer implements IASPlayer {
                 .build();
         mConfig = config;
         Context appContext = BaseAppContext.getAppContext();
-        if (looper == null) {
-            looper = Looper.getMainLooper();
-        }
         mPlayer = new ASPlayerImpl(mId, appContext, tuner, mConfig, looper);
         mPlayer.setOnGetSyncInstanceIdListener(this::onGetSyncInstanceId);
 
         logVersionInfo();
+
+        ASPlayerLog.i("%s ctor playbackMode: %d, inputSourceType: %d, eventMask: %d",
+                getTag(), initParams.getPlaybackMode(),initParams.getInputSourceType(), initParams.getEventMask());
     }
 
     private void logVersionInfo() {
