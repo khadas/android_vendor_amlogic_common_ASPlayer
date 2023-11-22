@@ -48,7 +48,7 @@ import static com.amlogic.asplayer.core.TsPlaybackConfig.PLAYBACK_BUFFER_SIZE;
 import static com.amlogic.asplayer.core.TsPlaybackConfig.TS_PACKET_SIZE;
 
 public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListener,
-        AudioOutputPath.AudioFormatListener {
+        AudioOutputPathBase.AudioFormatListener {
 
     private static final boolean DEBUG = false;
     private static final String TAG = Constant.LOG_TAG;
@@ -62,7 +62,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     private Handler mPlayerHandler;
 
     private VideoOutputPath mVideoOutputPath;
-    private AudioOutputPath mAudioOutputPath;
+    private AudioOutputPathBase mAudioOutputPath;
 
     private RendererScheduler mRendererScheduler;
     private TsPlayback mTsPlayback;

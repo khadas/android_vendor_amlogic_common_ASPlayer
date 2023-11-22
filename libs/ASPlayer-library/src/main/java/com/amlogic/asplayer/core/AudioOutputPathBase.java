@@ -1,16 +1,21 @@
+/*
+ * Copyright (c) 2019 Amlogic, Inc. All rights reserved.
+ *
+ * This source code is subject to the terms and conditions defined in the
+ * file 'LICENSE' which is part of this source code package.
+ *
+ * Description:
+ */
 package com.amlogic.asplayer.core;
 
 import android.media.AudioFormat;
-import android.media.MediaDescrambler;
 import android.media.MediaFormat;
 
 import com.amlogic.asplayer.api.AudioParams;
-import com.amlogic.asplayer.api.WorkMode;
 
-import java.nio.ByteBuffer;
 import java.util.Objects;
 
-class AudioOutputPath extends MediaOutputPath {
+abstract class AudioOutputPathBase extends MediaOutputPath {
 
     private static final int DEFAULT_AD_MIX_LEVEL = 50; // mix level: 50, ad volume no scale.
 
@@ -18,26 +23,17 @@ class AudioOutputPath extends MediaOutputPath {
         void onAudioFormat(AudioFormat audioFormat);
     }
 
-    //
     protected AudioCodecRenderer mAudioCodecRenderer;
 
-    //
     protected int mAudioSessionId = Constant.INVALID_AUDIO_SESSION_ID;
     protected boolean mTunneledPlayback;
 
-    //
-    protected boolean mSecurePlayback;
-
-    //
     protected AudioCaps mAudioCaps;
 
     protected float mGain;
     protected float mADVolumeDb = 0.f;
     protected Integer mADMixLevel = null;
     protected boolean mMute = false;
-
-    // input buffer shared with extractor
-    protected final InputBuffer mInputBuffer;
 
     protected boolean mNeedToConfigureSubTrack = false;
 
@@ -54,10 +50,14 @@ class AudioOutputPath extends MediaOutputPath {
 
     protected AudioFormatListener mAudioFormatListener;
 
-    AudioOutputPath(int id) {
+    AudioOutputPathBase(int id) {
         super(id);
         mGain = 1.f;
-        mInputBuffer = new InputBuffer();
+    }
+
+    @Override
+    String getName() {
+        return "AudioOutputPathBase";
     }
 
     void setAudioFormatListener(AudioFormatListener listener) {
@@ -158,6 +158,10 @@ class AudioOutputPath extends MediaOutputPath {
         mEnableADMix = Boolean.FALSE;
     }
 
+    void setCaps(AudioCaps caps) {
+        mAudioCaps = caps;
+    }
+
     void switchAudioTrack(AudioParams audioParams) {
         setAudioParams(audioParams);
     }
@@ -228,72 +232,6 @@ class AudioOutputPath extends MediaOutputPath {
             return 0;
     }
 
-    @Override
-    public boolean configure() {
-        return false;
-    }
-
-    @Override
-    protected void pushInputBuffer() {
-        if (!isConfigured() && !configure())
-            return;
-
-        pushInputBufferInitStartTime();
-
-        boolean bufferPushed = false;
-        while (mAudioCodecRenderer.hasInputBuffer() &&
-                mInputBufferQueue != null &&
-                !mInputBufferQueue.isEmpty() &&
-                !pushInputBufferIsTimeout()) {
-
-            // check if configuration has changed
-            MediaFormat newFormat = getMediaFormat();
-            if (newFormat != null && mHasAudioFormatChanged) {
-                MediaDescrambler descrambler = getMediaDescrambler();
-                ASPlayerLog.i("%s input format has changed (%s)", getTag(), mMediaFormat);
-                mAudioCodecRenderer.configure(mMediaFormat, descrambler);
-                String errorMessage = mAudioCodecRenderer.getErrorMessage();
-                handleConfigurationError(errorMessage);
-            }
-
-            int index = mAudioCodecRenderer.getNextInputBufferIndex();
-            ByteBuffer inputBuffer = mAudioCodecRenderer.getInputBuffer(index);
-            if (inputBuffer == null)
-                break;
-            mInputBuffer.buffer = inputBuffer;
-            // If getting the next input buffer fails we will try again until it succeeds or
-            // until there is no more buffer
-            // Anyway we need to push back the buffer into the renderer. So even if it fails
-            // we send an empty buffer hoping that the renderer will be able to handle it
-            // without crash
-            while (!mInputBufferQueue.pop(mInputBuffer)) {
-                if (mInputBufferQueue.isEmpty()) {
-                    ASPlayerLog.w("%s all input buffers are incorrect, we push an empty one to mediacodec", getTag());
-                    break;
-                }
-            }
-            if (mSecurePlayback) {
-                mAudioCodecRenderer.queueSecureInputBuffer(index, 0, mInputBuffer.cryptoInfo,
-                        mInputBuffer.timestampUs, 0);
-            } else {
-                mAudioCodecRenderer.queueInputBuffer(index, 0, mInputBuffer.buffer.limit(),
-                        mInputBuffer.timestampUs, 0);
-            }
-            bufferPushed = true;
-            mTimestampKeeper.pushTimestamp(mInputBuffer.timestampUs);
-            if (mTimestampKeeper.hasDiscontinuity())
-                break;
-        }
-
-        timestampInputBufferQueueFullIfNeeded();
-
-        if (bufferPushed)
-            notifyBufferPushed();
-
-        if (mTimestampKeeper.hasDiscontinuity())
-            reset();
-    }
-
     protected boolean hasAudioFormatChanged(MediaFormat format1, MediaFormat format2) {
         // mime type
         if (!Objects.equals(format1.getString(MediaFormat.KEY_MIME),
@@ -328,7 +266,7 @@ class AudioOutputPath extends MediaOutputPath {
     }
 
     public void resume() {
-        ASPlayerLog.i("%s resume start", getTag());
+        ASPlayerLog.i("%s resume start, render: %s", getTag(), mAudioCodecRenderer);
         if (mAudioCodecRenderer != null) {
             mAudioCodecRenderer.resume();
         }
@@ -337,115 +275,56 @@ class AudioOutputPath extends MediaOutputPath {
     public void flush() {
         ASPlayerLog.i("%s flush", getTag());
         super.reset();
-        // maybe one day we will reuse mAudioCodecRenderer, but today it is safer to forget it
-        if (mAudioCodecRenderer != null) mAudioCodecRenderer.release();
-        mAudioCodecRenderer = null;
-
-        mHasAudioFormatChanged = false;
     }
 
     @Override
     public void reset() {
         ASPlayerLog.i("%s reset", getTag());
         super.reset();
-        // maybe one day we will reuse mAudioCodecRenderer, but today it is safer to forget it
-        if (mAudioCodecRenderer != null) mAudioCodecRenderer.release();
-        mAudioCodecRenderer = null;
 
         mAudioParams = null;
         mHasAudioFormatChanged = false;
+    }
+
+    @Override
+    void setSpeed(double speed) {
+        super.setSpeed(speed);
+        if (mAudioCodecRenderer != null) {
+            mAudioCodecRenderer.setSpeed(speed);
+        }
+    }
+
+    @Override
+    void checkErrors() {
+        if (mAudioCodecRenderer != null) {
+            mAudioCodecRenderer.checkErrors();
+        }
+    }
+
+    protected void releaseAudioRenderer() {
+        ASPlayerLog.i("%s releaseAudioRenderer", getTag());
+        if (mAudioCodecRenderer != null) {
+            mAudioCodecRenderer.release();
+            mAudioCodecRenderer = null;
+        }
+
+        setConfigured(false);
+
+        mLastWorkMode = -1;
+        mLastPIPMode = -1;
     }
 
     @Override
     public void release() {
         ASPlayerLog.i("%s release", getTag());
         super.release();
-        if (mAudioCodecRenderer != null) mAudioCodecRenderer.release();
-        mAudioCodecRenderer = null;
+
+        releaseAudioRenderer();
 
         mMute = false;
         mHasAudio = false;
 
         mAudioParams = null;
         mHasAudioFormatChanged = false;
-    }
-
-    @Override
-    long render() {
-        if (mAudioCodecRenderer == null || !mClock.isStarted())
-            return 10000;
-
-        if (mClock.getSpeed() == 0.0)
-            return 10000;
-
-        switch (getRenderingMode()) {
-            case RENDER_FREE_RUN:
-                return mAudioCodecRenderer.renderFreeRun();
-            case RENDER_SYNCHRONIZED:
-                return mAudioCodecRenderer.renderSynchro(mInputBufferQueue.getSizeInUs());
-            case RENDER_NONE:
-            default:
-                return 10000;
-        }
-    }
-
-    @Override
-    void setSpeed(double speed) {
-        super.setSpeed(speed);
-        if (mAudioCodecRenderer != null)
-            mAudioCodecRenderer.setSpeed(speed);
-    }
-
-    @Override
-    void checkErrors() {
-        if (mAudioCodecRenderer != null)
-            mAudioCodecRenderer.checkErrors();
-    }
-
-    @Override
-    public String getName() {
-        return "AudioOutputPath";
-    }
-
-    void setCaps(AudioCaps caps) {
-        mAudioCaps = caps;
-    }
-
-    @Override
-    public void setWorkMode(int workMode) {
-        if (workMode == mLastWorkMode) {
-            return;
-        }
-
-        ASPlayerLog.i("%s setWorkMode: %d, last mode:%d", getTag(), workMode, mLastWorkMode);
-        if (workMode == WorkMode.CACHING_ONLY) {
-            handleConfigurationError(null);
-        }
-
-        super.setWorkMode(workMode);
-        mChangedWorkMode = true;
-        setConfigured(false);
-    }
-
-    @Override
-    public void setPIPMode(int pipMode) {
-        if (pipMode == mLastPIPMode) {
-            return;
-        }
-
-        ASPlayerLog.i("%s setPIPMode: %d, last mode: %d", getTag(), pipMode, mLastPIPMode);
-        super.setPIPMode(pipMode);
-        mChangePIPMode = true;
-        setConfigured(false);
-    }
-
-    protected void releaseAudioRenderer() {
-        if (mAudioCodecRenderer != null) {
-            mAudioCodecRenderer.release();
-            mAudioCodecRenderer = null;
-        }
-
-        mLastWorkMode = -1;
-        mLastPIPMode = -1;
     }
 }

@@ -168,6 +168,7 @@ class RendererPlaybackV3 extends Renderer {
         if (!mTasks.contains(mVideoInputBuffersTask)) {
             mTasks.add(mVideoInputBuffersTask);
         }
+        dumpTasks();
     }
 
     @Override
@@ -177,6 +178,7 @@ class RendererPlaybackV3 extends Renderer {
         if (mTasks.contains(mVideoInputBuffersTask)) {
             mTasks.remove(mVideoInputBuffersTask);
         }
+        dumpTasks();
     }
 
     @Override
@@ -186,6 +188,7 @@ class RendererPlaybackV3 extends Renderer {
         if (!mTasks.contains(mAudioInputBuffersTask)) {
             mTasks.add(mAudioInputBuffersTask);
         }
+        dumpTasks();
     }
 
     @Override
@@ -194,6 +197,13 @@ class RendererPlaybackV3 extends Renderer {
         super.stopAudio();
         if (mTasks.contains(mAudioInputBuffersTask)) {
             mTasks.remove(mAudioInputBuffersTask);
+        }
+        dumpTasks();
+    }
+
+    private void dumpTasks() {
+        for (PlaybackTask task : mTasks) {
+            ASPlayerLog.d("%s task: %s", getTag(), task);
         }
     }
 

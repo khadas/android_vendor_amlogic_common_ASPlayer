@@ -41,6 +41,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     private static final long AUDIO_TRACK_PREPARE_TIMEOUT = 200;
     private static final int AUDIO_BUFFER_SIZE = 256;
     private OutputBufferListener mOutputBufferListener;
+    private AudioFormatListener mAudioFormatListener;
     private AudioTimestamp timestamp = new AudioTimestamp();
     private final ByteBuffer mEmptyPacket = ByteBuffer.allocate(AUDIO_BUFFER_SIZE);
     private final ByteBuffer mMetadataPacket = ByteBuffer.allocate(AUDIO_BUFFER_SIZE);
@@ -54,7 +55,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     private int mLastPIPMode = -1;
     private int mTargetPIPMode = mLastPIPMode;
 
-    private boolean mPaused = true;
+    private boolean mPaused;
 
     private AudioFormat mAudioFormat;
 
@@ -65,6 +66,8 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
         mGain = 1.f;
         mClock = clock;
         EncapsulationEncoder.encodeEmptyPacket(mEmptyPacket, AUDIO_BUFFER_SIZE);
+
+        mPaused = false;
     }
 
     @Override
@@ -75,6 +78,11 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     @Override
     public void setOutputBufferListener(OutputBufferListener listener) {
         mOutputBufferListener = listener;
+    }
+
+    @Override
+    public void setAudioFormatListener(AudioFormatListener listener) {
+        mAudioFormatListener = listener;
     }
 
     @Override
@@ -122,12 +130,9 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
     @Override
     public void setVolume(float gain) {
-        ASPlayerLog.i("%s setVolume: %.3f", getTag(), gain);
+        ASPlayerLog.i("%s setVolume: %.2f", getTag(), gain);
         mGain = gain;
-        if (mAudioTrack != null) {
-            ASPlayerLog.i("%s audioTrack: %s, setVolume: %.3f", getTag(), mAudioTrack, gain);
-            mAudioTrack.setVolume(gain);
-        }
+        setAudioTrackVolume(mGain);
     }
 
     @Override
@@ -220,36 +225,47 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
             ASPlayerLog.i("%s configure AudioTrack, workMode: %d, pipMode: %d", getTag(), workMode, pipMode);
 
+            mAudioFormat = audioFormat;
+        } catch (Exception exception) {
+            ASPlayerLog.w("%s Failed to configure AudioTrack: %s", getTag(), exception.getMessage());
+            mErrorMessage = exception.toString();
+            AudioUtils.releaseAudioTrack(mAudioTrack);
+            mAudioTrack = null;
+        }
+    }
+
+    @Override
+    public void start() {
+        mPaused = false;
+        int workMode = mTargetWorkMode;
+        int pipMode = mTargetPIPMode;
+
+        ASPlayerLog.i("%s start, workMode: %d, pipMode: %d", getTag(), workMode, pipMode);
+
+        try {
             if (workMode == WorkMode.NORMAL && pipMode == PIPMode.NORMAL) {
-                ASPlayerLog.i("%s set volume %f", getTag(), mGain);
-                mAudioTrack.setVolume(mGain);
+                setAudioTrackVolume(mGain);
 
                 setAudioDescriptionVolume(mSubAudioVolumeDb);
 
                 if (mClock.getSpeed() == 0) {
-                    ASPlayerLog.i("%s AudioTrack.pause", getTag());
-                    mAudioTrack.pause();
+                    pauseAudioTrack();
                 } else {
-                    ASPlayerLog.i("%s AudioTrack.play", getTag());
-                    mAudioTrack.play();
+                    startAudioTrack();
                 }
             } else if (workMode == WorkMode.CACHING_ONLY || pipMode == PIPMode.PIP) {
-                ASPlayerLog.i("%s set volume 0", getTag());
-                mAudioTrack.setVolume(0.f);
-                ASPlayerLog.i("%s AudioTrack.stop", getTag());
-                mAudioTrack.stop();
+                setAudioTrackVolume(0.f);
+                stopAudioTrack();
             }
 
             if (workMode == WorkMode.NORMAL && pipMode == PIPMode.NORMAL) {
                 startDecoderThread();
             }
 
-            mAudioFormat = audioFormat;
-
             mLastWorkMode = workMode;
             mLastPIPMode = pipMode;
         } catch (Exception exception) {
-            ASPlayerLog.w("%s Failed to configure AudioTrack: %s", getTag(), exception.getMessage());
+            ASPlayerLog.w("%s Failed to start AudioTrack: %s", getTag(), exception.getMessage());
             mErrorMessage = exception.toString();
             releaseDecoderThread();
             AudioUtils.releaseAudioTrack(mAudioTrack);
@@ -333,7 +349,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
                     if ((SystemClock.elapsedRealtime() - mLastRenderNotificationTime > 500)
                             && mAudioTrack.getTimestamp(timestamp)) {
                         mHandler.post(() -> {
-                            if (mOutputBufferListener != null) {
+                            if (!mPaused && mOutputBufferListener != null) {
                                 mOutputBufferListener
                                         .onRender(0, timestamp.nanoTime / 1000);
                             }
@@ -385,32 +401,26 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
         }
         mClock.setSpeed(speed);
         if (speed == 0) {
-            ASPlayerLog.w("%s AudioTrack.pause", getTag());
-            mAudioTrack.pause();
+            pauseAudioTrack();
         } else {
-            ASPlayerLog.w("%s AudioTrack.play", getTag());
-            mAudioTrack.play();
+            if (!mPaused) {
+                startAudioTrack();
+            }
         }
     }
 
     @Override
     public void pause() {
         ASPlayerLog.i("%s pause start", getTag());
-        if (mAudioTrack != null) {
-            ASPlayerLog.i("%s pause AudioTrack: %s", getTag(), mAudioTrack);
-            mAudioTrack.pause();
-        }
+        pauseAudioTrack();
         mPaused = true;
     }
 
     @Override
     public void resume() {
-        ASPlayerLog.i("%s resume start", getTag());
+        ASPlayerLog.i("%s resume start, paused: %b", getTag(), mPaused);
         if (mPaused) {
-            if (mAudioTrack != null) {
-                ASPlayerLog.i("%s resume AudioTrack: %s", getTag(), mAudioTrack);
-                mAudioTrack.play();
-            }
+            startAudioTrack();
             mPaused = false;
         }
     }
@@ -431,9 +441,46 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
         synchronized (mLock) {
             if (mAudioTrack != null) {
                 boolean isPlaying = mClock.getSpeed() != 0;
-                if (isPlaying) mAudioTrack.pause();
+                if (isPlaying) {
+                    pauseAudioTrack();
+                }
+
                 mAudioTrack.flush();
-                if (isPlaying) mAudioTrack.play();
+
+                if (isPlaying) {
+                    startAudioTrack();
+                }
+            }
+        }
+    }
+
+    private void startAudioTrack() {
+        if (mAudioTrack != null) {
+            ASPlayerLog.i("%s AudioTrack.play: %s", getTag(), mAudioTrack);
+            mAudioTrack.play();
+        }
+    }
+
+    private void pauseAudioTrack() {
+        if (mAudioTrack != null) {
+            ASPlayerLog.i("%s AudioTrack.pause: %s", getTag(), mAudioTrack);
+            mAudioTrack.pause();
+        }
+    }
+
+    private void stopAudioTrack() {
+        if (mAudioTrack != null) {
+            ASPlayerLog.i("%s AudioTrack.stop: %s", getTag(), mAudioTrack);
+            mAudioTrack.stop();
+        }
+    }
+
+    private void setAudioTrackVolume(float volume) {
+        if (mAudioTrack != null) {
+            ASPlayerLog.i("%s AudioTrack.setVolume(%.2f)", getTag(), volume);
+            int ret = mAudioTrack.setVolume(volume);
+            if (ret != AudioTrack.SUCCESS) {
+                ASPlayerLog.e("%s AudioTrack.setVolume(%.2f) failed, ret: %d", getTag(), volume, ret);
             }
         }
     }
@@ -547,24 +594,15 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     private boolean switchAudioTrackMode(boolean cache) {
         ASPlayerLog.i("%s switchAudioTrackMode type: %s", getTag(), cache ? "cache" : "normal");
         if (cache) {
-            ASPlayerLog.i("%s AudioTrack.setVolume(0)", getTag());
-            int ret = mAudioTrack.setVolume(0.f);
-            if (ret != AudioTrack.SUCCESS) {
-                ASPlayerLog.e("%s AudioTrack.setVolume(0) failed, ret: %d", getTag(), ret);
-            }
-            ASPlayerLog.i("%s AudioTrack.stop", getTag());
-            mAudioTrack.stop();
+            setAudioTrackVolume(0.f);
+            stopAudioTrack();
             mErrorMessage = null;
 
             releaseDecoderThread();
         } else {
-            ASPlayerLog.i("%s AudioTrack.setVolume: %.2f", getTag(), mGain);
-            int ret = mAudioTrack.setVolume(mGain);
-            if (ret != AudioTrack.SUCCESS) {
-                ASPlayerLog.e("%s AudioTrack.setVolume: %.2f failed", getTag(), mGain);
-            }
-            ASPlayerLog.i("%s AudioTrack.play", getTag());
-            mAudioTrack.play();
+            setAudioTrackVolume(mGain);
+            startAudioTrack();
+
             mErrorMessage = null;
 
             startDecoderThread();

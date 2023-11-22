@@ -1,7 +1,6 @@
 package com.amlogic.asplayer.core;
 
 import static android.media.MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayback;
-import static com.amlogic.asplayer.core.MediaContainerExtractor.INVALID_AV_SYNC_HW_ID;
 import static com.amlogic.asplayer.core.MediaContainerExtractor.INVALID_FILTER_ID;
 
 import android.media.AudioFormat;
@@ -14,8 +13,8 @@ import com.amlogic.asplayer.api.WorkMode;
 import com.amlogic.asplayer.core.encapsulation.Metadata;
 
 
-class AudioOutputPathV3 extends AudioOutputPath {
-    private static final boolean DEBUG = false;
+class AudioOutputPathV3 extends AudioOutputPathBase {
+    private static final boolean DEBUG = true;
 
     private Metadata.TunerMetadata mTunerMetadataMain;
     private Metadata.TunerMetadata mTunerMetadataSub;
@@ -40,11 +39,6 @@ class AudioOutputPathV3 extends AudioOutputPath {
     @Override
     public String getName() {
         return "AudioOutputPathV3";
-    }
-
-    @Override
-    void setAudioParams(AudioParams audioParams) {
-        super.setAudioParams(audioParams);
     }
 
     @Override
@@ -173,26 +167,41 @@ class AudioOutputPathV3 extends AudioOutputPath {
         mNeedToConfigureSubTrack = mSubTrackAudioParams != null;
 
         errorMessage = audioCodecRenderer.getErrorMessage();
-
-        if (errorMessage == null) {
-            AudioFormat audioFormat = audioCodecRenderer.getAudioFormat();
-            if (mAudioFormatListener != null) {
-                mAudioFormatListener.onAudioFormat(audioFormat);
-            }
+        if (errorMessage != null) {
+            ASPlayerLog.i("%s configure audio render failed, errorMessage: %s", getTag(), errorMessage);
+            handleConfigurationError(errorMessage);
+            return false;
         }
+
+        AudioFormat audioFormat = audioCodecRenderer.getAudioFormat();
+        if (mAudioFormatListener != null) {
+            mAudioFormatListener.onAudioFormat(audioFormat);
+        }
+
+        ASPlayerLog.i("%s start audio render", getTag());
+        audioCodecRenderer.start();
+
+        errorMessage = audioCodecRenderer.getErrorMessage();
 
         if (errorMessage != null) {
-            ASPlayerLog.i("%s configure failed, errorMessage: %s", getTag(), errorMessage);
+            ASPlayerLog.i("%s configure audio render failed, errorMessage: %s", getTag(), errorMessage);
+            handleConfigurationError(errorMessage);
         } else {
-            setConfigured(true);
+            handleConfigurationError(null);
         }
-        handleConfigurationError(errorMessage);
+
         boolean success = errorMessage == null;
         ASPlayerLog.i("%s configure %s", getTag(), success ? "success" : "failed");
-        mLastWorkMode = mTargetWorkMode;
-        mLastPIPMode = mTargetPIPMode;
-        mChangedWorkMode = false;
-        mChangePIPMode = false;
+
+        if (success) {
+            setConfigured(true);
+
+            mLastWorkMode = mTargetWorkMode;
+            mLastPIPMode = mTargetPIPMode;
+            mChangedWorkMode = false;
+            mChangePIPMode = false;
+        }
+
         return success;
     }
 
@@ -222,12 +231,32 @@ class AudioOutputPathV3 extends AudioOutputPath {
     }
 
     @Override
+    public void pause() {
+        super.pause();
+    }
+
+    @Override
+    public void resume() {
+        super.resume();
+    }
+
+    @Override
     public void flush() {
         super.flush();
 
-        if (mAudioCodecRenderer != null) {
-            mAudioCodecRenderer.reset();
-        }
+        // can not mAudioCodecRenderer.reset() here, need release mAudioCodecRenderer
+//        if (mAudioCodecRenderer != null) {
+//            mAudioCodecRenderer.reset();
+//        }
+
+        releaseAudioRenderer();
+    }
+
+    @Override
+    public void reset() {
+        super.reset();
+
+        releaseAudioRenderer();
     }
 
     @Override
@@ -235,6 +264,11 @@ class AudioOutputPathV3 extends AudioOutputPath {
         super.release();
 
         mSubTrackAudioParams = null;
+    }
+
+    @Override
+    long render() {
+        return 10000;
     }
 
     private boolean changeMainTrack(AudioParams audioParams) {
@@ -302,8 +336,20 @@ class AudioOutputPathV3 extends AudioOutputPath {
     @Override
     public void setWorkMode(int workMode) {
         ASPlayerLog.d("%s setWorkMode, workMode: %d", getTag(), workMode);
+        if (workMode == mLastWorkMode) {
+            return;
+        }
+
         int lastWorkMode = mLastWorkMode;
+
         super.setWorkMode(workMode);
+
+        if (workMode == WorkMode.CACHING_ONLY) {
+            handleConfigurationError(null);
+        }
+
+        mChangedWorkMode = true;
+        setConfigured(false);
 
         if (lastWorkMode == WorkMode.NORMAL && workMode == WorkMode.CACHING_ONLY) {
             ASPlayerLog.d("%s setWorkMode release audio render", getTag());
@@ -318,8 +364,16 @@ class AudioOutputPathV3 extends AudioOutputPath {
     @Override
     public void setPIPMode(int pipMode) {
         ASPlayerLog.d("%s setPIPMode, pipMode: %d", getTag(), pipMode);
+        if (pipMode == mLastPIPMode) {
+            return;
+        }
+
         int lastPipMode = mLastPIPMode;
+
         super.setPIPMode(pipMode);
+
+        mChangePIPMode = true;
+        setConfigured(false);
 
         if (lastPipMode == PIPMode.NORMAL && pipMode == PIPMode.PIP) {
             ASPlayerLog.d("%s setPIPMode release audio render", getTag());

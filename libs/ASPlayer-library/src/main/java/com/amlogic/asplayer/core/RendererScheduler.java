@@ -23,9 +23,14 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
 
     private static final boolean DEBUG = false;
 
-    private static final String TAG = RendererScheduler.class.getSimpleName();
-
     private static final double SPEED_DIFF_THRESHOLD = 0.001;
+
+    private enum AVState {
+        INIT,
+        START,
+        PAUSE,
+        STOP
+    }
 
     private final IASPlayer mASPlayer;
     private Context mContext;
@@ -42,12 +47,12 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     private final PositionHandler mPositionHandler;
 
     private VideoOutputPath mVideoOutputPath;
-    private AudioOutputPath mAudioOutputPath;
+    private AudioOutputPathBase mAudioOutputPath;
     private boolean mHasVideo;
     private boolean mHasAudio;
 
-    private boolean mVideoStarted;
-    private boolean mAudioStarted;
+    private AVState mTargetVideoState;
+    private AVState mTargetAudioState;
 
     private EventNotifier mEventNotifier;
 
@@ -69,7 +74,7 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
                       IASPlayer asPlayer,
                       ASPlayerConfig config,
                       VideoOutputPath videoOutputPath,
-                      AudioOutputPath audioOutputPath,
+                      AudioOutputPathBase audioOutputPath,
                       EventNotifier eventNotifier) {
         mId = id;
         mContext = context;
@@ -103,6 +108,9 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
         }
 
         mNoVideoSpeedTask = new RendererTrickNoVideo(mId, this);
+
+        mTargetVideoState = AVState.INIT;
+        mTargetAudioState = AVState.INIT;
     }
 
     void setSyncInstanceId(int syncInstanceId) {
@@ -122,7 +130,7 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
         return mVideoOutputPath;
     }
 
-    AudioOutputPath getAudioOutputPath() {
+    AudioOutputPathBase getAudioOutputPath() {
         return mAudioOutputPath;
     }
 
@@ -154,6 +162,8 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     }
 
     void release() {
+        mTargetVideoState = AVState.INIT;
+        mTargetAudioState = AVState.INIT;
         mPlaybackTask.release();
         setDecoderListener(null);
         setDataListener(null);
@@ -184,7 +194,7 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
         mVideoOutputPath.setVideoFormatListener(listener);
     }
 
-    void setAudioFormatListener(AudioOutputPath.AudioFormatListener listener) {
+    void setAudioFormatListener(AudioOutputPathBase.AudioFormatListener listener) {
         mAudioOutputPath.setAudioFormatListener(listener);
     }
 
@@ -230,7 +240,43 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
             previousRenderer.reset(Renderer.RESET_REASON_RENDERER_CHANGED);
         }
         if (mCurrentSpeedTask != null) {
+            setRenderTaskState(mCurrentSpeedTask);
             mCurrentSpeedTask.setSpeed(previousRenderer, mSpeed);
+        }
+    }
+
+    private void setRenderTaskState(Renderer rendererTask) {
+        if (rendererTask == null) {
+            return;
+        }
+
+        ASPlayerLog.i("%s setRenderTaskState video state: %s, audio state: %s, task: %s",
+                getTag(), mTargetVideoState, mTargetAudioState, rendererTask);
+
+        switch (mTargetVideoState) {
+            case START:
+                rendererTask.startVideo();
+                break;
+            case PAUSE:
+            case STOP:
+                rendererTask.stopVideo();
+                break;
+            case INIT:
+            default:
+                break;
+        }
+
+        switch (mTargetAudioState) {
+            case START:
+                rendererTask.startAudio();
+                break;
+            case PAUSE:
+            case STOP:
+                rendererTask.stopAudio();
+                break;
+            case INIT:
+            default:
+                break;
         }
     }
 
@@ -275,7 +321,7 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
 
     void startVideoDecoding() {
         ASPlayerLog.i("%s startVideoDecoding start", getTag());
-        mVideoStarted = true;
+        mTargetVideoState = AVState.START;
         mFirstVideoFrameDisplayed = false;
         stopRendererTask();
         if (mCurrentSpeedTask != null) {
@@ -307,15 +353,21 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     }
 
     private boolean canStartRendererTask() {
-        boolean videoCanStart = mVideoOutputPath != null && mVideoOutputPath.hasMediaFormat() && mVideoStarted;
-        boolean audioCanStart = mAudioOutputPath != null && mAudioOutputPath.hasMediaFormat() && mAudioStarted;
+        boolean videoCanStart = mVideoOutputPath != null && mVideoOutputPath.hasMediaFormat()
+                && isTargetStateStart(mTargetVideoState);
+        boolean audioCanStart = mAudioOutputPath != null && mAudioOutputPath.hasMediaFormat()
+                && isTargetStateStart(mTargetAudioState);
 
         return videoCanStart || audioCanStart;
     }
 
+    private boolean isTargetStateStart(AVState state) {
+        return state == AVState.START;
+    }
+
     void stopVideoDecoding() {
         ASPlayerLog.i("%s stopVideoDecoding start", getTag());
-        mVideoStarted = false;
+        mTargetVideoState = AVState.STOP;
         mFirstVideoFrameDisplayed = false;
         if (mCurrentSpeedTask != null) {
             mCurrentSpeedTask.stopVideo();
@@ -329,14 +381,14 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     }
 
     private void stopRendererSchedulerIfNeed() {
-        if (!mVideoStarted && !mAudioStarted) {
+        if (!isTargetStateStart(mTargetVideoState) && !isTargetStateStart(mTargetAudioState)) {
             stop();
         }
     }
 
     void pauseVideoDecoding() {
         ASPlayerLog.i("%s pauseVideoDecoding start", getTag());
-        mVideoStarted = false;
+        mTargetVideoState = AVState.PAUSE;
         mFirstVideoFrameDisplayed = false;
         if (mCurrentSpeedTask != null) {
             mCurrentSpeedTask.stopVideo();
@@ -351,7 +403,7 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
 
     void resumeVideoDecoding() {
         ASPlayerLog.i("%s resumeVideoDecoding start", getTag());
-        mVideoStarted = true;
+        mTargetVideoState = AVState.START;
         mFirstVideoFrameDisplayed = false;
         stopRendererTask();
         if (mCurrentSpeedTask != null) {
@@ -366,7 +418,7 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
 
     void startAudioDecoding() {
         ASPlayerLog.i("%s startAudioDecoding start", getTag());
-        mAudioStarted = true;
+        mTargetAudioState = AVState.START;
         mFirstAudioFrameDisplayed = false;
         stopRendererTask();
         if (mCurrentSpeedTask != null) {
@@ -378,19 +430,19 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
 
     void stopAudioDecoding() {
         ASPlayerLog.i("%s stopAudioDecoding start", getTag());
-        mAudioStarted = false;
+        mTargetAudioState = AVState.STOP;
         mFirstAudioFrameDisplayed = false;
         if (mCurrentSpeedTask != null) {
             mCurrentSpeedTask.stopAudio();
         }
         stopRendererSchedulerIfNeed();
-        mAudioOutputPath.flush();
+        mAudioOutputPath.reset();
         ASPlayerLog.i("%s stopAudioDecoding end", getTag());
     }
 
     void pauseAudioDecoding() {
         ASPlayerLog.i("%s pauseAudioDecoding start", getTag());
-        mAudioStarted = false;
+        mTargetAudioState = AVState.PAUSE;
         mFirstAudioFrameDisplayed = false;
         if (mCurrentSpeedTask != null) {
             mCurrentSpeedTask.stopAudio();
@@ -401,7 +453,7 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
 
     void resumeAudioDecoding() {
         ASPlayerLog.i("%s resumeAudioDecoding start", getTag());
-        mAudioStarted = true;
+        mTargetAudioState = AVState.START;
         mFirstAudioFrameDisplayed = false;
         stopRendererTask();
         if (mCurrentSpeedTask != null) {

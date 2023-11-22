@@ -20,7 +20,7 @@ abstract class Renderer {
     protected IASPlayer mPlayer;
 
     // output paths
-    protected AudioOutputPath mAudioOutputPath;
+    protected AudioOutputPathBase mAudioOutputPath;
     protected VideoOutputPath mVideoOutputPath;
 
     // video start or not
