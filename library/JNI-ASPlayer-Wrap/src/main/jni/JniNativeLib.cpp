@@ -432,6 +432,11 @@ asplayer_set_audio_params(JNIEnv* env, jobject jniASPlayerWrapperObj, jobject au
         params.mimeType = nullptr;
     }
 
+    if (params.extraInfoJson) {
+        delete[] params.extraInfoJson;
+        params.extraInfoJson = nullptr;
+    }
+
     return ret;
 }
 

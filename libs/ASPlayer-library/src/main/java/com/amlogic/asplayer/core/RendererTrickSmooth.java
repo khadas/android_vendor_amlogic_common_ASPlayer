@@ -20,7 +20,7 @@ class RendererTrickSmooth extends Renderer {
         super.setSpeed(previousRenderer, speed);
 
         // stop audio
-        if (mAudioOutputPath.hasMediaFormat()) {
+        if (mAudioOutputPath.hasAudioFormat()) {
             mAudioOutputPath.flush();
         }
 

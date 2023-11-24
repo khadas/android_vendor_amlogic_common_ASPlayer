@@ -63,7 +63,7 @@ class RendererTrickBySeek extends Renderer {
         mPendingNextPositionTimeMs = 0;
 
         // stop audio
-        if (mAudioOutputPath.hasMediaFormat()) {
+        if (mAudioOutputPath.hasAudioFormat()) {
             mAudioOutputPath.flush();
         }
 

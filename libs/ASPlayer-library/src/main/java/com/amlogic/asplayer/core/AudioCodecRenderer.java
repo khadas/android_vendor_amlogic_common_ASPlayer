@@ -6,6 +6,8 @@ import android.media.MediaDescrambler;
 import android.media.MediaFormat;
 
 
+import com.amlogic.asplayer.api.AudioParams;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -118,9 +120,9 @@ interface AudioCodecRenderer {
     /**
      * Configures decoder with the given format
      *
-     * @param format
+     * @param audioParams
      */
-    void configure(MediaFormat format, MediaDescrambler descrambler);
+    void configure(AudioParams audioParams, MediaDescrambler descrambler);
 
     /**
      * Set speed of audio track

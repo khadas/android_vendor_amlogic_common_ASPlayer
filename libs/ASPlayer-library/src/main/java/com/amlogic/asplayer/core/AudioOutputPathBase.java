@@ -145,9 +145,10 @@ abstract class AudioOutputPathBase extends MediaOutputPath {
         }
 
         mAudioParams = audioParams;
-        if (mAudioParams != null) {
-            setMediaFormat(mAudioParams.getMediaFormat());
-        }
+    }
+
+    boolean hasAudioFormat() {
+        return mAudioParams != null;
     }
 
     void enableADMix() {

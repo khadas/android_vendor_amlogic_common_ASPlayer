@@ -60,6 +60,11 @@ public class AudioParams {
      */
     private MediaFormat mMediaFormat;
 
+    /**
+     * Audio Extra info, format: json
+     */
+    private String mExtraInfoJson;
+
     // for JNI use
     private AudioParams() {
 
@@ -147,6 +152,14 @@ public class AudioParams {
         this.mMediaFormat = mediaFormat;
     }
 
+    public String getExtraInfo() {
+        return mExtraInfoJson;
+    }
+
+    private void setExtraInfo(String extraInfoJson) {
+        this.mExtraInfoJson = extraInfoJson;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -159,7 +172,12 @@ public class AudioParams {
         sb.append(", mAvSyncHwId=").append(mAvSyncHwId);
         sb.append(", mSecLevel=").append(mSecLevel);
         sb.append(", mScrambled=").append(mScrambled);
-        sb.append(", mMediaFormat=").append(mMediaFormat);
+        if (mMediaFormat != null) {
+            sb.append(", mMediaFormat=").append(mMediaFormat);
+        }
+        if (mExtraInfoJson != null) {
+            sb.append(", mExtraInfoJson=").append(mExtraInfoJson);
+        }
         sb.append("}");
         return sb.toString();
     }
@@ -183,6 +201,8 @@ public class AudioParams {
         private boolean mScrambled;
 
         private MediaFormat mMediaFormat;
+
+        private String mExtraInfoJson;
 
         public Builder(String mimeType, int sampleRate, int channelCount) {
             this.mMimeType = mimeType;
@@ -219,6 +239,11 @@ public class AudioParams {
             return this;
         }
 
+        public Builder setExtraInfo(String extraInfo) {
+            this.mExtraInfoJson = extraInfo;
+            return this;
+        }
+
         public AudioParams build() {
             AudioParams audioParams = new AudioParams(mMimeType, mSampleRate, mChannelCount);
             audioParams.setPid(mPid);
@@ -227,6 +252,7 @@ public class AudioParams {
             audioParams.setSecLevel(mSecLevel);
             audioParams.setScrambled(mScrambled);
             audioParams.setMediaFormat(mMediaFormat);
+            audioParams.setExtraInfo(mExtraInfoJson);
             return audioParams;
         }
     }

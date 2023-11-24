@@ -6,6 +6,7 @@ import static com.amlogic.asplayer.core.MediaContainerExtractor.INVALID_FILTER_I
 import android.media.AudioFormat;
 import android.media.MediaFormat;
 import android.os.Build;
+import android.text.TextUtils;
 
 import com.amlogic.asplayer.api.AudioParams;
 import com.amlogic.asplayer.api.PIPMode;
@@ -42,6 +43,11 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
     }
 
     @Override
+    boolean hasAudioFormat() {
+        return mAudioParams != null && mAudioParams.getTrackFilterId() > 0;
+    }
+
+    @Override
     void switchAudioTrack(AudioParams audioParams) {
         super.switchAudioTrack(audioParams);
 
@@ -75,18 +81,21 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
             return false;
         }
 
-        MediaFormat format = mAudioParams.getMediaFormat();
-        if (format == null) {
-            if (DEBUG) ASPlayerLog.w("%s configure failed, audio format is null", getTag());
-            return false;
-        }
-
         ASPlayerLog.i("%s configure, audio renderer: %s, mChangedWorkMode: %b, mChangePIPMode: %b",
                 getTag(), mAudioCodecRenderer, mChangedWorkMode, mChangePIPMode);
 
         String errorMessage;
 
-        String mimeType = format.getString(MediaFormat.KEY_MIME);
+        String mimeType = mAudioParams.getMimeType();
+        MediaFormat format = mAudioParams.getMediaFormat();
+        if (TextUtils.isEmpty(mimeType) && format != null) {
+            mimeType = format.getString(MediaFormat.KEY_MIME);
+        }
+
+        if (TextUtils.isEmpty(mimeType)) {
+            if (DEBUG) ASPlayerLog.w("%s configure failed, mimeType not set", getTag());
+            return false;
+        }
 
         if (mAudioCodecRenderer != null) {
             boolean needChangeWorkMode = mChangedWorkMode;
@@ -139,12 +148,14 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
         });
 
         ASPlayerLog.i("%s source:%s, tunneled:%b", getTag(), mimeType, mTunneledPlayback);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+
+        // check secure playback or not
+        mSecurePlayback = mAudioParams.isScrambled();
+        if (!mSecurePlayback && format != null) {
             mSecurePlayback = format.containsFeature(FEATURE_SecurePlayback) &&
                     format.getFeatureEnabled(FEATURE_SecurePlayback);
-        } else {
-            mSecurePlayback = format.getFeatureEnabled(FEATURE_SecurePlayback);
         }
+
         audioCodecRenderer.setAudioSessionId(mAudioSessionId);
         audioCodecRenderer.setTunneledPlayback(mTunneledPlayback);
         audioCodecRenderer.setAudioCaps(mAudioCaps);
@@ -161,7 +172,7 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
         audioCodecRenderer.setSubAudioVolumeDb(mADVolumeDb);
         audioCodecRenderer.writeMetadata(mPlacementMetadata);
 
-        audioCodecRenderer.configure(format, null);
+        audioCodecRenderer.configure(mAudioParams, null);
 
         mNeedToConfigureSubTrack = mSubTrackAudioParams != null;
 
@@ -210,7 +221,10 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
         }
 
         ASPlayerLog.i("%s setTrackWithTunerMetaData filterId: %d", getTag(), audioParams.getTrackFilterId());
-        changeMainTrack(audioParams);
+        boolean success = changeMainTrack(audioParams);
+        if (success) {
+            mAudioParams = audioParams;
+        }
     }
 
     @Override
@@ -269,14 +283,15 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
 
     private boolean changeMainTrack(AudioParams audioParams) {
         ASPlayerLog.i("%s changeMainTrack start", getTag());
-        if (mAudioCodecRenderer instanceof AudioCodecRendererV3) {
-            mMediaFormat = audioParams.getMediaFormat();
-            if (mMediaFormat == null) {
-                ASPlayerLog.i("%s audio format null..", getTag());
-                return false;
-            }
+        if (audioParams == null) {
+            ASPlayerLog.i("%s changeMainTrack failed, audioParam is null");
+            return false;
+        }
 
-            if (!prepareMetadata(mTunerMetadataMain, audioParams.getTrackFilterId())) {
+        if (mAudioCodecRenderer instanceof AudioCodecRendererV3) {
+            final int filterId = audioParams.getTrackFilterId();
+            final int encodingType = AudioUtils.getEncoding(audioParams);
+            if (!prepareMetadata(mTunerMetadataMain, filterId, encodingType)) {
                 return false;
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -295,12 +310,16 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
         }
 
         if (mNeedToConfigureSubTrack && mAudioCodecRenderer instanceof AudioCodecRendererV3) {
-            if (mMediaFormat == null) {
-                ASPlayerLog.i("%s audio format null..", getTag());
+            if (mSubTrackAudioParams == null) {
+                ASPlayerLog.i("%s sub track audio param is null", getTag());
                 return;
             }
-            ASPlayerLog.i("%s changeSubTrack, filterId: %d", getTag(), mSubTrackAudioParams.getTrackFilterId());
-            if (!prepareMetadata(mTunerMetadataSub, mSubTrackAudioParams.getTrackFilterId())) {
+
+            final int filterId = mSubTrackAudioParams.getTrackFilterId();
+            // sub track must has same format with main track
+            final int encodingType = AudioUtils.getEncoding(mAudioParams);
+            ASPlayerLog.i("%s changeSubTrack, filterId: %d", getTag(), filterId);
+            if (!prepareMetadata(mTunerMetadataSub, filterId, encodingType)) {
                 return;
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -310,20 +329,16 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
         }
     }
 
-    private boolean prepareMetadata(Metadata.TunerMetadata tunerMetadata, int filterId) {
-        if (mMediaFormat == null) {
-            ASPlayerLog.i("%s audio format null..", getTag());
-            return false;
-        }
-
+    private boolean prepareMetadata(Metadata.TunerMetadata tunerMetadata, int filterId, int encodingType) {
         tunerMetadata.filterId = 0;
+
         if (filterId != INVALID_FILTER_ID) {
             tunerMetadata.filterId = filterId;
         }
         if (tunerMetadata.filterId < 0) {
             return false;
         }
-        tunerMetadata.encodingType = AudioUtils.getEncoding(mMediaFormat);
+        tunerMetadata.encodingType = encodingType;
         ASPlayerLog.i("%s prepareMetadata filterId: 0x%04x, encoding: %d",
                 getTag(), tunerMetadata.filterId, tunerMetadata.encodingType);
         return true;

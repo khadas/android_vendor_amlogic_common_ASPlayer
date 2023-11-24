@@ -354,9 +354,9 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     }
 
     private boolean canStartRendererTask() {
-        boolean videoCanStart = mVideoOutputPath != null && mVideoOutputPath.hasMediaFormat()
+        boolean videoCanStart = mVideoOutputPath != null && mVideoOutputPath.hasVideoFormat()
                 && isTargetStateStart(mTargetVideoState);
-        boolean audioCanStart = mAudioOutputPath != null && mAudioOutputPath.hasMediaFormat()
+        boolean audioCanStart = mAudioOutputPath != null && mAudioOutputPath.hasAudioFormat()
                 && isTargetStateStart(mTargetAudioState);
 
         return videoCanStart || audioCanStart;

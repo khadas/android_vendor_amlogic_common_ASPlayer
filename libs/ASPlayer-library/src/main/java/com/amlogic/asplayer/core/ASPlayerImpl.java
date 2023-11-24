@@ -21,6 +21,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Process;
+import android.text.TextUtils;
 import android.view.Surface;
 import android.view.SurfaceControl;
 
@@ -659,7 +660,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             if (params.isScrambled() && !format.containsFeature(MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayback)) {
                 format.setFeatureEnabled(MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayback, true);
             }
-            mVideoOutputPath.setMediaFormat(format);
+            mVideoOutputPath.setVideoFormat(format);
 
             if (mVideoOutputPath instanceof VideoOutputPathV3) {
                 VideoOutputPathV3 outputPathV3 = (VideoOutputPathV3) mVideoOutputPath;
@@ -671,7 +672,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
             mRendererScheduler.onSetVideoParams(true);
         } else {
-            mVideoOutputPath.setMediaFormat(null);
+            mVideoOutputPath.setVideoFormat(null);
             if (mVideoOutputPath instanceof VideoOutputPathV3) {
                 VideoOutputPathV3 outputPathV3 = (VideoOutputPathV3) mVideoOutputPath;
                 outputPathV3.setTrackFilterId(MediaContainerExtractor.INVALID_FILTER_ID);
@@ -946,12 +947,9 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
             setSyncInstanceIdByAvSyncId(avSyncHwId);
 
-            ASPlayerLog.i("%s setAudioParams pid: 0x%04x, filterId: 0x%016x, avSyncHwId: 0x%x, format: %s",
-                    getTag(), pid, filterId, avSyncHwId, mediaFormat);
-
-            if (mediaFormat == null) {
-                params = createAudioParamsWithMediaFormat(params);
-            }
+            ASPlayerLog.i("%s setAudioParams pid: 0x%04x, filterId: 0x%016x, avSyncHwId: 0x%x," +
+                            " format: %s, extraInfo: %s",
+                    getTag(), pid, filterId, avSyncHwId, mediaFormat, params.getExtraInfo());
 
             mAudioOutputPath.setAudioParams(params);
 
@@ -966,36 +964,6 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
             mRendererScheduler.onSetAudioParams(false);
         }
-    }
-
-    private AudioParams createAudioParamsWithMediaFormat(AudioParams audioParams) {
-        if (audioParams == null) {
-            return null;
-        }
-
-        if (audioParams.getMediaFormat() != null) {
-            return audioParams;
-        }
-
-        MediaFormat mediaFormat = MediaFormat.createAudioFormat(audioParams.getMimeType(),
-                audioParams.getSampleRate(), audioParams.getChannelCount());
-
-        ASPlayerLog.i("%s create audio MediaFormat, mimeType: %s, sampleRate: %d, channelCount: %d, scrambled: %b",
-                getTag(), audioParams.getMimeType(), audioParams.getSampleRate(), audioParams.getChannelCount(),
-                audioParams.isScrambled());
-
-        if (audioParams.isScrambled() && !mediaFormat.containsFeature(MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayback)) {
-            mediaFormat.setFeatureEnabled(MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayback, true);
-        }
-
-        AudioParams newParams = new AudioParams.Builder(mediaFormat)
-                .setPid(audioParams.getPid())
-                .setTrackFilterId(audioParams.getTrackFilterId())
-                .setAvSyncHwId(audioParams.getAvSyncHwId())
-                .setSecLevel(audioParams.getSecLevel())
-                .setScrambled(audioParams.isScrambled())
-                .build();
-        return newParams;
     }
 
     @Override
@@ -1039,12 +1007,9 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
             setSyncInstanceIdByAvSyncId(avSyncHwId);
 
-            ASPlayerLog.i("%s switchAudioTrack pid: 0x%04x, filterId: 0x%016x, avSyncHwId: 0x%x, format: %s",
-                    getTag(), pid, filterId, avSyncHwId, mediaFormat);
-
-            if (mediaFormat == null) {
-                params = createAudioParamsWithMediaFormat(params);
-            }
+            ASPlayerLog.i("%s switchAudioTrack pid: 0x%04x, filterId: 0x%016x, avSyncHwId: 0x%x," +
+                            " format: %s, extraInfo: %s",
+                    getTag(), pid, filterId, avSyncHwId, mediaFormat, params.getExtraInfo());
 
             mAudioOutputPath.switchAudioTrack(params);
 

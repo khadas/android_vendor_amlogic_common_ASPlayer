@@ -133,6 +133,8 @@ class VideoOutputPath extends MediaOutputPath {
 
     protected VideoFormatListener mVideoFormatListener;
 
+    protected MediaFormat mMediaFormat;
+
     protected int mPixelAspectRatio;
     protected String mMimeType;
     protected int mVideoWidth;
@@ -196,6 +198,14 @@ class VideoOutputPath extends MediaOutputPath {
         } else if (surface == null) {
             setConfigured(false);
         }
+    }
+
+    void setVideoFormat(MediaFormat format) {
+        this.mMediaFormat = format;
+    }
+
+    boolean hasVideoFormat() {
+        return mMediaFormat != null;
     }
 
     void setDummySurface(Surface surface) {
@@ -602,6 +612,7 @@ class VideoOutputPath extends MediaOutputPath {
 
         mTrickModeSpeed = 0;
 
+        mMediaFormat = null;
         mMimeType = null;
 
         super.reset();
@@ -683,6 +694,9 @@ class VideoOutputPath extends MediaOutputPath {
     @Override
     public void release() {
         super.release();
+
+        mMediaFormat = null;
+        mMimeType = null;
 
         mSurface = null;
         mDummySurface = null;

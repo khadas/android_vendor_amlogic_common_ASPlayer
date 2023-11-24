@@ -199,6 +199,11 @@ class VideoOutputPathV3 extends VideoOutputPath {
     }
 
     @Override
+    boolean hasVideoFormat() {
+        return mMediaFormat != null && mTrackFilterId > 0;
+    }
+
+    @Override
     public boolean configure() {
         if (DEBUG) ASPlayerLog.i("%s configure", getTag());
         if (isConfigured()) {

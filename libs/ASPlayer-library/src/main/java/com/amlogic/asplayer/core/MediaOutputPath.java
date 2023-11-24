@@ -1,7 +1,6 @@
 package com.amlogic.asplayer.core;
 
 import android.media.MediaDescrambler;
-import android.media.MediaFormat;
 import android.os.Handler;
 import android.os.SystemClock;
 
@@ -84,8 +83,6 @@ abstract class MediaOutputPath {
     // to limit spent time in pushInputBuffer
     private long mInputBufferPushStartTimeMs;
 
-    protected MediaFormat mMediaFormat;
-
     protected MediaDescrambler mMediaDescrambler;
 
     protected int mTargetWorkMode = WorkMode.NORMAL;
@@ -121,18 +118,6 @@ abstract class MediaOutputPath {
 
     String getError() {
         return mError;
-    }
-
-    void setMediaFormat(MediaFormat format) {
-        this.mMediaFormat = format;
-    }
-
-    MediaFormat getMediaFormat() {
-        return mMediaFormat;
-    }
-
-    boolean hasMediaFormat() {
-        return mMediaFormat != null;
     }
 
     void setMediaDescrambler(MediaDescrambler mediaDescrambler) {
@@ -238,7 +223,6 @@ abstract class MediaOutputPath {
         reset();
         mInputBufferQueue = null;
 
-        mMediaFormat = null;
         mMediaDescrambler = null;
 
         mHandler = null;

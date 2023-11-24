@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.os.SystemClock;
 
 
+import com.amlogic.asplayer.api.AudioParams;
 import com.amlogic.asplayer.api.PIPMode;
 import com.amlogic.asplayer.api.WorkMode;
 import com.amlogic.asplayer.core.encapsulation.EncapsulationEncoder;
@@ -182,7 +183,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     }
 
     @Override
-    public void configure(MediaFormat format, MediaDescrambler descrambler) {
+    public void configure(AudioParams audioParams, MediaDescrambler descrambler) {
         ASPlayerLog.i("%s configure", getTag());
         releaseDecoderThread();
         AudioUtils.releaseAudioTrack(mAudioTrack);
@@ -191,7 +192,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
         int workMode = mTargetWorkMode;
         int pipMode = mTargetPIPMode;
 
-        ASPlayerLog.i("%s source format:%s", getTag(), format);
+        ASPlayerLog.i("%s source format:%s", getTag(), audioParams);
         try {
             AudioAttributes audioAttributes = new AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_MEDIA)
@@ -214,7 +215,9 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
                 audioFormat = getAudioFormat(audioAttributes, AudioFormat.ENCODING_DEFAULT);
             } else {
                 ASPlayerLog.i("%s get tuner version failed, or tuner version < 1.1", getTag());
-                audioFormat = getAudioFormat(audioAttributes, AudioUtils.getEncoding(format));
+                int encodingType = AudioUtils.getEncoding(audioParams);
+                ASPlayerLog.i("%s encodingType: %d", getTag(), encodingType);
+                audioFormat = getAudioFormat(audioAttributes, encodingType);
             }
             builder.setAudioFormat(audioFormat);
 

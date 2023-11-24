@@ -38,6 +38,7 @@ struct audio_param_t {
     jfieldID secLevel;
     jfieldID scrambled;
     jfieldID mediaFormat;
+    jfieldID extraInfoJson;
 };
 
 struct input_buffer_t {
@@ -218,6 +219,8 @@ bool ASPlayerJni::initJni(JNIEnv *env) {
                 gAudioParamsCls, "mScrambled", "Z");
         gAudioParamsCtx.mediaFormat = env->GetFieldID(
                 gAudioParamsCls, "mMediaFormat", "Landroid/media/MediaFormat;");
+        gAudioParamsCtx.extraInfoJson = env->GetFieldID(
+                gAudioParamsCls, "mExtraInfoJson", "Ljava/lang/String;");
     }
 
     // init InputBuffer
@@ -402,6 +405,7 @@ bool ASPlayerJni::convertAudioParams(
     jint secLevel = env->GetIntField(jAudioParam, gAudioParamsCtx.secLevel);
     jboolean scrambled = env->GetBooleanField(jAudioParam, gAudioParamsCtx.scrambled);
     jobject mediaFormat = env->GetObjectField(jAudioParam, gAudioParamsCtx.mediaFormat);
+    jstring jExtraInfoJson = static_cast<jstring>(env->GetObjectField(jAudioParam, gAudioParamsCtx.extraInfoJson));
 
     memset(outParams, 0, sizeof(jni_asplayer_audio_params));
 
@@ -422,6 +426,16 @@ bool ASPlayerJni::convertAudioParams(
     outParams->seclevel = secLevel;
     outParams->scrambled = scrambled;
     outParams->mediaFormat = mediaFormat;
+
+    if (jExtraInfoJson != nullptr) {
+        jsize extraInfoLen = env->GetStringUTFLength(jExtraInfoJson);
+        if (extraInfoLen > 0) {
+            char *extraInfo = new char[extraInfoLen + 1];
+            memset(extraInfo, 0, extraInfoLen + 1);
+            env->GetStringUTFRegion(jExtraInfoJson, 0, extraInfoLen, extraInfo);
+            outParams->extraInfoJson = extraInfo;
+        }
+    }
 
     LOG_FUNCTION_END();
     return true;

@@ -28,7 +28,7 @@ class RendererTrickNoVideo extends Renderer {
         mRequestedPositionSet = true;
 
         // stop audio
-        if (mAudioOutputPath.hasMediaFormat()) {
+        if (mAudioOutputPath.hasAudioFormat()) {
             mAudioOutputPath.flush();
         }
 

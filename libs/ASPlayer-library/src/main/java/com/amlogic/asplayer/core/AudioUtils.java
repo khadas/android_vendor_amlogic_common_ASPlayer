@@ -5,10 +5,15 @@ import android.media.AudioFormat;
 import android.media.AudioTrack;
 import android.media.MediaFormat;
 import android.os.Build;
+import android.text.TextUtils;
 import android.util.Log;
 
 
+import com.amlogic.asplayer.api.AudioParams;
 import com.amlogic.asplayer.core.ts.TsAc3Parser;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -23,8 +28,31 @@ public class AudioUtils {
 
     public static final float VOLUME_MAX_DB = 48.0f;
 
-    public static int getEncoding(MediaFormat format) {
-        int encoding;
+    public static int getEncoding(AudioParams audioParams) {
+        MediaFormat mediaFormat = audioParams.getMediaFormat();
+        if (mediaFormat != null) {
+            return getEncoding(mediaFormat);
+        }
+
+        int encoding = AudioFormat.ENCODING_DEFAULT;
+        String mimeType = audioParams.getMimeType();
+        if (TextUtils.isEmpty(mimeType)) {
+            return encoding;
+        }
+
+        if (mimeType.equalsIgnoreCase("audio/mp4a-latm")) {
+            return AudioFormat.ENCODING_AAC_HE_V1;
+        } else if (mimeType.equalsIgnoreCase("audio/aac")) {
+            return AudioFormat.ENCODING_AAC_HE_V2;
+        }
+
+        mediaFormat = new MediaFormat();
+        mediaFormat.setString(MediaFormat.KEY_MIME, mimeType);
+        return getEncoding(mediaFormat);
+    }
+
+    private static int getEncoding(MediaFormat format) {
+        int encoding = AudioFormat.ENCODING_DEFAULT;
         String mimeType = format.getString(MediaFormat.KEY_MIME);
         switch (mimeType) {
             case MediaFormat.MIMETYPE_AUDIO_AC3:
@@ -44,7 +72,7 @@ public class AudioUtils {
                 encoding = AudioFormat.ENCODING_MP3;
                 break;
             default:
-                throw new IllegalStateException("Invalid mime type " + mimeType);
+                ASPlayerLog.w("Invalid mime type: %s", mimeType);
         }
         return encoding;
     }
