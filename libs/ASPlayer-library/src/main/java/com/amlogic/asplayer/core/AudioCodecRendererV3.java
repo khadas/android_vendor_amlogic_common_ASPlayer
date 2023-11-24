@@ -393,6 +393,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
     @Override
     public void setSpeed(double speed) {
+        ASPlayerLog.i("%s setSpeed %f", getTag(), speed);
         if (mAudioTrack == null)
             return;
         if (speed != 0 && speed != 1) {
@@ -438,6 +439,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
     @Override
     public void reset() {
+        ASPlayerLog.i("%s reset", getTag());
         synchronized (mLock) {
             if (mAudioTrack != null) {
                 boolean isPlaying = mClock.getSpeed() != 0;
@@ -445,7 +447,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
                     pauseAudioTrack();
                 }
 
-                mAudioTrack.flush();
+                flushAudioTrack();
 
                 if (isPlaying) {
                     startAudioTrack();
@@ -465,6 +467,13 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
         if (mAudioTrack != null) {
             ASPlayerLog.i("%s AudioTrack.pause: %s", getTag(), mAudioTrack);
             mAudioTrack.pause();
+        }
+    }
+
+    private void flushAudioTrack() {
+        if (mAudioTrack != null) {
+            ASPlayerLog.i("%s AudioTrack.flush: %s", getTag(), mAudioTrack);
+            mAudioTrack.flush();
         }
     }
 

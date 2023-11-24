@@ -243,12 +243,9 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
     public void flush() {
         super.flush();
 
-        // can not mAudioCodecRenderer.reset() here, need release mAudioCodecRenderer
-//        if (mAudioCodecRenderer != null) {
-//            mAudioCodecRenderer.reset();
-//        }
-
-        releaseAudioRenderer();
+        if (mAudioCodecRenderer != null) {
+            mAudioCodecRenderer.reset();
+        }
     }
 
     @Override

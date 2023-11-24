@@ -220,10 +220,6 @@ abstract class MediaOutputPath {
 
     protected abstract void pushInputBuffer();
 
-    // TODO
-    // a envisager
-    // - mettre release abstract
-    // - ajouter une/des methode/s pour flusher les inputs, la clock, les erreurs
     public void reset() {
         mConfigurationState = CONFIGURATION_NONE;
         mClock.reset();

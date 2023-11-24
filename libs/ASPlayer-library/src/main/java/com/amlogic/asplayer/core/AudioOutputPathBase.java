@@ -274,7 +274,6 @@ abstract class AudioOutputPathBase extends MediaOutputPath {
 
     public void flush() {
         ASPlayerLog.i("%s flush", getTag());
-        super.reset();
     }
 
     @Override
