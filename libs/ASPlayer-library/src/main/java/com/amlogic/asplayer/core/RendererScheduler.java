@@ -466,10 +466,12 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
 
     void onSetVideoParams(boolean hasVideo) {
         mHasVideo = hasVideo;
+        mFirstVideoFrameDisplayed = false;
     }
 
     void onSetAudioParams(boolean hasAudio) {
         mHasAudio = hasAudio;
+        mFirstAudioFrameDisplayed = false;
     }
 
     void stop() {

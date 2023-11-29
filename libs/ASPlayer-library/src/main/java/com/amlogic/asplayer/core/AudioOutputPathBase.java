@@ -140,8 +140,7 @@ abstract class AudioOutputPathBase extends MediaOutputPath {
 
     void setAudioParams(AudioParams audioParams) {
         if (mAudioParams != null) {
-            mHasAudioFormatChanged = hasAudioFormatChanged(mAudioParams.getMediaFormat(),
-                    audioParams.getMediaFormat());
+            mHasAudioFormatChanged = hasAudioFormatChanged(mAudioParams, audioParams);
         }
 
         mAudioParams = audioParams;
@@ -233,7 +232,43 @@ abstract class AudioOutputPathBase extends MediaOutputPath {
             return 0;
     }
 
-    protected boolean hasAudioFormatChanged(MediaFormat format1, MediaFormat format2) {
+    protected boolean hasAudioFormatChanged(AudioParams params1, AudioParams params2) {
+        if (params1 == null && params2 == null) {
+            return false;
+        } else if (params1 == null || params2 == null) {
+            return true;
+        }
+
+        if (params1 == params2) {
+            return false;
+        }
+
+        if (params1.getTrackFilterId() != params2.getTrackFilterId()) {
+            return true;
+        }
+
+        if (params1.getAvSyncHwId() != params2.getAvSyncHwId()) {
+            return true;
+        }
+
+        if (params1.isScrambled() != params2.isScrambled()) {
+            return true;
+        }
+
+        if (params1.getPid() != params2.getPid()) {
+            return true;
+        }
+
+        return hasAudioMediaFormatChanged(params1.getMediaFormat(), params2.getMediaFormat());
+    }
+
+    protected boolean hasAudioMediaFormatChanged(MediaFormat format1, MediaFormat format2) {
+        if (format1 == null && format2 == null) {
+            return false;
+        } else if (format1 != null || format2 != null) {
+            return true;
+        }
+
         // mime type
         if (!Objects.equals(format1.getString(MediaFormat.KEY_MIME),
                 format2.getString(MediaFormat.KEY_MIME)))
