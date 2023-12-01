@@ -44,7 +44,7 @@ abstract class MediaOutputPath {
     }
 
     // the handler in which all stuff must be done
-    private Handler mHandler;
+    protected Handler mHandler;
 
     // Timekeeper
     protected TimestampKeeper mTimestampKeeper;
@@ -113,10 +113,6 @@ abstract class MediaOutputPath {
 
     void setHandler(Handler handler) {
         mHandler = handler;
-    }
-
-    Handler getHandler() {
-        return mHandler;
     }
 
     void setError(String error) {
@@ -248,6 +244,8 @@ abstract class MediaOutputPath {
 
         mMediaFormat = null;
         mMediaDescrambler = null;
+
+        mHandler = null;
     }
 
     abstract void checkErrors();

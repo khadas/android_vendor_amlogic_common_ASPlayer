@@ -275,9 +275,9 @@ class VideoOutputPathV3 extends VideoOutputPath {
                 ASPlayerLog.i("%s video filter id: 0x%016x, avSyncHwId: 0x%x",
                         getTag(), mTrackFilterId, mAvSyncHwId);
 
-                mediaCodec.setOnFrameRenderedListener(mMediaCodecOnFrameCallback, getHandler());
+                mediaCodec.setOnFrameRenderedListener(mMediaCodecOnFrameCallback, mHandler);
             }
-            mediaCodec.setCallback(mMediaCodecCallback, getHandler());
+            mediaCodec.setCallback(mMediaCodecCallback, mHandler);
 
             Surface surface = mSurface;
             if (mTargetWorkMode == WorkMode.NORMAL) {
@@ -345,13 +345,14 @@ class VideoOutputPathV3 extends VideoOutputPath {
     @Override
     public void reset() {
         super.reset();
+
+        stopCheckDataLoss();
+
         mLastRenderedTimeUs = 0;
         mLastFrameTimestampMillisecond = -1;
 
         mDataLossReported = false;
         mLastDataLossReportTimestamp = -1;
-
-        stopCheckDataLoss();
     }
 
     @Override
@@ -360,8 +361,6 @@ class VideoOutputPathV3 extends VideoOutputPath {
 
         mTrackFilterId = INVALID_FILTER_ID;
         mAvSyncHwId = INVALID_AV_SYNC_HW_ID;
-
-        stopCheckDataLoss();
     }
 
     @Override
@@ -491,11 +490,12 @@ class VideoOutputPathV3 extends VideoOutputPath {
                 }
             }
 
-            Handler handler = getHandler();
-            if (handler.hasCallbacks(this)) {
-                handler.removeCallbacks(this);
+            if (mHandler != null) {
+                if (mHandler.hasCallbacks(this)) {
+                    mHandler.removeCallbacks(this);
+                }
+                mHandler.postDelayed(this, CHECK_DATA_LOSS_PERIOD);
             }
-            handler.postDelayed(this, CHECK_DATA_LOSS_PERIOD);
         }
     }
 
@@ -507,17 +507,23 @@ class VideoOutputPathV3 extends VideoOutputPath {
     }
 
     private void startCheckDataLoss() {
+        if (mHandler == null) {
+            return;
+        }
+
         if (mCheckDataLossRunnable != null) {
-            getHandler().removeCallbacks(mCheckDataLossRunnable);
+            mHandler.removeCallbacks(mCheckDataLossRunnable);
         } else {
             mCheckDataLossRunnable = new CheckDataLossRunnable();
         }
-        getHandler().postDelayed(mCheckDataLossRunnable, CHECK_DATA_LOSS_PERIOD);
+        mHandler.postDelayed(mCheckDataLossRunnable, CHECK_DATA_LOSS_PERIOD);
     }
 
     private void stopCheckDataLoss() {
         if (mCheckDataLossRunnable != null) {
-            getHandler().removeCallbacks(mCheckDataLossRunnable);
+            if (mHandler != null) {
+                mHandler.removeCallbacks(mCheckDataLossRunnable);
+            }
             mCheckDataLossRunnable = null;
         }
     }

@@ -118,8 +118,7 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
             mAudioCodecRenderer = null;
         }
 
-        AudioCodecRendererV3 audioCodecRenderer =
-                new AudioCodecRendererV3(mId, mClock, getHandler());
+        AudioCodecRendererV3 audioCodecRenderer = new AudioCodecRendererV3(mId, mClock, mHandler);
         mAudioCodecRenderer = audioCodecRenderer;
         mAudioCodecRenderer.setSyncInstanceId(mSyncInstanceId);
         audioCodecRenderer.setWorkMode(mTargetWorkMode);

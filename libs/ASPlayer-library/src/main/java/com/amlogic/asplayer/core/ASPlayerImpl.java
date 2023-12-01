@@ -310,11 +310,12 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     private void handleRelease() {
         handleStop();
+
+        releaseTsPlayback();
+
         mRendererScheduler.setVideoFormatListener(null);
         mRendererScheduler.setAudioFormatListener(null);
         mRendererScheduler.release();
-
-        releaseTsPlayback();
 
         mVideoOutputPath.release();
         mAudioOutputPath.release();

@@ -125,8 +125,6 @@ public class TsPlayback {
             mDvrPlayback = null;
             ASPlayerLog.i("%s close DvrPlayback", getTag());
         }
-
-        mTuner = null;
     }
 
     public void release() {

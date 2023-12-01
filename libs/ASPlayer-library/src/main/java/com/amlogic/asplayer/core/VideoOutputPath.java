@@ -356,8 +356,8 @@ class VideoOutputPath extends MediaOutputPath {
 
             String surfaceTag = (mDummySurface != null && surface == mDummySurface) ? "dummy surface" : "normal surface";
 
-            mMediaCodec.setOnFrameRenderedListener(mMediaCodecOnFrameCallback, getHandler());
-            mMediaCodec.setCallback(mMediaCodecCallback, getHandler());
+            mMediaCodec.setOnFrameRenderedListener(mMediaCodecOnFrameCallback, mHandler);
+            mMediaCodec.setCallback(mMediaCodecCallback, mHandler);
             if (mMediaDescrambler == null) {
                 ASPlayerLog.i("%s configure mediacodec without descrambler, surface: %s, format: %s",
                         getTag(), surfaceTag, format);
@@ -582,8 +582,11 @@ class VideoOutputPath extends MediaOutputPath {
         mMediaCodecStarted = false;
         mMediaCodecStartTimeMillisecond = -1;
 
-        if (mMediaCodecStarter != null)
-            getHandler().removeCallbacks(mMediaCodecStarter);
+        if (mMediaCodecStarter != null) {
+            if (mHandler != null) {
+                mHandler.removeCallbacks(mMediaCodecStarter);
+            }
+        }
         mMediaCodecStarter = null;
 
         mInputBufferIndexes.clear();
@@ -641,8 +644,8 @@ class VideoOutputPath extends MediaOutputPath {
     protected void stopMediaCodec() {
         if (mMediaCodec != null) {
             stopMediaCodec(mMediaCodec);
+            onMediaCodecStopped();
         }
-        onMediaCodecStopped();
         mMediaCodecStarted = false;
         mMediaCodecStartTimeMillisecond = -1;
     }
@@ -667,8 +670,8 @@ class VideoOutputPath extends MediaOutputPath {
     protected void releaseMediaCodec() {
         if (mMediaCodec != null) {
             releaseMediaCodec(mMediaCodec);
+            onMediaCodecReleased();
         }
-        onMediaCodecReleased();
         mMediaCodecStarted = false;
         mMediaCodec = null;
     }
@@ -939,11 +942,16 @@ class VideoOutputPath extends MediaOutputPath {
 
     private void discardOutstandingCallbacksAndStart() {
         ASPlayerLog.i("%s discardOutstandingCallbacksAndStart mediacodec: %s", getTag(), mMediaCodec);
-        if (mMediaCodecStarter != null)
-            getHandler().removeCallbacks(mMediaCodecStarter);
-        else
+        if (mHandler == null) {
+            return;
+        }
+
+        if (mMediaCodecStarter != null) {
+            mHandler.removeCallbacks(mMediaCodecStarter);
+        } else {
             mMediaCodecStarter = new MediaCodecStarter();
-        getHandler().post(mMediaCodecStarter);
+        }
+        mHandler.post(mMediaCodecStarter);
     }
 
     private void applyAmlBestVideoQualityWorkAround(MediaFormat format) {

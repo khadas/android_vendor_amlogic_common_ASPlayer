@@ -162,22 +162,23 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     }
 
     void release() {
+        ASPlayerLog.i("%s release", getTag());
         mTargetVideoState = AVState.INIT;
         mTargetAudioState = AVState.INIT;
-        mPlaybackTask.release();
+        if (mPlaybackTask != null) {
+            mPlaybackTask.release();
+        }
         setDecoderListener(null);
         setDataListener(null);
-        setHandler(null);
+
+        if (mHandler != null) {
+            mHandler.removeCallbacks(this);
+        }
+        mHandler = null;
     }
 
     double getSpeed() {
         return mSpeed;
-    }
-
-    void setHandler(Handler handler) {
-        mHandler = handler;
-        mAudioOutputPath.setHandler(handler);
-        mVideoOutputPath.setHandler(handler);
     }
 
     void setDecoderListener(MediaOutputPath.DecoderListener listener) {
