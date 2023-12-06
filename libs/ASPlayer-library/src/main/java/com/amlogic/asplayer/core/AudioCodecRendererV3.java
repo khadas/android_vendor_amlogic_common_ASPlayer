@@ -104,7 +104,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     public void writeMetadata(Metadata metadata) {
         ASPlayerLog.i("%s metadata: %s", getTag(), metadata);
         synchronized (mMetadata) {
-            mMetadata.removeIf(item -> item.getClass().equals(metadata.getClass()));
+//            mMetadata.removeIf(item -> item.getClass().equals(metadata.getClass()));
             mMetadata.add(metadata);
         }
     }

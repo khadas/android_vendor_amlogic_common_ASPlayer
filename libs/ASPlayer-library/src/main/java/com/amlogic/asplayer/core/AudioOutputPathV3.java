@@ -296,7 +296,8 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 ASPlayerLog.i("%s changeMainTrack start writeMetadata", getTag());
-                ((AudioCodecRendererV3) mAudioCodecRenderer).writeMetadata(mTunerMetadataMain);
+                Metadata.TunerMetadata metadata = mTunerMetadataMain.clone();
+                ((AudioCodecRendererV3) mAudioCodecRenderer).writeMetadata(metadata);
             }
 
             mNeedToConfigureSubTrack = mSubTrackAudioParams != null;
@@ -304,27 +305,82 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
         return true;
     }
 
+    @Override
+    void enableADMix() {
+        ASPlayerLog.i("%s enableADMix start", getTag());
+        super.enableADMix();
+        mNeedToConfigureSubTrack = true;
+        ASPlayerLog.i("%s enableADMix enable reconfiguring sub track", getTag());
+    }
+
+    @Override
+    void disableADMix() {
+        ASPlayerLog.i("%s disableADMix start", getTag());
+        super.disableADMix();
+        mNeedToConfigureSubTrack = true;
+        ASPlayerLog.i("%s disableADMix enable reconfiguring sub track", getTag());
+    }
+
     private void changeSubTrack() {
-        if (mEnableADMix == null || !mEnableADMix.booleanValue()) {
+        if (mEnableADMix == null || !mNeedToConfigureSubTrack) {
+            // nothing to do in these cases:
+            // 1. AD enable/disable not set (AD not supported?)
+            // 2. no need to reconfiguring AD track(AD not changed)
             return;
         }
 
-        if (mNeedToConfigureSubTrack && mAudioCodecRenderer instanceof AudioCodecRendererV3) {
-            if (mSubTrackAudioParams == null) {
-                ASPlayerLog.i("%s sub track audio param is null", getTag());
-                return;
-            }
+        if (mEnableADMix.booleanValue()) {
+            startADByMetadata();
+        } else {
+            stopADByMetadata();
+        }
+    }
 
+    private void startADByMetadata() {
+        if (mSubTrackAudioParams == null) {
+            ASPlayerLog.i("%s sub track audio param is null", getTag());
+            return;
+        }
+
+        if (mAudioCodecRenderer == null) {
+            return;
+        }
+
+        if (mAudioCodecRenderer instanceof AudioCodecRendererV3) {
             final int filterId = mSubTrackAudioParams.getTrackFilterId();
-            // sub track must has same format with main track
-            final int encodingType = AudioUtils.getEncoding(mAudioParams);
-            ASPlayerLog.i("%s changeSubTrack, filterId: %d", getTag(), filterId);
+            final int encodingType = AudioUtils.getEncoding(mSubTrackAudioParams);
+            ASPlayerLog.i("%s startADMixByMetadata, filterId: %d", getTag(), filterId);
             if (!prepareMetadata(mTunerMetadataSub, filterId, encodingType)) {
                 return;
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                ((AudioCodecRendererV3) mAudioCodecRenderer).writeMetadata(mTunerMetadataSub);
+                Metadata.TunerMetadata metadata = mTunerMetadataSub.clone();
+                ((AudioCodecRendererV3) mAudioCodecRenderer).writeMetadata(metadata);
             }
+
+            mNeedToConfigureSubTrack = false;
+        }
+    }
+
+    private void stopADByMetadata() {
+        if (mAudioCodecRenderer == null) {
+            return;
+        }
+
+        if (mAudioCodecRenderer instanceof AudioCodecRendererV3) {
+            final int lastADFilterId = mSubTrackAudioParams != null
+                    ? mSubTrackAudioParams.getTrackFilterId() : 0;
+            ASPlayerLog.i("%s stopADMixByMetadata, last AD filterId: %d", getTag(), lastADFilterId);
+
+            final int fakeFilterId = 0; // set to invalid filter id. (not -1, 0 instead)
+            if (!prepareMetadata(mTunerMetadataSub, fakeFilterId, AudioFormat.ENCODING_DEFAULT)) {
+                return;
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                Metadata.TunerMetadata metadata = mTunerMetadataSub.clone();
+                ((AudioCodecRendererV3) mAudioCodecRenderer).writeMetadata(metadata);
+            }
+
             mNeedToConfigureSubTrack = false;
         }
     }

@@ -15,6 +15,12 @@ public abstract class Metadata {
         }
 
         @Override
+        public TunerMetadata clone() {
+            TunerMetadata metadata = new TunerMetadata(this.audioType, this.encodingType, this.filterId);
+            return metadata;
+        }
+
+        @Override
         public String toString() {
             return "TunerMetadata{" +
                     "audioType=" + audioType +
@@ -31,6 +37,12 @@ public abstract class Metadata {
         public int placement;
         public PlacementMetadata(int placement) {
             this.placement = placement;
+        }
+
+        @Override
+        public PlacementMetadata clone() {
+            PlacementMetadata metadata = new PlacementMetadata(this.placement);
+            return metadata;
         }
 
         @Override
