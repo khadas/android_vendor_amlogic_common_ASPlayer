@@ -41,22 +41,19 @@ public:
     // returns true if an exception is set (and dumps it out to the Log)
     static bool hasException(JNIEnv *env);
 
-    static bool createJniASPlayer(JNIEnv *env, jni_asplayer_init_params params, void *tuner, jobject *outJniASPlayer);
-    static bool createInitParams(JNIEnv *env, jni_asplayer_init_params params, jobject *outJInitParams);
+    static bool createJniASPlayer(JNIEnv *env, jni_asplayer_init_params *params, void *tuner, jobject *outJniASPlayer);
+    static bool createInitParams(JNIEnv *env, jni_asplayer_init_params *params, jobject *outJInitParams);
     static bool createVideoParams(JNIEnv *env, jni_asplayer_video_params *params, jobject *outJVideoParams);
     static bool createAudioParams(JNIEnv *env, jni_asplayer_audio_params *params, jobject *outJAudioParams);
     static bool createInputBuffer(JNIEnv *env, jni_asplayer_input_buffer *inputBuffer, jobject *outJInputBuffer);
 
     static bool initASPlayerJNI(JNIEnv *env);
 
-    static jclass findClass(const char *name);
-
 protected:
     /* JNI JavaVM pointer */
     static JavaVM* mJavaVM;
 
 private:
-    static int initJNIEnv(JNIEnv *env);
 
     static int initASPlayerNotify(JNIEnv *env);
 };
@@ -67,7 +64,7 @@ public:
     virtual ~JniASPlayer();
 
 public:
-    bool create(jni_asplayer_init_params params, void* tuner);
+    bool create(jni_asplayer_init_params *params, void* tuner);
 
     bool getJavaASPlayer(jobject **pPlayer);
 

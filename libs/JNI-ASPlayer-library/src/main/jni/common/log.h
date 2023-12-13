@@ -281,13 +281,19 @@ extern "C" {
     __android_log_assert(cond, tag, \
         __android_second(0, ## fmt, NULL) __android_rest(fmt))
 
+#define AP_LOGV(format,...) ALOGV("[%s/%d] " format, __FUNCTION__, __LINE__, ## __VA_ARGS__)
+#define AP_LOGD(format,...) ALOGD("[%s/%d] " format, __FUNCTION__, __LINE__, ## __VA_ARGS__)
+#define AP_LOGI(format,...) ALOGI("[%s/%d] " format, __FUNCTION__, __LINE__, ## __VA_ARGS__)
+#define AP_LOGW(format,...) ALOGW("[%s/%d] " format, __FUNCTION__, __LINE__, ## __VA_ARGS__)
+#define AP_LOGE(format,...) ALOGE("[%s/%d] " format, __FUNCTION__, __LINE__, ## __VA_ARGS__)
 
-#define LOG_FUNCTION_ENTER() ALOGD("[%s/%d] start", __FUNCTION__, __LINE__)
-#define LOG_FUNCTION_END() ALOGD("[%s/%d] ok", __FUNCTION__, __LINE__)
-#define LOG_FUNCTION_INT_END(ret) ALOGD("[%s/%d] ok, " #ret ": %d", __FUNCTION__, __LINE__, ret)
-#define LOG_FUNCTION_INT_FAILED(error) ALOGE("[%s/%d] failed, err: %d", __FUNCTION__, __LINE__, error)
+#define AP_LOGE_IF(cond, format,...) ALOGE_IF(cond, "[%s/%d] " format, __FUNCTION__, __LINE__, ## __VA_ARGS__)
 
-#define LOG_GET_JNIENV_FAILED() ALOGE("[%s/%d] failed to get jni env", __FUNCTION__, __LINE__)
+#define LOG_FUNCTION_ENTER() AP_LOGD("start.")
+#define LOG_FUNCTION_END() AP_LOGD("ok.")
+#define LOG_FUNCTION_INT_END(ret) AP_LOGD("ok, " #ret ": %d.", ret)
+#define LOG_FUNCTION_INT_FAILED(error) AP_LOGE("failed, err: %d.", error)
+
 
 #ifdef __cplusplus
 }
