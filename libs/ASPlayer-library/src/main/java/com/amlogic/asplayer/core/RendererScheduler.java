@@ -202,6 +202,14 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
         mAudioOutputPath.setAudioFormatListener(listener);
     }
 
+    boolean hasVideo() {
+        return mHasVideo;
+    }
+
+    boolean hasAudio() {
+        return mHasAudio;
+    }
+
     private void selectRendererTask() {
         ASPlayerLog.i("%s speed: %f, hasVideo: %b, hasAudio: %b", getTag(), mSpeed, mHasVideo, mHasAudio);
 
@@ -327,13 +335,20 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
         ASPlayerLog.i("%s startVideoDecoding start", getTag());
         mTargetVideoState = AVState.START;
         mFirstVideoFrameDisplayed = false;
-        stopRendererTask();
-        if (mCurrentSpeedTask != null) {
-            ASPlayerLog.i("%s currentSpeedTask: %s", getTag(), mCurrentSpeedTask);
-            mCurrentSpeedTask.startVideo();
-        }
-        startRendererTaskIfNeed();
+        startVideoRenderIfNeed();
         ASPlayerLog.i("%s startVideoDecoding end", getTag());
+    }
+
+    private void startVideoRenderIfNeed() {
+        // we need start video render whether has video or not.
+        if (isTargetStateStart(mTargetVideoState)) {
+            stopRendererTask();
+            if (mCurrentSpeedTask != null) {
+                ASPlayerLog.i("%s currentSpeedTask: %s", getTag(), mCurrentSpeedTask);
+                mCurrentSpeedTask.startVideo();
+            }
+            startRendererTaskIfNeed();
+        }
     }
 
     private void stopRendererTask() {
@@ -357,7 +372,7 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     }
 
     private boolean canStartRendererTask() {
-        boolean videoCanStart = mVideoOutputPath != null && mVideoOutputPath.hasVideoFormat()
+        boolean videoCanStart = mVideoOutputPath != null && mVideoOutputPath.hasVideoParams()
                 && isTargetStateStart(mTargetVideoState);
         boolean audioCanStart = mAudioOutputPath != null && mAudioOutputPath.hasAudioFormat()
                 && isTargetStateStart(mTargetAudioState);
@@ -424,12 +439,18 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
         ASPlayerLog.i("%s startAudioDecoding start", getTag());
         mTargetAudioState = AVState.START;
         mFirstAudioFrameDisplayed = false;
-        stopRendererTask();
-        if (mCurrentSpeedTask != null) {
-            mCurrentSpeedTask.startAudio();
-        }
-        startRendererTaskIfNeed();
+        startAudioRenderIfNeed();
         ASPlayerLog.i("%s startAudioDecoding end", getTag());
+    }
+
+    private void startAudioRenderIfNeed() {
+        if (isTargetStateStart(mTargetAudioState) && hasAudio()) {
+            stopRendererTask();
+            if (mCurrentSpeedTask != null) {
+                mCurrentSpeedTask.startAudio();
+            }
+            startRendererTaskIfNeed();
+        }
     }
 
     void stopAudioDecoding() {
@@ -470,11 +491,18 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     void onSetVideoParams(boolean hasVideo) {
         mHasVideo = hasVideo;
         mFirstVideoFrameDisplayed = false;
+
+        // we need start video render whether has video or not.
+        startVideoRenderIfNeed();
     }
 
     void onSetAudioParams(boolean hasAudio) {
         mHasAudio = hasAudio;
         mFirstAudioFrameDisplayed = false;
+
+        if (hasAudio) {
+            startAudioRenderIfNeed();
+        }
     }
 
     void stop() {
@@ -501,9 +529,9 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
             mPositionHandler.setPresentationTimestampUs(presentationTimeUs);
         }
 
-        if (mHasVideo && outputPath == mVideoOutputPath) {
+        if (mVideoOutputPath != null && outputPath == mVideoOutputPath) {
             onVideoFrame(presentationTimeUs, renderTime);
-        } else if (mHasAudio && outputPath == mAudioOutputPath) {
+        } else if (mAudioOutputPath != null && outputPath == mAudioOutputPath) {
             onAudioFrame(presentationTimeUs, renderTime);
         }
     }

@@ -8,7 +8,10 @@ import android.os.Handler;
 import android.text.TextUtils;
 import android.view.Surface;
 
-import com.amlogic.asplayer.api.TransitionSettings;
+import com.amlogic.asplayer.api.PlaybackControl.TransitionModeBefore;
+import com.amlogic.asplayer.api.PlaybackControl.TransitionModeAfter;
+import com.amlogic.asplayer.api.PlaybackControl.VideoMute;
+import com.amlogic.asplayer.api.VideoParams;
 import com.amlogic.asplayer.api.WorkMode;
 import com.amlogic.asplayer.core.utils.StringUtils;
 
@@ -16,8 +19,8 @@ import java.nio.ByteBuffer;
 
 import static android.media.MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayback;
 import static android.media.MediaFormat.KEY_HARDWARE_AV_SYNC_ID;
-import static com.amlogic.asplayer.core.MediaContainerExtractor.INVALID_AV_SYNC_HW_ID;
-import static com.amlogic.asplayer.core.MediaContainerExtractor.INVALID_FILTER_ID;
+import static com.amlogic.asplayer.core.Constant.INVALID_AV_SYNC_ID;
+import static com.amlogic.asplayer.core.Constant.INVALID_FILTER_ID;
 import static com.amlogic.asplayer.core.VideoMediaFormatEvent.EVENT_FLAGS_AFD;
 import static com.amlogic.asplayer.core.VideoMediaFormatEvent.EVENT_FLAGS_FRAME_RATES;
 import static com.amlogic.asplayer.core.VideoMediaFormatEvent.EVENT_FLAGS_PIXEL_ASPECT_RATIO;
@@ -29,6 +32,8 @@ import static com.amlogic.asplayer.core.VideoMediaFormatEvent.EVENT_TYPE_FRAME_R
 import static com.amlogic.asplayer.core.VideoMediaFormatEvent.EVENT_TYPE_RESOLUTION;
 import static com.amlogic.asplayer.core.VideoMediaFormatEvent.EVENT_TYPE_VIDEO_VF_TYPE;
 import static com.amlogic.asplayer.core.VideoMediaFormatEvent.KEY_EVENT_FLAGS;
+import static com.amlogic.asplayer.core.VideoPassthroughParameters.ScreenColorMode.SCREEN_COLOR_MODE_ONCE_TRANSITION;
+import static com.amlogic.asplayer.core.VideoPassthroughParameters.ScreenColorMode.SCREEN_COLOR_MODE_ONCE_SOLID;
 
 
 class VideoOutputPathV3 extends VideoOutputPath {
@@ -46,46 +51,96 @@ class VideoOutputPathV3 extends VideoOutputPath {
     public static final int TRICK_MODE_SMOOTH = 1;
     public static final int TRICK_MODE_BY_SEEK = 2;
 
-    public static final String PARAM_TRICK_MODE = "vendor.tunerhal.passthrough.trick-mode";
-    public static final String PARAM_TRICK_SPEED = "vendor.tunerhal.passthrough.trick-speed";
+    public static final String KEY_TRICK_MODE = "vendor.tunerhal.passthrough.trick-mode";
+    public static final String KEY_TRICK_SPEED = "vendor.tunerhal.passthrough.trick-speed";
 
-    public static final String PARAM_TRANSITION_BEFORE =
+    public static final String KEY_VIDEO_MUTE = "vendor.tunerhal.passthrough.mute";
+    public static final String KEY_TRANSITION_BEFORE =
             "vendor.tunerhal.passthrough.transition-mode-before";
-    public static final String PARAM_TRANSITION_AFTER =
+    public static final String KEY_TRANSITION_AFTER =
             "vendor.tunerhal.passthrough.transition-mode-after";
+
+    /**
+     * int value (0~900) scaled by 1000 from float
+     *
+     * 0: show first image before sync and show video after sync (default)
+     * 500: show video from first image with 0.5x before sync and show 1x video after sync
+     * higher value takes longer for av sync
+     */
+    public static final String KEY_TRANSITION_PREROLL_RATE =
+            "vendor.tunerhal.passthrough.transition-preroll-rate";
+
+    /**
+     * int, maximum a/v time difference in ms to start preroll.
+     * This value limits the max time of preroll duration.
+     *
+     * 0: no limit, preroll starts directly from first image
+     * n: show first image and preroll starts from when a/v diff < n
+     * ex) preroll-rate: 900, preroll-av-tolerance: 0
+     * If first a/v time difference: 1000ms => it takes 10 seconds for preroll (0.9x)
+     * ex) preroll-rate: 900, preroll-av-tolerance: 500ms
+     * If first a/v time difference: 1000ms => show first image for 500ms and it takes 5 seconds for
+     * preroll (0.9x)
+     */
+    public static final String KEY_TRANSITION_PREROLL_AV_TOLERANCE =
+            "vendor.tunerhal.passthrough.transition-preroll-av-tolerance";
+
+    public static final String KEY_SCREEN_COLOR_MODE = "vendor.tunerhal.passthrough.screencolor-mode";
+    public static final String KEY_SCREEN_COLOR = "vendor.tunerhal.passthrough.screencolor-color";
 
     private static final int CHECK_DATA_LOSS_PERIOD = 100; // 100 millisecond
     private static final int DATA_LOSS_DURATION_MILLISECOND = 2 * 1000; // 2 second
+
+    private static final int PRE_ROLL_RATE_SCALE = 1000;
 
     public static final Bundle PARAMS_TRICK_NONE;
     public static final Bundle PARAMS_TRICK_BY_SEEK;
 
     public static final Bundle PARAMS_TRANSITION_MODE_BEFORE;
+    public static final Bundle PARAMS_TRANSITION_MODE_AFTER;
+    public static final Bundle PARAMS_TRANSITION_PREROLL_RATE;
+    public static final Bundle PARAMS_TRANSITION_PREROLL_AV_TOLERANCE;
+    public static final Bundle PARAMS_VIDEO_MUTE;
 
     static {
         PARAMS_TRICK_NONE = new Bundle();
-        PARAMS_TRICK_NONE.putInt(PARAM_TRICK_MODE, TRICK_MODE_NONE);
-        PARAMS_TRICK_NONE.putInt(PARAM_TRICK_SPEED, 1000);
+        PARAMS_TRICK_NONE.putInt(KEY_TRICK_MODE, TRICK_MODE_NONE);
+        PARAMS_TRICK_NONE.putInt(KEY_TRICK_SPEED, 1000);
 
         PARAMS_TRICK_BY_SEEK = new Bundle();
-        PARAMS_TRICK_BY_SEEK.putInt(PARAM_TRICK_MODE, TRICK_MODE_BY_SEEK);
-        PARAMS_TRICK_BY_SEEK.putInt(PARAM_TRICK_SPEED, 0);
+        PARAMS_TRICK_BY_SEEK.putInt(KEY_TRICK_MODE, TRICK_MODE_BY_SEEK);
+        PARAMS_TRICK_BY_SEEK.putInt(KEY_TRICK_SPEED, 0);
 
         PARAMS_TRANSITION_MODE_BEFORE = new Bundle();
-        PARAMS_TRANSITION_MODE_BEFORE.putInt(PARAM_TRANSITION_BEFORE,
-                TransitionSettings.TransitionModeBefore.BLACK);
+        PARAMS_TRANSITION_MODE_BEFORE.putInt(KEY_TRANSITION_BEFORE,
+                TransitionModeBefore.BLACK);
+
+        PARAMS_TRANSITION_MODE_AFTER = new Bundle();
+        PARAMS_TRANSITION_MODE_AFTER.putInt(KEY_TRANSITION_AFTER,
+                TransitionModeAfter.PREROLL_FROM_FIRST_IMAGE);
+
+        PARAMS_TRANSITION_PREROLL_RATE = new Bundle();
+        PARAMS_TRANSITION_PREROLL_RATE.putInt(KEY_TRANSITION_PREROLL_RATE, 0);
+
+        PARAMS_TRANSITION_PREROLL_AV_TOLERANCE = new Bundle();
+        PARAMS_TRANSITION_PREROLL_AV_TOLERANCE.putInt(KEY_TRANSITION_PREROLL_AV_TOLERANCE, 0);
+
+        PARAMS_VIDEO_MUTE = new Bundle();
+        PARAMS_VIDEO_MUTE.putInt(KEY_VIDEO_MUTE, VideoMute.UN_MUTE);
     }
 
-    int mPlaybackMode;
-    long mLastRenderedTimeUs;
+    private int mPlaybackMode;
+    private long mLastRenderedTimeUs;
 
     private CheckDataLossRunnable mCheckDataLossRunnable;
     private long mLastFrameTimestampMillisecond = -1;
     private boolean mDataLossReported = false;
     private long mLastDataLossReportTimestamp = 0;
 
-    int mTrackFilterId = INVALID_FILTER_ID;
-    int mAvSyncHwId = INVALID_AV_SYNC_HW_ID;
+    private int mTrackFilterId = INVALID_FILTER_ID;
+    private int mAvSyncHwId = INVALID_AV_SYNC_ID;
+
+    private boolean mAudioOnly = false;
 
     private class VideoMediaCodecOnFrameCallback implements MediaCodec.OnFrameRenderedListener {
         @Override
@@ -100,12 +155,16 @@ class VideoOutputPathV3 extends VideoOutputPath {
                 return;
             }
 
-//            if (DEBUG) ASPlayerLog.i("%s onFrameRendered pts: %d", getTag(), presentationTimeUs);
-            notifyFrameDisplayed(presentationTimeUs, nanoTime / 1000);
+            final long renderTime = nanoTime / 1000;
+            if (DEBUG) {
+                ASPlayerLog.i("%s onFrameRendered pts: %d, 0x%x, renderTime: %d, 0x%x",
+                        getTag(), presentationTimeUs, presentationTimeUs, renderTime, renderTime);
+            }
             if (!mFirstFrameDisplayed) {
                 ASPlayerLog.i("%s [KPI-FCC] onFrameRendered pts: %d, nanoTime: %d",
                         getTag(), presentationTimeUs, nanoTime);
             }
+            notifyFrameDisplayed(presentationTimeUs, renderTime);
             mLastRenderedTimeUs = presentationTimeUs;
             mLastFrameTimestampMillisecond = System.nanoTime() / 1000000;
             mFirstFrameDisplayed = true;
@@ -120,9 +179,7 @@ class VideoOutputPathV3 extends VideoOutputPath {
         private void handleMediaFormatEvent(long eventData) {
             ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
             buffer.putLong(eventData);
-            if (DEBUG) {
-                StringUtils.dumpBytes(getTag(), buffer.array(), 0, Long.BYTES);
-            }
+            StringUtils.dumpBytes(getTag(), buffer.array(), 0, Long.BYTES);
 
             VideoMediaFormatEvent event = VideoMediaFormatEvent.parse(buffer.array());
             if (event != null) {
@@ -190,17 +247,23 @@ class VideoOutputPathV3 extends VideoOutputPath {
         return "VideoOutputPathV3";
     }
 
-    void setTrackFilterId(int filterId) {
-        this.mTrackFilterId = filterId;
-    }
-
-    void setAvSyncHwId(int avSyncHwId) {
-        this.mAvSyncHwId = avSyncHwId;
+    @Override
+    void setVideoParams(VideoParams videoParams) {
+        super.setVideoParams(videoParams);
+        if (videoParams != null) {
+            mTrackFilterId = videoParams.getTrackFilterId();
+            mAvSyncHwId = videoParams.getAvSyncHwId();
+            mAudioOnly = !videoParams.getHasVideo();
+        } else {
+            mTrackFilterId = INVALID_FILTER_ID;
+            mAvSyncHwId = INVALID_AV_SYNC_ID;
+            mAudioOnly = true;
+        }
     }
 
     @Override
-    boolean hasVideoFormat() {
-        return mMediaFormat != null && mTrackFilterId > 0;
+    boolean hasVideoParams() {
+        return mVideoParams != null && mVideoParams.getTrackFilterId() > 0;
     }
 
     @Override
@@ -231,26 +294,36 @@ class VideoOutputPathV3 extends VideoOutputPath {
             releaseMediaCodec();
         }
 
-        MediaFormat format = mMediaFormat;
-        if (format == null) {
-            if (DEBUG) ASPlayerLog.i("%s configure failed, video format is null", getTag());
+        VideoParams videoParams = mVideoParams;
+        if (videoParams == null) {
+            if (DEBUG) ASPlayerLog.i("%s configure failed, video params is null", getTag());
             return false;
         }
 
-        mMimeType = format.getString(MediaFormat.KEY_MIME);
-        mSecurePlayback = format.containsFeature(FEATURE_SecurePlayback) &&
-                format.getFeatureEnabled(FEATURE_SecurePlayback);
+        String mimeType = videoParams.getMimeType();
+        mSecurePlayback = videoParams.isScrambled();
+        if (!mSecurePlayback) {
+            MediaFormat mediaFormat = videoParams.getMediaFormat();
+            if (mediaFormat != null) {
+                mSecurePlayback = mediaFormat.containsFeature(FEATURE_SecurePlayback) &&
+                        mediaFormat.getFeatureEnabled(FEATURE_SecurePlayback);
+            }
+        }
 
-        if (TextUtils.isEmpty(mMimeType)) {
+        if (TextUtils.isEmpty(mimeType)) {
             if (DEBUG) ASPlayerLog.i("%s configure failed, mimeType is null", getTag());
             return false;
         }
 
+        // if no video and no mimeType, we need set valid mimeType here to create MediaCodec
+        // set mimeType to video/mpeg2 here
+        if (!videoParams.getHasVideo() && mimeType.equalsIgnoreCase("video/unknown")) {
+            mimeType = MediaFormat.MIMETYPE_VIDEO_MPEG2;
+        }
+
         ASPlayerLog.i("%s mSecurePlayback: %b", getTag(), mSecurePlayback);
 
-        mNbDecodedFrames = 0;
         mFirstFrameDisplayed = false;
-        mInputBufferQueue = null;
 
         MediaCodec mediaCodec = null;
         boolean configured = false;
@@ -258,7 +331,7 @@ class VideoOutputPathV3 extends VideoOutputPath {
             if (mMediaCodec != null) {
                 mediaCodec = mMediaCodec;
             } else {
-                mediaCodec = MediaCodecUtils.findMediaCodec(format, mTunneledPlayback, mSecurePlayback);
+                mediaCodec = MediaCodecUtils.findMediaCodec(mimeType, mTunneledPlayback, mSecurePlayback);
             }
 
             if (mediaCodec == null) {
@@ -266,19 +339,27 @@ class VideoOutputPathV3 extends VideoOutputPath {
                 return false;
             }
 
+            MediaFormat format = new MediaFormat();
+
             if (mTunneledPlayback) {
                 ASPlayerLog.i("%s mTunneledPlayback", getTag());
-                // get video size from input
-                mVideoWidth = format.getInteger(MediaFormat.KEY_WIDTH);
-                mVideoHeight = format.getInteger(MediaFormat.KEY_HEIGHT);
-
                 // make a copy
-                format = MediaFormat.createVideoFormat(mMimeType, mVideoWidth, mVideoHeight);
+                format = MediaFormat.createVideoFormat(mimeType, videoParams.getWidth(), videoParams.getHeight());
 
                 onSetVideoFormat(format);
 
-                ASPlayerLog.i("%s video filter id: 0x%016x, avSyncHwId: 0x%x",
-                        getTag(), mTrackFilterId, mAvSyncHwId);
+                // set transition parameters
+                setTransitionParametersForConfigure(format);
+
+                if (mAudioOnly) {
+                    // need configure and start mediacodec for set surface color
+                    // set fake filter id
+                    format.setInteger(KEY_VIDEO_FILTER_ID, -1);
+                    ASPlayerLog.i("%s configure video filter id: -1", getTag());
+                } else {
+                    ASPlayerLog.i("%s configure video filter id: 0x%016x, avSyncHwId: 0x%x",
+                            getTag(), mTrackFilterId, mAvSyncHwId);
+                }
 
                 mediaCodec.setOnFrameRenderedListener(mMediaCodecOnFrameCallback, mHandler);
             }
@@ -296,7 +377,7 @@ class VideoOutputPathV3 extends VideoOutputPath {
             String surfaceTag = (mDummySurface != null && surface == mDummySurface) ? "dummy surface" : "normal surface";
 
             ASPlayerLog.i("%s codec:%s, mime_type:%s, format:%s",
-                    getTag(), mediaCodec.getName(), mMimeType, format);
+                    getTag(), mediaCodec.getName(), mimeType, format);
 
             long beginTime = System.nanoTime();
             long startTime = beginTime;
@@ -320,7 +401,14 @@ class VideoOutputPathV3 extends VideoOutputPath {
             ASPlayerLog.i("%s [KPI-FCC] configure mediacodec start before, mediacodec: %s", getTag(), mediaCodec);
             startTime = System.nanoTime();
             mMediaCodec = mediaCodec;
+
+            if (mSolidScreenColor != null) {
+                handleSetScreenColorOnce(mSolidScreenColor.intValue());
+                mSolidScreenColor = null;
+            }
+
             startMediaCodec();
+
             long endTime = System.nanoTime();
             ASPlayerLog.i("%s [KPI-FCC] configure mediacodec start end, workMode: %d, cost: %d ms",
                     getTag(), mTargetWorkMode, getCostTime(startTime, endTime));
@@ -358,6 +446,8 @@ class VideoOutputPathV3 extends VideoOutputPath {
 
         mDataLossReported = false;
         mLastDataLossReportTimestamp = -1;
+
+        mSolidScreenColor = null;
     }
 
     @Override
@@ -365,7 +455,11 @@ class VideoOutputPathV3 extends VideoOutputPath {
         super.release();
 
         mTrackFilterId = INVALID_FILTER_ID;
-        mAvSyncHwId = INVALID_AV_SYNC_HW_ID;
+        mAvSyncHwId = INVALID_AV_SYNC_ID;
+
+        mAudioOnly = false;
+
+        mSolidScreenColor = null;
     }
 
     @Override
@@ -422,16 +516,32 @@ class VideoOutputPathV3 extends VideoOutputPath {
         format.setInteger(KEY_INSTANCE_NO, mId);
     }
 
+    private void setTransitionParametersForConfigure(MediaFormat mediaFormat) {
+        if (mediaFormat == null) {
+            return;
+        }
+
+        if (mTransitionModeAfterSet) {
+            mediaFormat.setInteger(KEY_TRANSITION_AFTER, mTransitionModeAfter);
+        }
+
+        if (mTransitionPreRollRate >= 0) {
+            mediaFormat.setInteger(KEY_TRANSITION_PREROLL_RATE, getPrerollRateForMediaFormat(mTransitionPreRollRate));
+        }
+        if (mTransitionPreRollAVTolerance >= 0) {
+            mediaFormat.setInteger(KEY_TRANSITION_PREROLL_AV_TOLERANCE, mTransitionPreRollAVTolerance);
+        }
+    }
+
     @Override
     void setTransitionModeBefore(int transitionModeBefore) {
+        ASPlayerLog.i("%s setTransitionModeBefore mode: %d", getTag(), transitionModeBefore);
         super.setTransitionModeBefore(transitionModeBefore);
-        ASPlayerLog.i("%s setTransitionModeBefore %d", getTag(), transitionModeBefore);
 
-        PARAMS_TRANSITION_MODE_BEFORE.putInt(PARAM_TRANSITION_BEFORE, transitionModeBefore);
+        PARAMS_TRANSITION_MODE_BEFORE.putInt(KEY_TRANSITION_BEFORE, transitionModeBefore);
 
         if (mMediaCodec != null) {
-            mMediaCodec.setParameters(PARAMS_TRANSITION_MODE_BEFORE);
-            mRequestTransitionModeBefore = false;
+            handleSetTransitionModeBefore();
         }
     }
 
@@ -439,7 +549,177 @@ class VideoOutputPathV3 extends VideoOutputPath {
     protected void handleSetTransitionModeBefore() {
         super.handleSetTransitionModeBefore();
 
-        mMediaCodec.setParameters(PARAMS_TRANSITION_MODE_BEFORE);
+        if (mMediaCodec != null) {
+            ASPlayerLog.i("%s handleSetTransitionModeBefore mode: %d", getTag(), mTransitionModeBefore);
+            mMediaCodec.setParameters(PARAMS_TRANSITION_MODE_BEFORE);
+        }
+    }
+
+    @Override
+    void setTransitionModeAfter(int transitionModeAfter) {
+        ASPlayerLog.i("%s setTransitionModeAfter mode: %d", getTag(), transitionModeAfter);
+        super.setTransitionModeAfter(transitionModeAfter);
+
+        PARAMS_TRANSITION_MODE_AFTER.putInt(KEY_TRANSITION_AFTER, transitionModeAfter);
+
+//        if (mMediaCodec != null) {
+//            handleSetTransitionModeAfter();
+//        }
+    }
+
+    @Override
+    protected void handleSetTransitionModeAfter() {
+        super.handleSetTransitionModeAfter();
+
+        if (mMediaCodec != null) {
+            ASPlayerLog.i("%s handleSetTransitionModeAfter mode: %d", getTag(), mTransitionModeAfter);
+            mMediaCodec.setParameters(PARAMS_TRANSITION_MODE_AFTER);
+        }
+    }
+
+    @Override
+    void setTransitionScreenColor(int screenColor) {
+        ASPlayerLog.i("%s setTransitionScreenColor color: %d", getTag(), screenColor);
+        super.setTransitionScreenColor(screenColor);
+
+        if (mMediaCodec != null && mTransitionModeBefore != TransitionModeBefore.LAST_IMAGE) {
+            handleSetTransitionScreenColor(screenColor);
+            mTransitionScreenColor = null;
+        }
+    }
+
+    @Override
+    protected void handleSetTransitionScreenColor(int screenColor) {
+        if (mMediaCodec != null) {
+            ASPlayerLog.i("%s handleSetTransitionScreenColor color: %d", getTag(), mTransitionScreenColor);
+            Bundle params = new Bundle();
+            params.putInt(KEY_SCREEN_COLOR_MODE, SCREEN_COLOR_MODE_ONCE_TRANSITION);
+            params.putInt(KEY_SCREEN_COLOR, screenColor);
+            setMediaCodecParameters(mMediaCodec, params);
+        }
+    }
+
+    private static int getPrerollRateForMediaFormat(float prerollRate) {
+        return (int)(prerollRate * PRE_ROLL_RATE_SCALE);
+    }
+
+    @Override
+    void setTransitionPreRollRate(float rate) {
+        ASPlayerLog.i("%s setTransitionPreRollRate rate: %.3f", getTag(), rate);
+        super.setTransitionPreRollRate(rate);
+
+        PARAMS_TRANSITION_PREROLL_RATE.putInt(KEY_TRANSITION_PREROLL_RATE, getPrerollRateForMediaFormat(rate));
+
+        if (mMediaCodec != null) {
+            handleSetTransitionPreRollRate();
+        }
+    }
+
+    @Override
+    protected void handleSetTransitionPreRollRate() {
+        super.handleSetTransitionPreRollRate();
+
+        if (mMediaCodec != null) {
+            ASPlayerLog.i("%s handleSetTransitionPreRollRate rate: %.3f", getTag(), mTransitionPreRollRate);
+            mMediaCodec.setParameters(PARAMS_TRANSITION_PREROLL_RATE);
+        }
+    }
+
+    @Override
+    void setTransitionPreRollAVTolerance(int milliSecond) {
+        ASPlayerLog.i("%s setTransitionPreRollAVTolerance milliSecond: %d", getTag(), milliSecond);
+        super.setTransitionPreRollAVTolerance(milliSecond);
+
+        PARAMS_TRANSITION_PREROLL_AV_TOLERANCE.putInt(KEY_TRANSITION_PREROLL_AV_TOLERANCE, milliSecond);
+
+        if (mMediaCodec != null) {
+            handleSetTransitionPreRollAVTolerance();
+        }
+    }
+
+    @Override
+    protected void handleSetTransitionPreRollAVTolerance() {
+        super.handleSetTransitionPreRollAVTolerance();
+
+        if (mMediaCodec != null) {
+            ASPlayerLog.i("%s handleSetTransitionPreRollAVTolerance time: %d", getTag(), mTransitionPreRollAVTolerance);
+            mMediaCodec.setParameters(PARAMS_TRANSITION_PREROLL_AV_TOLERANCE);
+        }
+    }
+
+    @Override
+    void setVideoMute(int mute) {
+        ASPlayerLog.i("%s setVideoMute mute: %d", getTag(), mute);
+        super.setVideoMute(mute);
+
+        PARAMS_VIDEO_MUTE.putInt(KEY_VIDEO_MUTE, mute);
+
+        if (mMediaCodec != null) {
+            handleSetVideoMute();
+            mRequestVideoMute = false;
+        }
+    }
+
+    @Override
+    protected void handleSetVideoMute() {
+        super.handleSetVideoMute();
+
+        if (mMediaCodec != null) {
+            int mute = PARAMS_VIDEO_MUTE.getInt(KEY_VIDEO_MUTE);
+            ASPlayerLog.i("%s handleSetVideoMute mute: %d", getTag(), mute);
+            setMediaCodecParameters(mMediaCodec, PARAMS_VIDEO_MUTE);
+        }
+    }
+
+    @Override
+    protected void setScreenColorOnce(int screenColor) {
+        super.setScreenColorOnce(screenColor);
+        ASPlayerLog.i("%s setScreenColorOnce screenColor: %d", getTag(), screenColor);
+        if (mMediaCodec != null) {
+            mSolidScreenColor = Integer.valueOf(screenColor);
+            handleSetScreenColorOnce(mSolidScreenColor.intValue());
+        } else {
+            ASPlayerLog.w("%s setScreenColorOnce screenColor: %d, mediacodec is null",
+                    getTag(), screenColor);
+        }
+    }
+
+    private boolean handleSetScreenColorOnce(int screenColor) {
+        if (mMediaCodec != null) {
+            ASPlayerLog.i("%s handleSetScreenColorOnce screenColor: %d", getTag(), screenColor);
+            boolean success = handleSetScreenColor(SCREEN_COLOR_MODE_ONCE_SOLID, screenColor);
+            if (success) {
+                mSolidScreenColor = null;
+            }
+
+            return success;
+        } else {
+            ASPlayerLog.w("%s handleSetScreenColorOnce screenColor: %d failed, mediacodec is null",
+                    getTag(), screenColor);
+            return false;
+        }
+    }
+
+    protected boolean handleSetScreenColor(int mode, int screenColor) {
+        if (mMediaCodec != null) {
+            ASPlayerLog.i("%s handleSetScreenColor mode: %d, screenColor: %d", getTag(),
+                    mode, screenColor);
+            Bundle params = new Bundle();
+            params.putInt(KEY_SCREEN_COLOR_MODE, mode);
+            params.putInt(KEY_SCREEN_COLOR, screenColor);
+            setMediaCodecParameters(mMediaCodec, params);
+            return true;
+        }
+        return false;
+    }
+
+    private void setMediaCodecParameters(MediaCodec mediaCodec, Bundle params) {
+        if (mediaCodec == null || params == null) {
+            ASPlayerLog.i("%s setMediaCodecParameters failed, invalid param", getTag());
+            return;
+        }
+
+        mediaCodec.setParameters(params);
     }
 
     @Override

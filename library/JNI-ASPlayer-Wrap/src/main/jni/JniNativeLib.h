@@ -110,6 +110,21 @@ jni_asplayer_result
 asplayer_set_transition_mode_before(JNIEnv *env, jobject jniASPlayerWrapperObj, jint jMode);
 
 jni_asplayer_result
+asplayer_set_transition_mode_after(JNIEnv *env, jobject jniASPlayerWrapperObj, jint jMode);
+
+jni_asplayer_result
+asplayer_set_transition_preroll_rate(JNIEnv *env, jobject jniASPlayerWrapperObj, jfloat jRate);
+
+jni_asplayer_result
+asplayer_set_transition_preroll_av_tolerance(JNIEnv *env, jobject jniASPlayerWrapperObj, jint jMillSecond);
+
+jni_asplayer_result
+asplayer_set_video_mute(JNIEnv *env, jobject jniASPlayerWrapperObj, jint jMute);
+
+jni_asplayer_result
+asplayer_set_screen_color(JNIEnv *env, jobject jniASPlayerWrapperObj, jint jMode, jint jColor);
+
+jni_asplayer_result
 asplayer_set_pip_mode(JNIEnv *env, jobject jniASPlayerWrapperObj, jint mode);
 
 jni_asplayer_result

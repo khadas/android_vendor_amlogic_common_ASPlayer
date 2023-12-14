@@ -9,7 +9,11 @@ import android.text.TextUtils;
 import android.view.Surface;
 
 
-import com.amlogic.asplayer.api.TransitionSettings;
+import com.amlogic.asplayer.api.PlaybackControl.TransitionModeBefore;
+import com.amlogic.asplayer.api.PlaybackControl.TransitionModeAfter;
+import com.amlogic.asplayer.api.PlaybackControl.ScreenColor;
+import com.amlogic.asplayer.api.PlaybackControl.VideoMute;
+import com.amlogic.asplayer.api.VideoParams;
 import com.amlogic.asplayer.api.VideoTrickMode;
 import com.amlogic.asplayer.api.WorkMode;
 
@@ -133,24 +137,34 @@ class VideoOutputPath extends MediaOutputPath {
 
     protected VideoFormatListener mVideoFormatListener;
 
-    protected MediaFormat mMediaFormat;
+    protected VideoParams mVideoParams;
 
     protected int mPixelAspectRatio;
-    protected String mMimeType;
+    private String mMimeType;
     protected int mVideoWidth;
     protected int mVideoHeight;
     protected int mFrameRate;
     protected byte mActiveFormat;
     protected Integer mVFType;
 
-    protected long mNbDecodedFrames;
+    private long mNbDecodedFrames;
     private int mNbSuspiciousTimestamps;
 
     protected int mTrickMode = VideoTrickMode.NONE;
     protected double mTrickModeSpeed;
 
-    protected int mTransitionModeBefore = TransitionSettings.TransitionModeBefore.BLACK;
-    protected boolean mRequestTransitionModeBefore = false;
+    protected int mTransitionModeBefore = TransitionModeBefore.BLACK;
+    protected int mTransitionModeAfter = TransitionModeAfter.PREROLL_FROM_FIRST_IMAGE;
+    protected boolean mTransitionModeAfterSet = false;
+    protected Integer mTransitionScreenColor = null;
+
+    protected float mTransitionPreRollRate = 0.f;
+    protected int mTransitionPreRollAVTolerance = 0;
+
+    protected int mVideoMute = VideoMute.UN_MUTE;
+    protected boolean mRequestVideoMute = false;
+
+    protected Integer mSolidScreenColor = null;
 
     protected boolean mChangeWorkMode = false;
     protected boolean mMediaCodecStarted = false;
@@ -167,8 +181,6 @@ class VideoOutputPath extends MediaOutputPath {
 
         mMediaCodecCallback = new VideoMediaCodecCallback();
         mMediaCodecOnFrameCallback = new VideoMediaCodecOnFrameCallback();
-
-        mRequestTransitionModeBefore = false;
     }
 
     void setAudioSessionId(int sessionId) {
@@ -200,12 +212,12 @@ class VideoOutputPath extends MediaOutputPath {
         }
     }
 
-    void setVideoFormat(MediaFormat format) {
-        this.mMediaFormat = format;
+    void setVideoParams(VideoParams videoParams) {
+        this.mVideoParams = videoParams;
     }
 
-    boolean hasVideoFormat() {
-        return mMediaFormat != null;
+    boolean hasVideoParams() {
+        return this.mVideoParams != null;
     }
 
     void setDummySurface(Surface surface) {
@@ -580,9 +592,11 @@ class VideoOutputPath extends MediaOutputPath {
     public void reset() {
         ASPlayerLog.i("%s reset stop mediacodec: %s", getTag(), mMediaCodec);
         if (mMediaCodec != null) {
-            if (mRequestTransitionModeBefore) {
+            // if need to keep last frame, don't set screen color
+            if (mTransitionModeBefore == TransitionModeBefore.LAST_IMAGE) {
                 handleSetTransitionModeBefore();
-                mRequestTransitionModeBefore = false;
+            } else if (mTransitionScreenColor != null) {
+                handleSetTransitionScreenColor(mTransitionScreenColor.intValue());
             }
             stopMediaCodec();
             releaseMediaCodec();
@@ -612,7 +626,7 @@ class VideoOutputPath extends MediaOutputPath {
 
         mTrickModeSpeed = 0;
 
-        mMediaFormat = null;
+        mVideoParams = null;
         mMimeType = null;
 
         super.reset();
@@ -695,7 +709,7 @@ class VideoOutputPath extends MediaOutputPath {
     public void release() {
         super.release();
 
-        mMediaFormat = null;
+        mVideoParams = null;
         mMimeType = null;
 
         mSurface = null;
@@ -1017,8 +1031,70 @@ class VideoOutputPath extends MediaOutputPath {
     }
 
     void setTransitionModeBefore(int transitionModeBefore) {
+        ASPlayerLog.i("%s setTransitionModeBefore, mode: %d", getTag(), transitionModeBefore);
         mTransitionModeBefore = transitionModeBefore;
-        mRequestTransitionModeBefore = true;
+    }
+
+    protected void handleSetTransitionModeBefore() {
+
+    }
+
+    void setTransitionModeAfter(int transitionModeAfter) {
+        ASPlayerLog.i("%s setTransitionModeAfter, mode: %d", getTag(), transitionModeAfter);
+        mTransitionModeAfter = transitionModeAfter;
+        mTransitionModeAfterSet = true;
+    }
+
+    protected void handleSetTransitionModeAfter() {
+
+    }
+
+    void setTransitionScreenColor(int screenColor) {
+        mTransitionScreenColor = new Integer(screenColor);
+    }
+
+    protected void handleSetTransitionScreenColor(int screenColor) {
+
+    }
+
+    void setTransitionPreRollRate(float rate) {
+        mTransitionPreRollRate = rate;
+    }
+
+    protected void handleSetTransitionPreRollRate() {
+
+    }
+
+    void setTransitionPreRollAVTolerance(int milliSecond) {
+        mTransitionPreRollAVTolerance = milliSecond;
+    }
+
+    protected void handleSetTransitionPreRollAVTolerance() {
+
+    }
+
+    void setVideoMute(int mute) {
+        mVideoMute = mute;
+        mRequestVideoMute = true;
+    }
+
+    protected void handleSetVideoMute() {
+
+    }
+
+    void setScreenColor(int screenColorMode, int screenColor) {
+        switch (screenColorMode) {
+            case ScreenColor.MODE_ONCE_TRANSITION:
+                setTransitionScreenColor(screenColor);
+                break;
+            case ScreenColor.MODE_ONCE_SOLID:
+                setScreenColorOnce(screenColor);
+                break;
+        }
+    }
+
+    protected void setScreenColorOnce(int screenColor) {
+        mSolidScreenColor = Integer.valueOf(screenColor);
     }
 
     protected static long getCostTime(long startNanoTime) {
@@ -1027,10 +1103,6 @@ class VideoOutputPath extends MediaOutputPath {
 
     protected static long getCostTime(long startNanoTime, long endNanoTime) {
         return (endNanoTime - startNanoTime) / 1000000;
-    }
-
-    protected void handleSetTransitionModeBefore() {
-
     }
 
     @Override

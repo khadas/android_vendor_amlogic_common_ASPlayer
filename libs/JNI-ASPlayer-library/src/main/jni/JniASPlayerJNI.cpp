@@ -81,6 +81,11 @@ struct asplayer_t {
     jmethodID stopFastMID;
     jmethodID setTrickModeMID;
     jmethodID setTransitionModeBeforeMID;
+    jmethodID setTransitionModeAfterMID;
+    jmethodID setTransitionPrerollRateMID;
+    jmethodID setTransitionPrerollAvToleranceMID;
+    jmethodID setVideoMuteMID;
+    jmethodID setScreenColorMID;
     jmethodID releaseMID;
     jmethodID addPlaybackListenerMID;
     jmethodID removePlaybackListenerMID;
@@ -117,6 +122,7 @@ struct video_param_t {
     jfieldID trackFilterId;
     jfieldID avSyncHwId;
     jfieldID scrambled;
+    jfieldID hasVideo;
     jfieldID mediaFormat;
 };
 
@@ -325,6 +331,7 @@ bool JniASPlayerJNI::createVideoParams(JNIEnv *env, jni_asplayer_video_params *p
     env->SetIntField(videoParams, gVideoParamsCtx.trackFilterId, (jint) params->filterId);
     env->SetIntField(videoParams, gVideoParamsCtx.avSyncHwId, (jint) params->avSyncHwId);
     env->SetBooleanField(videoParams, gVideoParamsCtx.scrambled, (jboolean) params->scrambled);
+    env->SetBooleanField(videoParams, gVideoParamsCtx.hasVideo, (jboolean) params->hasVideo);
     env->SetObjectField(videoParams, gVideoParamsCtx.mediaFormat, params->mediaFormat);
 
     *outJVideoParams = videoParams;
@@ -524,6 +531,22 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
                 env, gASPlayerCls, "stopFast", "()I");
         gASPlayerCtx.setTrickModeMID = NativeHelper::GetMethodID(
                 env, gASPlayerCls, "setTrickMode", "(I)I");
+        gASPlayerCtx.setTransitionModeBeforeMID = NativeHelper::GetMethodID(
+                env, gASPlayerCls,
+                "setTransitionModeBefore", "(I)I");
+        gASPlayerCtx.setTransitionModeAfterMID = NativeHelper::GetMethodID(
+                env, gASPlayerCls,
+                "setTransitionModeAfter", "(I)I");
+        gASPlayerCtx.setTransitionPrerollRateMID = NativeHelper::GetMethodID(
+                env, gASPlayerCls,
+                "setTransitionPreRollRate", "(F)I");
+        gASPlayerCtx.setTransitionPrerollAvToleranceMID = NativeHelper::GetMethodID(
+                env, gASPlayerCls,
+                "setTransitionPreRollAVTolerance", "(I)I");
+        gASPlayerCtx.setVideoMuteMID = NativeHelper::GetMethodID(
+                env, gASPlayerCls, "setVideoMute", "(I)I");
+        gASPlayerCtx.setScreenColorMID = NativeHelper::GetMethodID(
+                env, gASPlayerCls, "setScreenColor", "(II)I");
         gASPlayerCtx.addPlaybackListenerMID = NativeHelper::GetMethodID(
                 env, gASPlayerCls,
                 "addPlaybackListener",
@@ -618,6 +641,8 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
                 env, gVideoParamsCls, "mAvSyncHwId", "I");
         gVideoParamsCtx.scrambled = NativeHelper::GetFieldID(
                 env, gVideoParamsCls, "mScrambled", "Z");
+        gVideoParamsCtx.hasVideo = NativeHelper::GetFieldID(
+                env, gVideoParamsCls, "mHasVideo", "Z");
         gVideoParamsCtx.mediaFormat = NativeHelper::GetFieldID(
                 env, gVideoParamsCls, "mMediaFormat", "Landroid/media/MediaFormat;");
 
@@ -1323,7 +1348,75 @@ jni_asplayer_result JniASPlayer::setTransitionModeBefore(jni_asplayer_transition
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
+    AP_LOGI("setTransitionModeBefore mode: %d", mode);
+
     int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setTransitionModeBeforeMID, (jint)(mode));
+    return static_cast<jni_asplayer_result>(ret);
+}
+
+jni_asplayer_result JniASPlayer::setTransitionModeAfter(jni_asplayer_transition_mode_after mode) {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED(__FUNCTION__);
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    AP_LOGI("setTransitionModeAfter mode: %d", mode);
+
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setTransitionModeAfterMID, (jint)mode);
+    return static_cast<jni_asplayer_result>(ret);
+}
+
+jni_asplayer_result JniASPlayer::setTransitionPrerollRate(float rate) {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED(__FUNCTION__);
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    AP_LOGI("setTransitionPrerollRate rate: %.3f", rate);
+
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setTransitionPrerollRateMID, (jfloat)rate);
+    return static_cast<jni_asplayer_result>(ret);
+}
+
+jni_asplayer_result JniASPlayer::setTransitionPrerollAvTolerance(int32_t milliSecond) {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED(__FUNCTION__);
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    AP_LOGI("setTransitionPrerollAvTolerance milliSecond: %d", milliSecond);
+
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setTransitionPrerollAvToleranceMID, (jint)milliSecond);
+    return static_cast<jni_asplayer_result>(ret);
+}
+
+jni_asplayer_result JniASPlayer::setVideoMute(jni_asplayer_video_mute mute) {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED(__FUNCTION__);
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    AP_LOGI("setVideoMute mute: %d", mute);
+
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setVideoMuteMID, (jint)mute);
+    return static_cast<jni_asplayer_result>(ret);
+}
+
+jni_asplayer_result JniASPlayer::setScreenColor(jni_asplayer_screen_color_mode mode,
+                                                jni_asplayer_screen_color color) {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED(__FUNCTION__);
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    AP_LOGI("setScreenColor mode: %d, color: %d", mode, color);
+
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setScreenColorMID, (jint)mode, (jint)color);
     return static_cast<jni_asplayer_result>(ret);
 }
 

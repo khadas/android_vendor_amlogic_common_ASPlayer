@@ -236,6 +236,31 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
+    public int setTransitionModeAfter(int transitionModeAfter) {
+        return native_setTransitionModeAfter(transitionModeAfter);
+    }
+
+    @Override
+    public int setTransitionPreRollRate(float rate) {
+        return native_setTransitionPrerollRate(rate);
+    }
+
+    @Override
+    public int setTransitionPreRollAVTolerance(int milliSecond) {
+        return native_setTransitionPrerollAvTolerance(milliSecond);
+    }
+
+    @Override
+    public int setVideoMute(int mute) {
+        return native_setVideoMute(mute);
+    }
+
+    @Override
+    public int setScreenColor(int screenColorMode, int screenColor) {
+        return native_setScreenColor(screenColorMode, screenColor);
+    }
+
+    @Override
     public MediaFormat getVideoInfo() {
         return native_getVideoInfo();
     }
@@ -427,6 +452,11 @@ public class JniASPlayerWrapper implements IASPlayer {
     private native int native_stopFast();
     private native int native_setTrickMode(int trickMode);
     private native int native_setTransitionModeBefore(int mode);
+    private native int native_setTransitionModeAfter(int mode);
+    private native int native_setTransitionPrerollRate(float rate);
+    private native int native_setTransitionPrerollAvTolerance(int milliSecond);
+    private native int native_setVideoMute(int mute);
+    private native int native_setScreenColor(int mode, int color);
     private native int native_setWorkMode(int mode);
     private native int native_resetWorkMode();
     private native int native_setPIPMode(int mode);

@@ -122,6 +122,16 @@ public:
 
     jni_asplayer_result setTransitionModeBefore(jni_asplayer_transition_mode_before mode);
 
+    jni_asplayer_result setTransitionModeAfter(jni_asplayer_transition_mode_after mode);
+
+    jni_asplayer_result setTransitionPrerollRate(float rate);
+
+    jni_asplayer_result setTransitionPrerollAvTolerance(int32_t milliSecond);
+
+    jni_asplayer_result setVideoMute(jni_asplayer_video_mute mute);
+
+    jni_asplayer_result setScreenColor(jni_asplayer_screen_color_mode mode, jni_asplayer_screen_color color);
+
     void setEventCallback(event_callback callback, void *eventUserData);
 
     bool getEventCallback(event_callback *callback, void **userdata);

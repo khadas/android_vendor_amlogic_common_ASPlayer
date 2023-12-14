@@ -12,6 +12,11 @@ import android.media.AudioTrack;
 import android.media.MediaFormat;
 import android.view.Surface;
 
+import com.amlogic.asplayer.api.PlaybackControl.TransitionModeBefore;
+import com.amlogic.asplayer.api.PlaybackControl.TransitionModeAfter;
+import com.amlogic.asplayer.api.PlaybackControl.ScreenColor;
+import com.amlogic.asplayer.api.PlaybackControl.VideoMute;
+
 
 public interface IASPlayer {
 
@@ -189,11 +194,70 @@ public interface IASPlayer {
     /**
      * Set if need keep last frame for video display for ASPlayer instance.
      *
-     * @param transitionModeBefore transition mode before.
+     * @param transitionModeBefore transition mode before. one of
+     *      {@link TransitionModeBefore#BLACK } or
+     *      {@link TransitionModeBefore#LAST_IMAGE}
      *
-     * @see com.amlogic.asplayer.api.TransitionSettings.TransitionModeBefore
+     * @return
      */
     int setTransitionModeBefore(int transitionModeBefore);
+
+    /**
+     * Set if need show first image before sync for ASPlayer instance.
+     *
+     * @param transitionModeAfter transition mode after. one of
+     *      {@link TransitionModeAfter#PREROLL_FROM_FIRST_IMAGE } or
+     *      {@link TransitionModeAfter#WAIT_UNTIL_SYNC }
+     *
+     * @return
+     */
+    int setTransitionModeAfter(int transitionModeAfter);
+
+    /**
+     * Set transition preroll rate
+     *
+     * @param rate
+     *
+     * @return
+     */
+    int setTransitionPreRollRate(float rate);
+
+    /**
+     *  maximum a/v time difference in ms to start preroll.
+     *  This value limits the max time of preroll duration.
+     *
+     * @param milliSecond the max time of preroll duration
+     *
+     * @return
+     */
+    int setTransitionPreRollAVTolerance(int milliSecond);
+
+    /**
+     * Set video mute or not
+     *
+     * @param mute one of {@link VideoMute#UN_MUTE } or {@link VideoMute#MUTE }
+     *
+     * @return
+     */
+    int setVideoMute(int mute);
+
+    /**
+     * Set screen color
+     *
+     * @param screenColorMode screen color mode. one of
+     *      {@link ScreenColor#MODE_ONCE_TRANSITION} or
+     *      {@link ScreenColor#MODE_ONCE_SOLID} or
+     *      {@link ScreenColor#MODE_ALWAYS} or
+     *      {@link ScreenColor#MODE_ALWAYS_CANCEL}
+     *
+     * @param screenColor screen color. one of
+     *      {@link ScreenColor#BLACK } or
+     *      {@link ScreenColor#BLUE } or
+     *      {@link ScreenColor#GREEN }
+     *
+     * @return
+     */
+    int setScreenColor(int screenColorMode, int screenColor);
 
     /**
      * Get video basic info of ASPlayer instance.

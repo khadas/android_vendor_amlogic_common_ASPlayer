@@ -2,8 +2,6 @@ package com.amlogic.asplayer.core;
 
 import static com.amlogic.asplayer.core.VideoOutputPathV3.PARAMS_TRICK_BY_SEEK;
 
-import android.os.SystemClock;
-
 
 class RendererTrickNoVideo extends Renderer {
 

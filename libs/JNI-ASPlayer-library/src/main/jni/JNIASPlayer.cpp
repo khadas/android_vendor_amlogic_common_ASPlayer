@@ -580,6 +580,108 @@ jni_asplayer_result JniASPlayer_setTransitionModeBefore(jni_asplayer_handle hand
 }
 
 /**
+ *@brief:        Set if need show first image before sync
+ *               for specified JniASPlayer instance.
+ *@param:        handle     JniASPlayer handle.
+ *@param:        mode       transition mode after.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_setTransitionModeAfter(jni_asplayer_handle handle,
+                                                        jni_asplayer_transition_mode_after mode) {
+    LOG_FUNCTION_ENTER();
+    if (handle == 0) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
+    jni_asplayer_result ret = player->setTransitionModeAfter(mode);
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+/**
+ *@brief:        Set transition preroll rate
+ *               for specified JniASPlayer instance.
+ *@param:        handle     JniASPlayer handle.
+ *@param:        rate       transition preroll rate.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_setTransitionPrerollRate(jni_asplayer_handle handle,
+                                                          float rate) {
+    LOG_FUNCTION_ENTER();
+    if (handle == 0) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
+    jni_asplayer_result ret = player->setTransitionPrerollRate(rate);
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+/**
+ *@brief:        Set maximum a/v time difference in ms to start preroll
+ *               for specified JniASPlayer instance.
+ *               This value limits the max time of preroll duration.
+ *@param:        handle         JniASPlayer handle.
+ *@param:        milliSecond    the max time of preroll duration
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_setTransitionPrerollAVTolerance(jni_asplayer_handle handle,
+                                                                 int32_t milliSecond) {
+    LOG_FUNCTION_ENTER();
+    if (handle == 0) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
+    jni_asplayer_result ret = player->setTransitionPrerollAvTolerance(milliSecond);
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+/**
+ *@brief:        Set video mute or not
+ *               for specified JniASPlayer instance.
+ *@param:        handle         JniASPlayer handle.
+ *@param:        mute           mute or not
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result JniASPlayer_setVideoMute(jni_asplayer_handle handle,
+                                             jni_asplayer_video_mute mute) {
+    LOG_FUNCTION_ENTER();
+    if (handle == 0) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
+    jni_asplayer_result ret = player->setVideoMute(mute);
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+/**
+ *@brief:        Set screen color for specified JniASPlayer instance.
+ *@param:        handle     JniASPlayer handle.
+ *@param:        mode       screen color mode.
+ *@param:        color      screen color.
+ *@return:       The JniASPlayer result.
+ */
+jni_asplayer_result  JniASPlayer_setScreenColor(jni_asplayer_handle handle,
+                                                jni_asplayer_screen_color_mode mode,
+                                                jni_asplayer_screen_color color) {
+    LOG_FUNCTION_ENTER();
+    if (handle == 0) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
+    jni_asplayer_result ret = player->setScreenColor(mode, color);
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+/**
  *@brief:        Set work mode to specified JniASPlayer instance.
  *@param:        handle     JniASPlayer handle.
  *@param:        mode       The enum of work mode.

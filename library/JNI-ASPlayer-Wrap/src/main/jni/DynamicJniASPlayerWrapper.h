@@ -40,6 +40,11 @@ typedef jni_asplayer_result (*JniASPlayer_setTrickMode_FUNC)(jni_asplayer_handle
 typedef jni_asplayer_result (*JniASPlayer_setSurface_FUNC)(jni_asplayer_handle, void*);
 typedef jni_asplayer_result (*JniASPlayer_setVideoParams_FUNC)(jni_asplayer_handle, jni_asplayer_video_params *);
 typedef jni_asplayer_result (*JniASPlayer_setTransitionModeBefore_FUNC)(jni_asplayer_handle, jni_asplayer_transition_mode_before);
+typedef jni_asplayer_result (*JniASPlayer_setTransitionModeAfter_FUNC)(jni_asplayer_handle, jni_asplayer_transition_mode_after);
+typedef jni_asplayer_result (*JniASPlayer_setTransitionPrerollRate_FUNC)(jni_asplayer_handle, float);
+typedef jni_asplayer_result (*JniASPlayer_setTransitionPrerollAvTolerance_FUNC)(jni_asplayer_handle, int32_t);
+typedef jni_asplayer_result (*JniASPlayer_setVideoMute_FUNC)(jni_asplayer_handle, jni_asplayer_video_mute);
+typedef jni_asplayer_result (*JniASPlayer_setScreenColor_FUNC)(jni_asplayer_handle, jni_asplayer_screen_color_mode, jni_asplayer_screen_color);
 typedef jni_asplayer_result (*JniASPlayer_getVideoInfo_FUNC)(jni_asplayer_handle, jni_asplayer_video_info *);
 typedef jni_asplayer_result (*JniASPlayer_startVideoDecoding_FUNC)(jni_asplayer_handle);
 typedef jni_asplayer_result (*JniASPlayer_pauseVideoDecoding_FUNC)(jni_asplayer_handle);
@@ -119,6 +124,12 @@ public:
     jni_asplayer_result stopFast();
     jni_asplayer_result setTrickMode(jni_asplayer_video_trick_mode trickMode);
     jni_asplayer_result setTransitionModeBefore(jni_asplayer_transition_mode_before mode);
+    jni_asplayer_result setTransitionModeAfter(jni_asplayer_transition_mode_after mode);
+    jni_asplayer_result setTransitionPrerollRate(float rate);
+    jni_asplayer_result setTransitionPrerollAvTolerance(int32_t milliSecond);
+    jni_asplayer_result setVideoMute(jni_asplayer_video_mute mute);
+    jni_asplayer_result setScreenColor(jni_asplayer_screen_color_mode mode,
+                                       jni_asplayer_screen_color color);
     jni_asplayer_result setWorkMode(jni_asplayer_work_mode mode);
     jni_asplayer_result resetWorkMode();
     jni_asplayer_result setPIPMode(jni_asplayer_pip_mode mode);
@@ -180,6 +191,11 @@ private:
     static JniASPlayer_setSurface_FUNC ASPlayer_setSurface;
     static JniASPlayer_setVideoParams_FUNC ASPlayer_setVideoParams;
     static JniASPlayer_setTransitionModeBefore_FUNC ASPlayer_setTransitionModeBefore;
+    static JniASPlayer_setTransitionModeAfter_FUNC ASPlayer_setTransitionModeAfter;
+    static JniASPlayer_setScreenColor_FUNC ASPlayer_setScreenColor;
+    static JniASPlayer_setTransitionPrerollRate_FUNC ASPlayer_setTransitionPrerollRate;
+    static JniASPlayer_setTransitionPrerollAvTolerance_FUNC ASPlayer_setTransitionPrerollAvTolerance;
+    static JniASPlayer_setVideoMute_FUNC ASPlayer_setVideoMute;
     static JniASPlayer_getVideoInfo_FUNC ASPlayer_getVideoInfo;
     static JniASPlayer_startVideoDecoding_FUNC ASPlayer_startVideoDecoding;
     static JniASPlayer_pauseVideoDecoding_FUNC ASPlayer_pauseVideoDecoding;

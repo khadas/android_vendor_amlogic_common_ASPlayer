@@ -529,7 +529,8 @@ jni_asplayer_result JniASPlayerWrapper::setTrickMode(jni_asplayer_video_trick_mo
     return ret;
 }
 
-jni_asplayer_result JniASPlayerWrapper::setTransitionModeBefore(jni_asplayer_transition_mode_before mode) {
+jni_asplayer_result
+JniASPlayerWrapper::setTransitionModeBefore(jni_asplayer_transition_mode_before mode) {
     LOG_FUNCTION_ENTER();
     jni_asplayer_handle handle = mHandle;
     if (handle == 0) {
@@ -539,6 +540,94 @@ jni_asplayer_result JniASPlayerWrapper::setTransitionModeBefore(jni_asplayer_tra
     }
 
     jni_asplayer_result ret = JniASPlayer_setTransitionModeBefore(handle, mode);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result
+JniASPlayerWrapper::setTransitionModeAfter(jni_asplayer_transition_mode_after mode) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = JniASPlayer_setTransitionModeAfter(handle, mode);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result JniASPlayerWrapper::setTransitionPrerollRate(float rate) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = JniASPlayer_setTransitionPrerollRate(handle, rate);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result JniASPlayerWrapper::setTransitionPrerollAvTolerance(int32_t milliSecond) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = JniASPlayer_setTransitionPrerollAVTolerance(handle, milliSecond);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result JniASPlayerWrapper::setVideoMute(jni_asplayer_video_mute mute) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = JniASPlayer_setVideoMute(handle, mute);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result
+JniASPlayerWrapper::setScreenColor(jni_asplayer_screen_color_mode mode,
+                                   jni_asplayer_screen_color color) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = JniASPlayer_setScreenColor(handle, mode, color);
     if (ret != JNI_ASPLAYER_OK) {
         LOG_PLAYER_OP_FAILED(ret);
     }

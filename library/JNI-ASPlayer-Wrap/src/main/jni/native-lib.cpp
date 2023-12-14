@@ -270,6 +270,41 @@ native_set_transition_mode_before(JNIEnv *env, jobject thiz, jint jMode) {
 }
 
 static jint
+native_set_transition_mode_after(JNIEnv *env, jobject thiz, jint jMode) {
+    jni_asplayer_result result = asplayer_set_transition_mode_after(env, thiz, jMode);
+
+    return result;
+}
+
+static jint
+native_set_transition_preroll_rate(JNIEnv *env, jobject thiz, jfloat jRate) {
+    jni_asplayer_result result = asplayer_set_transition_preroll_rate(env, thiz, jRate);
+
+    return result;
+}
+
+static jint
+native_set_transition_preroll_av_tolerance(JNIEnv *env, jobject thiz, jint jMilliSecond) {
+    jni_asplayer_result result = asplayer_set_transition_preroll_av_tolerance(env, thiz, jMilliSecond);
+
+    return result;
+}
+
+static jint
+native_set_video_mute(JNIEnv *env, jobject thiz, jint jMute) {
+    jni_asplayer_result result = asplayer_set_video_mute(env, thiz, jMute);
+
+    return result;
+}
+
+static jint
+native_set_screen_color(JNIEnv *env, jobject thiz, jint jMode, jint jColor) {
+    jni_asplayer_result result = asplayer_set_screen_color(env, thiz, jMode, jColor);
+
+    return result;
+}
+
+static jint
 native_set_pip_mode(JNIEnv *env, jobject thiz, jint pipMode) {
     jni_asplayer_result result = asplayer_set_pip_mode(env, thiz, pipMode);
 
@@ -413,6 +448,11 @@ static JNINativeMethod methods[] = {
         {"native_stopFast", "()I", (void*)native_stop_fast },
         {"native_setTrickMode", "(I)I", (void*)native_set_trick_mode },
         {"native_setTransitionModeBefore", "(I)I", (void*) native_set_transition_mode_before },
+        {"native_setTransitionModeAfter", "(I)I", (void*) native_set_transition_mode_after },
+        {"native_setTransitionPrerollRate", "(F)I", (void*) native_set_transition_preroll_rate },
+        {"native_setTransitionPrerollAvTolerance", "(I)I", (void*) native_set_transition_preroll_av_tolerance },
+        {"native_setVideoMute", "(I)I", (void*) native_set_video_mute },
+        {"native_setScreenColor", "(II)I", (void*) native_set_screen_color },
         {"native_setWorkMode", "(I)I", (void*)native_set_work_mode },
         {"native_resetWorkMode", "()I", (void*)native_reset_work_mode },
         {"native_setPIPMode", "(I)I", (void*)native_set_pip_mode },

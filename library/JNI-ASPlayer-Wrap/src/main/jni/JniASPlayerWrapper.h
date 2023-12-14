@@ -58,6 +58,12 @@ public:
     jni_asplayer_result stopFast();
     jni_asplayer_result setTrickMode(jni_asplayer_video_trick_mode trickMode);
     jni_asplayer_result setTransitionModeBefore(jni_asplayer_transition_mode_before mode);
+    jni_asplayer_result setTransitionModeAfter(jni_asplayer_transition_mode_after mode);
+    jni_asplayer_result setTransitionPrerollRate(float rate);
+    jni_asplayer_result setTransitionPrerollAvTolerance(int32_t milliSecond);
+    jni_asplayer_result setVideoMute(jni_asplayer_video_mute mute);
+    jni_asplayer_result setScreenColor(jni_asplayer_screen_color_mode mode,
+                                       jni_asplayer_screen_color color);
     jni_asplayer_result setWorkMode(jni_asplayer_work_mode mode);
     jni_asplayer_result resetWorkMode();
     jni_asplayer_result setPIPMode(jni_asplayer_pip_mode mode);

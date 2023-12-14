@@ -31,7 +31,6 @@ import com.amlogic.asplayer.api.ErrorCode;
 import com.amlogic.asplayer.api.InputBuffer;
 import com.amlogic.asplayer.api.InputFrameBuffer;
 import com.amlogic.asplayer.api.InputSourceType;
-import com.amlogic.asplayer.api.TransitionSettings;
 import com.amlogic.asplayer.api.TsPlaybackListener;
 import com.amlogic.asplayer.api.VideoFormat;
 import com.amlogic.asplayer.api.VideoParams;
@@ -46,6 +45,8 @@ import static com.amlogic.asplayer.api.ASPlayer.INFO_BUSY;
 import static com.amlogic.asplayer.api.ASPlayer.INFO_ERROR_RETRY;
 import static com.amlogic.asplayer.api.ASPlayer.INFO_INVALID_OPERATION;
 import static com.amlogic.asplayer.api.ASPlayer.INFO_INVALID_PARAMS;
+import static com.amlogic.asplayer.core.Constant.INVALID_AV_SYNC_ID;
+import static com.amlogic.asplayer.core.Constant.INVALID_SYNC_INSTANCE_ID;
 import static com.amlogic.asplayer.core.TsPlaybackConfig.PLAYBACK_BUFFER_SIZE;
 import static com.amlogic.asplayer.core.TsPlaybackConfig.TS_PACKET_SIZE;
 
@@ -94,8 +95,8 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     private VideoInfo mVideoInfo;
 
     private final int mId;
-    private int mSyncInstanceId = Constant.INVALID_SYNC_INSTANCE_ID;
-    private int mAvSyncHwId = Constant.INVALID_AV_SYNC_ID;
+    private int mSyncInstanceId = INVALID_SYNC_INSTANCE_ID;
+    private int mAvSyncHwId = INVALID_AV_SYNC_ID;
 
     public interface OnGetSyncInstanceIdListener {
         void onGetSyncInstanceId(int syncInstanceId);
@@ -178,6 +179,10 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         mRendererScheduler.setVideoFormatListener(this);
         mRendererScheduler.setAudioFormatListener(this);
         mRendererScheduler.prepare(mPlayerHandler);
+    }
+
+    private boolean isAlive() {
+        return mPlayerHandler != null && mPlayerThread != null && mPlayerThread.isAlive();
     }
 
     @Override
@@ -278,8 +283,8 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         });
         lock.block();
 
-        mAvSyncHwId = Constant.INVALID_AV_SYNC_ID;
-        mSyncInstanceId = Constant.INVALID_SYNC_INSTANCE_ID;
+        mAvSyncHwId = INVALID_AV_SYNC_ID;
+        mSyncInstanceId = INVALID_SYNC_INSTANCE_ID;
 
         mPendingPlaybackListeners.clear();
 
@@ -294,6 +299,8 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         }
 
         mEventLooper = null;
+
+        mPlayerHandler.removeCallbacksAndMessages(null);
 
         mPlayerThread.quitSafely();
         mPlayerThread = null;
@@ -616,7 +623,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         }
 
         int playbackMode = mConfig.getPlaybackMode();
-        if (playbackMode == ASPlayerConfig.PLAYBACK_MODE_PASSTHROUGH) {
+        if (playbackMode == ASPlayerConfig.PLAYBACK_MODE_PASSTHROUGH && params.getHasVideo()) {
             int filterId = params.getTrackFilterId();
             int avSyncHwId = params.getAvSyncHwId();
             if (filterId < 0) {
@@ -632,7 +639,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
-                handleSetVideoParams(params);
+                handleSetVideoParams(params.clone());
             });
         } else {
             ASPlayerLog.e("%s failed to set video params, playerHandler is null", getTag());
@@ -641,49 +648,53 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     private void handleSetVideoParams(VideoParams params) {
+        ASPlayerLog.i("%s handleSetVideoParams, params: %s", getTag(), params);
         if (params != null) {
-            MediaFormat format = params.getMediaFormat();
-            int pid = params.getPid();
-            int filterId = params.getTrackFilterId();
-            int avSyncHwId = params.getAvSyncHwId();
-
-            setSyncInstanceIdByAvSyncId(avSyncHwId);
-
-            ASPlayerLog.i("%s setVideoParams pid: 0x%04x, filterId: 0x%016x, avsyncHwId: 0x%x, " +
-                            "scrambled: %b, media format: %s",
-                    getTag(), pid, filterId, avSyncHwId, params.isScrambled(), format);
-
-            if (format == null) {
-                format = MediaFormat.createVideoFormat(params.getMimeType(), params.getWidth(), params.getHeight());
-                ASPlayerLog.i("%s setVideoParams create MediaFormat, mimetype: %s, width: %d, height: %d",
-                        getTag(), params.getMimeType(), params.getWidth(), params.getHeight());
+            if (!params.getHasVideo()) {
+                // audio only program, but need to control surface by MediaCodec
+                handleSetVideoParamsAudioOnly(params);
+            } else {
+                handleSetVideoParamsNormal(params);
             }
-            if (params.isScrambled() && !format.containsFeature(MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayback)) {
-                format.setFeatureEnabled(MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayback, true);
-            }
-            mVideoOutputPath.setVideoFormat(format);
-
-            if (mVideoOutputPath instanceof VideoOutputPathV3) {
-                VideoOutputPathV3 outputPathV3 = (VideoOutputPathV3) mVideoOutputPath;
-                outputPathV3.setTrackFilterId(filterId);
-                outputPathV3.setAvSyncHwId(avSyncHwId);
-            }
-
-            mVideoOutputPath.setSyncInstanceId(getSyncInstanceIdByAvSyncId(avSyncHwId));
-
-            mRendererScheduler.onSetVideoParams(true);
         } else {
-            mVideoOutputPath.setVideoFormat(null);
-            if (mVideoOutputPath instanceof VideoOutputPathV3) {
-                VideoOutputPathV3 outputPathV3 = (VideoOutputPathV3) mVideoOutputPath;
-                outputPathV3.setTrackFilterId(MediaContainerExtractor.INVALID_FILTER_ID);
-                outputPathV3.setAvSyncHwId(MediaContainerExtractor.INVALID_AV_SYNC_HW_ID);
-            }
-
-            mVideoOutputPath.setSyncInstanceId(Constant.INVALID_SYNC_INSTANCE_ID);
+            mVideoOutputPath.setVideoParams(null);
+            mVideoOutputPath.setSyncInstanceId(INVALID_SYNC_INSTANCE_ID);
 
             mRendererScheduler.onSetVideoParams(false);
         }
+    }
+
+    private void handleSetVideoParamsNormal(VideoParams params) {
+        if (params == null) {
+            ASPlayerLog.i("%s setVideoParams failed, params is null", getTag());
+            return;
+        }
+
+        int pid = params.getPid();
+        int filterId = params.getTrackFilterId();
+        int avSyncHwId = params.getAvSyncHwId();
+
+        setSyncInstanceIdByAvSyncId(avSyncHwId);
+
+        ASPlayerLog.i("%s setVideoParams pid: 0x%04x, filterId: 0x%016x, avsyncHwId: 0x%x, " +
+                        "width: %d, height: %d, scrambled: %b, hasVideo: %b, media format: %s",
+                getTag(), pid, filterId, avSyncHwId, params.getWidth(), params.getHeight(),
+                params.isScrambled(), params.getHasVideo(), params.getMediaFormat());
+
+        mVideoOutputPath.setVideoParams(params);
+        mVideoOutputPath.setSyncInstanceId(getSyncInstanceIdByAvSyncId(avSyncHwId));
+        mRendererScheduler.onSetVideoParams(true);
+    }
+
+    private void handleSetVideoParamsAudioOnly(VideoParams params) {
+        if (params == null) {
+            ASPlayerLog.i("%s setVideoParams failed, params is null", getTag());
+            return;
+        }
+
+        mVideoOutputPath.setVideoParams(params);
+        mVideoOutputPath.setSyncInstanceId(INVALID_AV_SYNC_ID);
+        mRendererScheduler.onSetVideoParams(true);
     }
 
     private void setSyncInstanceIdByAvSyncId(int avSyncHwId) {
@@ -714,17 +725,80 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
     @Override
     public int setTransitionModeBefore(int transitionModeBefore) {
-        if (transitionModeBefore != TransitionSettings.TransitionModeBefore.BLACK
-                && transitionModeBefore != TransitionSettings.TransitionModeBefore.LAST_IMAGE) {
-            return ErrorCode.ERROR_INVALID_PARAMS;
-        }
-
-        if (mPlayerHandler != null) {
+        if (isAlive()) {
             mPlayerHandler.post(() -> {
                 mVideoOutputPath.setTransitionModeBefore(transitionModeBefore);
             });
             return ErrorCode.SUCCESS;
         } else {
+            ASPlayerLog.w("%s setTransitionModeBefore called, but playerHandler is null", getTag());
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+    }
+
+    @Override
+    public int setTransitionModeAfter(int transitionModeAfter) {
+        if (isAlive()) {
+            mPlayerHandler.post(() -> {
+                mVideoOutputPath.setTransitionModeAfter(transitionModeAfter);
+            });
+            return ErrorCode.SUCCESS;
+        } else {
+            ASPlayerLog.w("%s setTransitionModeAfter called, but playerHandler is null", getTag());
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+    }
+
+    @Override
+    public int setTransitionPreRollRate(float rate) {
+        if (isAlive()) {
+            mPlayerHandler.post(() -> {
+                mVideoOutputPath.setTransitionPreRollRate(rate);
+            });
+            return ErrorCode.SUCCESS;
+        } else {
+            ASPlayerLog.w("%s setTransitionPreRollRate called, but playerHandler is null", getTag());
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+    }
+
+    @Override
+    public int setTransitionPreRollAVTolerance(int milliSecond) {
+        if (isAlive()) {
+            mPlayerHandler.post(() -> {
+                mVideoOutputPath.setTransitionPreRollAVTolerance(milliSecond);
+            });
+            return ErrorCode.SUCCESS;
+        } else {
+            ASPlayerLog.w("%s setTransitionPreRollAVTolerance called, but playerHandler is null", getTag());
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+    }
+
+    @Override
+    public int setVideoMute(int mute) {
+        if (isAlive()) {
+            mPlayerHandler.post(() -> {
+                mVideoOutputPath.setVideoMute(mute);
+            });
+            return ErrorCode.SUCCESS;
+        } else {
+            ASPlayerLog.w("%s setVideoMute called, but playerHandler is null", getTag());
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+    }
+
+    @Override
+    public int setScreenColor(int screenColorMode, int screenColor) {
+        if (isAlive()) {
+            mPlayerHandler.post(() -> {
+                ASPlayerLog.i("%s setScreenColor, mode: %d, color: %d",
+                        getTag(), screenColorMode, screenColor);
+                mVideoOutputPath.setScreenColor(screenColorMode, screenColor);
+            });
+            return ErrorCode.SUCCESS;
+        } else {
+            ASPlayerLog.w("%s setScreenColor called, but playerHandler is null", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
@@ -979,7 +1053,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             ASPlayerLog.i("%s setAudioParams params is null", getTag());
             mAudioOutputPath.setAudioParams(null);
 
-            mAudioOutputPath.setSyncInstanceId(Constant.INVALID_SYNC_INSTANCE_ID);
+            mAudioOutputPath.setSyncInstanceId(INVALID_SYNC_INSTANCE_ID);
 
             mRendererScheduler.onSetAudioParams(false);
         }
@@ -1039,7 +1113,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             ASPlayerLog.i("%s switchAudioTrack params is null", getTag());
             mAudioOutputPath.switchAudioTrack(null);
 
-            mAudioOutputPath.setSyncInstanceId(Constant.INVALID_SYNC_INSTANCE_ID);
+            mAudioOutputPath.setSyncInstanceId(INVALID_SYNC_INSTANCE_ID);
 
             mRendererScheduler.onSetAudioParams(false);
         }

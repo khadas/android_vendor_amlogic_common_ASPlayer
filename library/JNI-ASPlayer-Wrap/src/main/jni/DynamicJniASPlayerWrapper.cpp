@@ -58,6 +58,11 @@ JniASPlayer_setTrickMode_FUNC DynamicJniASPlayerWrapper::ASPlayer_setTrickMode =
 JniASPlayer_setSurface_FUNC DynamicJniASPlayerWrapper::ASPlayer_setSurface = nullptr;
 JniASPlayer_setVideoParams_FUNC DynamicJniASPlayerWrapper::ASPlayer_setVideoParams = nullptr;
 JniASPlayer_setTransitionModeBefore_FUNC DynamicJniASPlayerWrapper::ASPlayer_setTransitionModeBefore = nullptr;
+JniASPlayer_setTransitionModeAfter_FUNC DynamicJniASPlayerWrapper::ASPlayer_setTransitionModeAfter = nullptr;
+JniASPlayer_setTransitionPrerollRate_FUNC DynamicJniASPlayerWrapper::ASPlayer_setTransitionPrerollRate = nullptr;
+JniASPlayer_setTransitionPrerollAvTolerance_FUNC DynamicJniASPlayerWrapper::ASPlayer_setTransitionPrerollAvTolerance = nullptr;
+JniASPlayer_setVideoMute_FUNC DynamicJniASPlayerWrapper::ASPlayer_setVideoMute = nullptr;
+JniASPlayer_setScreenColor_FUNC DynamicJniASPlayerWrapper::ASPlayer_setScreenColor = nullptr;
 JniASPlayer_getVideoInfo_FUNC DynamicJniASPlayerWrapper::ASPlayer_getVideoInfo = nullptr;
 JniASPlayer_startVideoDecoding_FUNC DynamicJniASPlayerWrapper::ASPlayer_startVideoDecoding = nullptr;
 JniASPlayer_pauseVideoDecoding_FUNC DynamicJniASPlayerWrapper::ASPlayer_pauseVideoDecoding = nullptr;
@@ -97,7 +102,7 @@ JniASPlayer_getADMixLevel_FUNC DynamicJniASPlayerWrapper::ASPlayer_getADMixLevel
 
 static void asplayer_callback(void *user_data, jni_asplayer_event *event) {
     if (event && event->type != JNI_ASPLAYER_EVENT_TYPE_PTS) {
-        ALOGI("%s[%d] event type: %d", __func__, __LINE__, event ? event->type : -1);
+        ALOGI("[%s/%d] event type: %d", __func__, __LINE__, event ? event->type : -1);
     }
 
     dasplayer_callback_userdata_t *data = static_cast<dasplayer_callback_userdata_t *>(user_data);
@@ -180,17 +185,21 @@ void DynamicJniASPlayerWrapper::initSymbols() {
         return;
     }
 
-    ASPlayer_registerJni = (JniASPlayer_registerJNI_FUNC)(dlsym(handle, "JniASPlayer_registerJNI"));
+    ASPlayer_registerJni = (JniASPlayer_registerJNI_FUNC)
+            (dlsym(handle, "JniASPlayer_registerJNI"));
     CHECK_SYMBOL(ASPlayer_registerJni, "JniASPlayer_registerJNI");
     ASPlayer_create = (JniASPlayer_create_FUNC)(dlsym(handle, "JniASPlayer_create"));
     CHECK_SYMBOL(ASPlayer_create, "JniASPlayer_create");
     ASPlayer_getVersion = (JniASPlayer_getVersion_FUNC)(dlsym(handle, "JniASPlayer_getVersion"));
     CHECK_SYMBOL(ASPlayer_getVersion, "JniASPlayer_getVersion");
-    ASPlayer_getInstanceNo = (JniASPlayer_getInstanceNo_FUNC)(dlsym(handle, "JniASPlayer_getInstanceNo"));
+    ASPlayer_getInstanceNo = (JniASPlayer_getInstanceNo_FUNC)
+            (dlsym(handle, "JniASPlayer_getInstanceNo"));
     CHECK_SYMBOL(ASPlayer_getInstanceNo, "JniASPlayer_getInstanceNo");
-    ASPlayer_getSyncInstanceNo = (JniASPlayer_getSyncInstanceNo_FUNC)(dlsym(handle, "JniASPlayer_getSyncInstanceNo"));
+    ASPlayer_getSyncInstanceNo = (JniASPlayer_getSyncInstanceNo_FUNC)
+            (dlsym(handle, "JniASPlayer_getSyncInstanceNo"));
     CHECK_SYMBOL(ASPlayer_getSyncInstanceNo, "JniASPlayer_getSyncInstanceNo");
-    ASPlayer_getJavaASPlayer = (JniASPlayer_getJavaASPlayer_FUNC)(dlsym(handle, "JniASPlayer_getJavaASPlayer"));
+    ASPlayer_getJavaASPlayer = (JniASPlayer_getJavaASPlayer_FUNC)
+            (dlsym(handle, "JniASPlayer_getJavaASPlayer"));
     CHECK_SYMBOL(ASPlayer_getJavaASPlayer, "JniASPlayer_getJavaASPlayer");
     ASPlayer_prepare = (JniASPlayer_prepare_FUNC)(dlsym(handle, "JniASPlayer_prepare"));
     CHECK_SYMBOL(ASPlayer_prepare, "JniASPlayer_prepare");
@@ -200,17 +209,21 @@ void DynamicJniASPlayerWrapper::initSymbols() {
     CHECK_SYMBOL(ASPlayer_getCb, "JniASPlayer_getCb");
     ASPlayer_release = (JniASPlayer_release_FUNC)(dlsym(handle, "JniASPlayer_release"));
     CHECK_SYMBOL(ASPlayer_release, "JniASPlayer_release");
-    ASPlayer_writeFrameData = (JniASPlayer_writeFrameData_FUNC)(dlsym(handle, "JniASPlayer_writeFrameData"));
+    ASPlayer_writeFrameData = (JniASPlayer_writeFrameData_FUNC)
+            (dlsym(handle, "JniASPlayer_writeFrameData"));
     CHECK_SYMBOL(ASPlayer_writeFrameData, "JniASPlayer_writeFrameData");
     ASPlayer_writeData = (JniASPlayer_writeData_FUNC)(dlsym(handle, "JniASPlayer_writeData"));
     CHECK_SYMBOL(ASPlayer_writeData, "JniASPlayer_writeData");
-    ASPlayer_setWorkMode = (JniASPlayer_setWorkMode_FUNC)(dlsym(handle, "JniASPlayer_setWorkMode"));
+    ASPlayer_setWorkMode = (JniASPlayer_setWorkMode_FUNC)
+            (dlsym(handle, "JniASPlayer_setWorkMode"));
     CHECK_SYMBOL(ASPlayer_setWorkMode, "JniASPlayer_setWorkMode");
-    ASPlayer_resetWorkMode = (JniASPlayer_resetWorkMode_FUNC)(dlsym(handle, "JniASPlayer_resetWorkMode"));
+    ASPlayer_resetWorkMode = (JniASPlayer_resetWorkMode_FUNC)
+            (dlsym(handle, "JniASPlayer_resetWorkMode"));
     CHECK_SYMBOL(ASPlayer_resetWorkMode, "JniASPlayer_resetWorkMode");
     ASPlayer_setPIPMode = (JniASPlayer_setPIPMode_FUNC)(dlsym(handle, "JniASPlayer_setPIPMode"));
     CHECK_SYMBOL(ASPlayer_setPIPMode, "JniASPlayer_setPIPMode");
-    ASPlayer_getCurrentTime = (JniASPlayer_getCurrentTime_FUNC)(dlsym(handle, "JniASPlayer_getCurrentTime"));
+    ASPlayer_getCurrentTime = (JniASPlayer_getCurrentTime_FUNC)
+            (dlsym(handle, "JniASPlayer_getCurrentTime"));
     CHECK_SYMBOL(ASPlayer_getCurrentTime, "JniASPlayer_getCurrentTime");
     ASPlayer_getSyncMode = (JniASPlayer_getSyncMode_FUNC)(dlsym(handle, "JniASPlayer_getSyncMode"));
     CHECK_SYMBOL(ASPlayer_getSyncMode, "JniASPlayer_getSyncMode");
@@ -220,7 +233,8 @@ void DynamicJniASPlayerWrapper::initSymbols() {
     CHECK_SYMBOL(ASPlayer_startFast, "JniASPlayer_startFast");
     ASPlayer_stopFast = (JniASPlayer_stopFast_FUNC)(dlsym(handle, "JniASPlayer_stopFast"));
     CHECK_SYMBOL(ASPlayer_stopFast, "JniASPlayer_stopFast");
-    ASPlayer_setTrickMode = (JniASPlayer_setTrickMode_FUNC)(dlsym(handle, "JniASPlayer_setTrickMode"));
+    ASPlayer_setTrickMode = (JniASPlayer_setTrickMode_FUNC)
+            (dlsym(handle, "JniASPlayer_setTrickMode"));
     CHECK_SYMBOL(ASPlayer_setTrickMode, "JniASPlayer_setTrickMode");
     ASPlayer_setSurface = (JniASPlayer_setSurface_FUNC)(dlsym(handle, "JniASPlayer_setSurface"));
     CHECK_SYMBOL(ASPlayer_setSurface, "JniASPlayer_setSurface");
@@ -228,21 +242,44 @@ void DynamicJniASPlayerWrapper::initSymbols() {
     CHECK_SYMBOL(ASPlayer_flush, "JniASPlayer_flush");
     ASPlayer_flushDvr = (JniASPlayer_flush_FUNC)(dlsym(handle, "JniASPlayer_flushDvr"));
     CHECK_SYMBOL(ASPlayer_flushDvr, "JniASPlayer_flushDvr");
-    ASPlayer_setVideoParams = (JniASPlayer_setVideoParams_FUNC)(dlsym(handle, "JniASPlayer_setVideoParams"));
+    ASPlayer_setVideoParams = (JniASPlayer_setVideoParams_FUNC)
+            (dlsym(handle, "JniASPlayer_setVideoParams"));
     CHECK_SYMBOL(ASPlayer_setVideoParams, "JniASPlayer_setVideoParams");
-    ASPlayer_setTransitionModeBefore = (JniASPlayer_setTransitionModeBefore_FUNC)(dlsym(handle, "JniASPlayer_setTransitionModeBefore"));
+    ASPlayer_setTransitionModeBefore = (JniASPlayer_setTransitionModeBefore_FUNC)
+            (dlsym(handle, "JniASPlayer_setTransitionModeBefore"));
     CHECK_SYMBOL(ASPlayer_setTransitionModeBefore, "JniASPlayer_setTransitionModeBefore");
-    ASPlayer_getVideoInfo = (JniASPlayer_getVideoInfo_FUNC)(dlsym(handle, "JniASPlayer_getVideoInfo"));
+    ASPlayer_setTransitionModeAfter = (JniASPlayer_setTransitionModeAfter_FUNC)
+            (dlsym(handle, "JniASPlayer_setTransitionModeAfter"));
+    CHECK_SYMBOL(ASPlayer_setTransitionModeAfter, "JniASPlayer_setTransitionModeAfter");
+    ASPlayer_setTransitionPrerollRate = (JniASPlayer_setTransitionPrerollRate_FUNC)
+            (dlsym(handle, "JniASPlayer_setTransitionPrerollRate"));
+    CHECK_SYMBOL(ASPlayer_setTransitionPrerollRate, "JniASPlayer_setTransitionPrerollRate");
+    ASPlayer_setTransitionPrerollAvTolerance = (JniASPlayer_setTransitionPrerollAvTolerance_FUNC)
+            (dlsym(handle, "JniASPlayer_setTransitionPrerollAVTolerance"));
+    CHECK_SYMBOL(ASPlayer_setTransitionPrerollAvTolerance, "JniASPlayer_setTransitionPrerollAVTolerance");
+    ASPlayer_setVideoMute = (JniASPlayer_setVideoMute_FUNC)
+            (dlsym(handle, "JniASPlayer_setVideoMute"));
+    CHECK_SYMBOL(ASPlayer_setVideoMute, "JniASPlayer_setVideoMute");
+    ASPlayer_setScreenColor = (JniASPlayer_setScreenColor_FUNC)
+            (dlsym(handle, "JniASPlayer_setScreenColor"));
+    CHECK_SYMBOL(ASPlayer_setScreenColor, "JniASPlayer_setScreenColor");
+    ASPlayer_getVideoInfo = (JniASPlayer_getVideoInfo_FUNC)
+            (dlsym(handle, "JniASPlayer_getVideoInfo"));
     CHECK_SYMBOL(ASPlayer_getVideoInfo, "JniASPlayer_getVideoInfo");
-    ASPlayer_startVideoDecoding = (JniASPlayer_startVideoDecoding_FUNC)(dlsym(handle, "JniASPlayer_startVideoDecoding"));
+    ASPlayer_startVideoDecoding = (JniASPlayer_startVideoDecoding_FUNC)
+            (dlsym(handle, "JniASPlayer_startVideoDecoding"));
     CHECK_SYMBOL(ASPlayer_startVideoDecoding, "JniASPlayer_startVideoDecoding");
-    ASPlayer_pauseVideoDecoding = (JniASPlayer_pauseVideoDecoding_FUNC)(dlsym(handle, "JniASPlayer_pauseVideoDecoding"));
+    ASPlayer_pauseVideoDecoding = (JniASPlayer_pauseVideoDecoding_FUNC)
+            (dlsym(handle, "JniASPlayer_pauseVideoDecoding"));
     CHECK_SYMBOL(ASPlayer_pauseVideoDecoding, "JniASPlayer_pauseVideoDecoding");
-    ASPlayer_resumeVideoDecoding = (JniASPlayer_resumeVideoDecoding_FUNC)(dlsym(handle, "JniASPlayer_resumeVideoDecoding"));
+    ASPlayer_resumeVideoDecoding = (JniASPlayer_resumeVideoDecoding_FUNC)
+            (dlsym(handle, "JniASPlayer_resumeVideoDecoding"));
     CHECK_SYMBOL(ASPlayer_resumeVideoDecoding, "JniASPlayer_resumeVideoDecoding");
-    ASPlayer_stopVideoDecoding = (JniASPlayer_stopVideoDecoding_FUNC)(dlsym(handle, "JniASPlayer_stopVideoDecoding"));
+    ASPlayer_stopVideoDecoding = (JniASPlayer_stopVideoDecoding_FUNC)
+            (dlsym(handle, "JniASPlayer_stopVideoDecoding"));
     CHECK_SYMBOL(ASPlayer_stopVideoDecoding, "JniASPlayer_stopVideoDecoding");
-    ASPlayer_setAudioVolume = (JniASPlayer_setAudioVolume_FUNC)(dlsym(handle, "JniASPlayer_setAudioVolume"));
+    ASPlayer_setAudioVolume = (JniASPlayer_setAudioVolume_FUNC)
+            (dlsym(handle, "JniASPlayer_setAudioVolume"));
     CHECK_SYMBOL(ASPlayer_setAudioVolume, "JniASPlayer_setAudioVolume");
     ASPlayer_getAudioVolume = (JniASPlayer_getAudioVolume_FUNC)
             (dlsym(handle, "JniASPlayer_getAudioVolume"));
@@ -256,21 +293,29 @@ void DynamicJniASPlayerWrapper::initSymbols() {
     ASPlayer_setAudioMute = (JniASPlayer_setAudioMute_FUNC)
             (dlsym(handle, "JniASPlayer_setAudioMute"));
     CHECK_SYMBOL(ASPlayer_setAudioMute, "JniASPlayer_setAudioMute");
-    ASPlayer_getAudioMute = (JniASPlayer_getAudioMute_FUNC)(dlsym(handle, "JniASPlayer_getAudioMute"));
+    ASPlayer_getAudioMute = (JniASPlayer_getAudioMute_FUNC)
+            (dlsym(handle, "JniASPlayer_getAudioMute"));
     CHECK_SYMBOL(ASPlayer_getAudioMute, "JniASPlayer_getAudioMute");
-    ASPlayer_setAudioParams = (JniASPlayer_setAudioParams_FUNC)(dlsym(handle, "JniASPlayer_setAudioParams"));
+    ASPlayer_setAudioParams = (JniASPlayer_setAudioParams_FUNC)
+            (dlsym(handle, "JniASPlayer_setAudioParams"));
     CHECK_SYMBOL(ASPlayer_setAudioParams, "JniASPlayer_setAudioParams");
-    ASPlayer_switchAudioTrack = (JniASPlayer_switchAudioTrack_FUNC)(dlsym(handle, "JniASPlayer_switchAudioTrack"));
+    ASPlayer_switchAudioTrack = (JniASPlayer_switchAudioTrack_FUNC)
+            (dlsym(handle, "JniASPlayer_switchAudioTrack"));
     CHECK_SYMBOL(ASPlayer_switchAudioTrack, "JniASPlayer_switchAudioTrack");
-    ASPlayer_getAudioInfo = (JniASPlayer_getAudioInfo_FUNC)(dlsym(handle, "JniASPlayer_getAudioInfo"));
+    ASPlayer_getAudioInfo = (JniASPlayer_getAudioInfo_FUNC)
+            (dlsym(handle, "JniASPlayer_getAudioInfo"));
     CHECK_SYMBOL(ASPlayer_getAudioInfo, "JniASPlayer_getAudioInfo");
-    ASPlayer_startAudioDecoding = (JniASPlayer_startAudioDecoding_FUNC)(dlsym(handle, "JniASPlayer_startAudioDecoding"));
+    ASPlayer_startAudioDecoding = (JniASPlayer_startAudioDecoding_FUNC)
+            (dlsym(handle, "JniASPlayer_startAudioDecoding"));
     CHECK_SYMBOL(ASPlayer_startAudioDecoding, "JniASPlayer_startAudioDecoding");
-    ASPlayer_pauseAudioDecoding = (JniASPlayer_pauseAudioDecoding_FUNC)(dlsym(handle, "JniASPlayer_pauseAudioDecoding"));
+    ASPlayer_pauseAudioDecoding = (JniASPlayer_pauseAudioDecoding_FUNC)
+            (dlsym(handle, "JniASPlayer_pauseAudioDecoding"));
     CHECK_SYMBOL(ASPlayer_pauseAudioDecoding, "JniASPlayer_pauseAudioDecoding");
-    ASPlayer_resumeAudioDecoding = (JniASPlayer_resumeAudioDecoding_FUNC)(dlsym(handle, "JniASPlayer_resumeAudioDecoding"));
+    ASPlayer_resumeAudioDecoding = (JniASPlayer_resumeAudioDecoding_FUNC)
+            (dlsym(handle, "JniASPlayer_resumeAudioDecoding"));
     CHECK_SYMBOL(ASPlayer_resumeAudioDecoding, "JniASPlayer_resumeAudioDecoding");
-    ASPlayer_stopAudioDecoding = (JniASPlayer_stopAudioDecoding_FUNC)(dlsym(handle, "JniASPlayer_stopAudioDecoding"));
+    ASPlayer_stopAudioDecoding = (JniASPlayer_stopAudioDecoding_FUNC)
+            (dlsym(handle, "JniASPlayer_stopAudioDecoding"));
     CHECK_SYMBOL(ASPlayer_stopAudioDecoding, "JniASPlayer_stopAudioDecoding");
     ASPlayer_getADInfo = (JniASPlayer_getADInfo_FUNC)(dlsym(handle, "JniASPlayer_getADInfo"));
     CHECK_SYMBOL(ASPlayer_getADInfo, "JniASPlayer_getADInfo");
@@ -286,21 +331,29 @@ void DynamicJniASPlayerWrapper::initSymbols() {
     CHECK_SYMBOL(ASPlayer_startSub, "JniASPlayer_startSub");
     ASPlayer_stopSub = (JniASPlayer_stopSub_FUNC)(dlsym(handle, "JniASPlayer_stopSub"));
     CHECK_SYMBOL(ASPlayer_stopSub, "JniASPlayer_stopSub");
-    ASPlayer_getFirstPts = (JniASPlayer_getFirstPts_FUNC)(dlsym(handle, "JniASPlayer_getFirstPts"));
+    ASPlayer_getFirstPts = (JniASPlayer_getFirstPts_FUNC)
+            (dlsym(handle, "JniASPlayer_getFirstPts"));
     CHECK_SYMBOL(ASPlayer_getFirstPts, "JniASPlayer_getFirstPts");
-    ASPlayer_setADParams = (JniASPlayer_setADParams_FUNC)(dlsym(handle, "JniASPlayer_setADParams"));
+    ASPlayer_setADParams = (JniASPlayer_setADParams_FUNC)
+            (dlsym(handle, "JniASPlayer_setADParams"));
     CHECK_SYMBOL(ASPlayer_setADParams, "JniASPlayer_setADParams");
-    ASPlayer_enableADMix = (JniASPlayer_enableADMix_FUNC)(dlsym(handle, "JniASPlayer_enableADMix"));
+    ASPlayer_enableADMix = (JniASPlayer_enableADMix_FUNC)
+            (dlsym(handle, "JniASPlayer_enableADMix"));
     CHECK_SYMBOL(ASPlayer_enableADMix, "JniASPlayer_enableADMix");
-    ASPlayer_disableADMix = (JniASPlayer_disableADMix_FUNC)(dlsym(handle, "JniASPlayer_disableADMix"));
+    ASPlayer_disableADMix = (JniASPlayer_disableADMix_FUNC)
+            (dlsym(handle, "JniASPlayer_disableADMix"));
     CHECK_SYMBOL(ASPlayer_disableADMix, "JniASPlayer_disableADMix");
-    ASPlayer_setADVolumeDB = (JniASPlayer_setADVolumeDB_FUNC)(dlsym(handle, "JniASPlayer_setADVolumeDB"));
+    ASPlayer_setADVolumeDB = (JniASPlayer_setADVolumeDB_FUNC)
+            (dlsym(handle, "JniASPlayer_setADVolumeDB"));
     CHECK_SYMBOL(ASPlayer_setADVolumeDB, "JniASPlayer_setADVolumeDB");
-    ASPlayer_getADVolumeDB = (JniASPlayer_getADVolumeDB_FUNC)(dlsym(handle, "JniASPlayer_getADVolumeDB"));
+    ASPlayer_getADVolumeDB = (JniASPlayer_getADVolumeDB_FUNC)
+            (dlsym(handle, "JniASPlayer_getADVolumeDB"));
     CHECK_SYMBOL(ASPlayer_getADVolumeDB, "JniASPlayer_getADVolumeDB");
-    ASPlayer_setADMixLevel = (JniASPlayer_setADMixLevel_FUNC)(dlsym(handle, "JniASPlayer_setADMixLevel"));
+    ASPlayer_setADMixLevel = (JniASPlayer_setADMixLevel_FUNC)
+            (dlsym(handle, "JniASPlayer_setADMixLevel"));
     CHECK_SYMBOL(ASPlayer_setADMixLevel, "JniASPlayer_setADMixLevel");
-    ASPlayer_getADMixLevel = (JniASPlayer_getADMixLevel_FUNC)(dlsym(handle, "JniASPlayer_getADMixLevel"));
+    ASPlayer_getADMixLevel = (JniASPlayer_getADMixLevel_FUNC)
+            (dlsym(handle, "JniASPlayer_getADMixLevel"));
     CHECK_SYMBOL(ASPlayer_getADMixLevel, "JniASPlayer_getADMixLevel");
 }
 
@@ -974,6 +1027,124 @@ DynamicJniASPlayerWrapper::setTransitionModeBefore(jni_asplayer_transition_mode_
     }
 
     jni_asplayer_result ret = ASPlayer_setTransitionModeBefore(handle, mode);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result
+DynamicJniASPlayerWrapper::setTransitionModeAfter(jni_asplayer_transition_mode_after mode) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_setTransitionModeAfter == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_setTransitionModeAfter(handle, mode);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result DynamicJniASPlayerWrapper::setTransitionPrerollRate(float rate) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_setTransitionPrerollRate == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_setTransitionPrerollRate(handle, rate);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result DynamicJniASPlayerWrapper::setTransitionPrerollAvTolerance(int32_t milliSecond) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_setTransitionPrerollAvTolerance == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_setTransitionPrerollAvTolerance(handle, milliSecond);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result DynamicJniASPlayerWrapper::setVideoMute(jni_asplayer_video_mute mute) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_setVideoMute == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_setVideoMute(handle, mute);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result
+DynamicJniASPlayerWrapper::setScreenColor(jni_asplayer_screen_color_mode mode,
+                                          jni_asplayer_screen_color color) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_setScreenColor == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_setScreenColor(handle, mode, color);
     if (ret != JNI_ASPLAYER_OK) {
         LOG_PLAYER_OP_FAILED(ret);
     }

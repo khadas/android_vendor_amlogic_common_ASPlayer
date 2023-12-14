@@ -106,8 +106,7 @@ public class MediaCodecUtils {
                 && codecInfo1.isHardwareAccelerated() == codecInfo2.isHardwareAccelerated();
     }
 
-    static MediaCodec findMediaCodec(MediaFormat format, boolean mustBeTunneled, boolean securePlaybackRequested) throws IOException {
-        String mimeType = format.getString(MediaFormat.KEY_MIME);
+    static MediaCodec findMediaCodec(String mimeType, boolean mustBeTunneled, boolean securePlaybackRequested) throws IOException {
         ensureMediaCodecInfosLoaded(mimeType);
 
         ArrayList<MediaCodecInfo> mediaCodecInfos = mCodecInfos.get(mimeType);

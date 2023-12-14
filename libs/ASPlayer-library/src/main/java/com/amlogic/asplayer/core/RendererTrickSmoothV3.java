@@ -4,7 +4,7 @@ import android.os.Bundle;
 
 
 import static com.amlogic.asplayer.core.VideoOutputPathV3.PARAMS_TRICK_NONE;
-import static com.amlogic.asplayer.core.VideoOutputPathV3.PARAM_TRICK_MODE;
+import static com.amlogic.asplayer.core.VideoOutputPathV3.KEY_TRICK_MODE;
 import static com.amlogic.asplayer.core.VideoOutputPathV3.TRICK_MODE_SMOOTH;
 
 
@@ -15,7 +15,7 @@ class RendererTrickSmoothV3 extends Renderer {
     RendererTrickSmoothV3(int id, RendererScheduler rendererScheduler) {
         super(id, rendererScheduler);
         mParamsTrickSmooth = new Bundle();
-        mParamsTrickSmooth.putInt(PARAM_TRICK_MODE, TRICK_MODE_SMOOTH);
+        mParamsTrickSmooth.putInt(KEY_TRICK_MODE, TRICK_MODE_SMOOTH);
     }
 
     @Override
@@ -33,7 +33,7 @@ class RendererTrickSmoothV3 extends Renderer {
         // configure video for smooth trick mode
         mVideoOutputPath.setTrickModeSpeed(speed);
 
-        mParamsTrickSmooth.putInt(VideoOutputPathV3.PARAM_TRICK_SPEED, (int)(speed * 1000));
+        mParamsTrickSmooth.putInt(VideoOutputPathV3.KEY_TRICK_SPEED, (int)(speed * 1000));
         mVideoOutputPath.setParameters(mParamsTrickSmooth);
         mAudioOutputPath.setSpeed(1.0f);
     }

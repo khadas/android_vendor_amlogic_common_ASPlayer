@@ -23,8 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.amlogic.asplayer.core.Constant.SPEED_DIFF_THRESHOLD;
-import static com.amlogic.asplayer.core.MediaContainerExtractor.INVALID_AV_SYNC_HW_ID;
-import static com.amlogic.asplayer.core.MediaContainerExtractor.INVALID_FILTER_ID;
+import static com.amlogic.asplayer.core.Constant.INVALID_AV_SYNC_ID;
+import static com.amlogic.asplayer.core.Constant.INVALID_FILTER_ID;
 
 
 public class AudioCodecRendererV3 implements AudioCodecRenderer {
@@ -37,7 +37,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     private float mSubAudioVolumeDb = 0.f;
     private final MediaClock mClock;
     private int mAudioFilterId = INVALID_FILTER_ID;
-    private int mAvSyncHwId = INVALID_AV_SYNC_HW_ID;
+    private int mAvSyncHwId = INVALID_AV_SYNC_ID;
     private AudioTrack mAudioTrack;
     private DecoderThread mDecoderThread;
     private final Object mLock;

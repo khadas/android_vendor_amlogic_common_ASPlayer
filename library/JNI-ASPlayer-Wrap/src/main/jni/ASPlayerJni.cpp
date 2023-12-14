@@ -25,6 +25,7 @@ struct video_param_t {
     jfieldID trackFilterId;
     jfieldID avSyncHwId;
     jfieldID scrambled;
+    jfieldID hasVideo;
     jfieldID mediaFormat;
 };
 
@@ -194,6 +195,8 @@ bool ASPlayerJni::initJni(JNIEnv *env) {
                 gVideoParamsCls, "mAvSyncHwId", "I");
         gVideoParamsCtx.scrambled = env->GetFieldID(
                 gVideoParamsCls, "mScrambled", "Z");
+        gVideoParamsCtx.hasVideo = env->GetFieldID(
+                gVideoParamsCls, "mHasVideo", "Z");
         gVideoParamsCtx.mediaFormat = env->GetFieldID(
                 gVideoParamsCls, "mMediaFormat", "Landroid/media/MediaFormat;");
     }
@@ -363,6 +366,7 @@ bool ASPlayerJni::convertVideoParams(
     jint filterId = env->GetIntField(jVideoParam, gVideoParamsCtx.trackFilterId);
     jint avSyncHwId = env->GetIntField(jVideoParam, gVideoParamsCtx.avSyncHwId);
     jboolean scrambled = env->GetBooleanField(jVideoParam, gVideoParamsCtx.scrambled);
+    jboolean hasVideo = env->GetBooleanField(jVideoParam, gVideoParamsCtx.hasVideo);
     jobject mediaFormat = env->GetObjectField(jVideoParam, gVideoParamsCtx.mediaFormat);
 
     memset(outParams, 0, sizeof(jni_asplayer_video_params));
@@ -383,6 +387,7 @@ bool ASPlayerJni::convertVideoParams(
     outParams->filterId = filterId;
     outParams->avSyncHwId = avSyncHwId;
     outParams->scrambled = scrambled;
+    outParams->hasVideo = hasVideo;
     outParams->mediaFormat = mediaFormat;
 
     LOG_FUNCTION_END();

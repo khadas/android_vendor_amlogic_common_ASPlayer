@@ -51,6 +51,11 @@ public class VideoParams {
     private boolean mScrambled;
 
     /**
+     * Has video or not(set this to false when audio only)
+     */
+    private boolean mHasVideo = false;
+
+    /**
      * Video media format
      */
     private MediaFormat mMediaFormat;
@@ -64,10 +69,12 @@ public class VideoParams {
         this.mMimeType = mimeType;
         this.mWidth = width;
         this.mHeight = height;
+        this.mHasVideo = true;
     }
 
     private VideoParams(MediaFormat mediaFormat) {
         this.mMediaFormat = mediaFormat;
+        this.mHasVideo = true;
     }
 
     private void setMimeType(String mimeType) {
@@ -126,12 +133,35 @@ public class VideoParams {
         return mScrambled;
     }
 
+    private void setHasVideo(boolean hasVideo) {
+        mHasVideo = hasVideo;
+    }
+
+    public boolean getHasVideo() {
+        return mHasVideo;
+    }
+
     public MediaFormat getMediaFormat() {
         return mMediaFormat;
     }
 
     private void setMediaFormat(MediaFormat mediaFormat) {
         this.mMediaFormat = mediaFormat;
+    }
+
+    @Override
+    public VideoParams clone() {
+        VideoParams videoParams = new VideoParams();
+        videoParams.mMimeType = mMimeType;
+        videoParams.mWidth = mWidth;
+        videoParams.mHeight = mHeight;
+        videoParams.mPid = mPid;
+        videoParams.mTrackFilterId = mTrackFilterId;
+        videoParams.mAvSyncHwId = mAvSyncHwId;
+        videoParams.mScrambled = mScrambled;
+        videoParams.mHasVideo = mHasVideo;
+        videoParams.mMediaFormat = mMediaFormat;
+        return videoParams;
     }
 
     @Override
@@ -145,6 +175,7 @@ public class VideoParams {
         sb.append(", mTrackFilterId=").append(mTrackFilterId);
         sb.append(", mAvSyncHwId=").append(mAvSyncHwId);
         sb.append(", mScrambled=").append(mScrambled);
+        sb.append(", mHasVideo=").append(mHasVideo);
         sb.append(", mMediaFormat=").append(mMediaFormat);
         sb.append("}");
         return sb.toString();
@@ -166,16 +197,20 @@ public class VideoParams {
 
         private boolean mScrambled;
 
+        private boolean mHasVideo;
+
         private MediaFormat mMediaFormat;
 
         public Builder(String mimeType, int width, int height) {
             this.mMimeType = mimeType;
             this.mWidth = width;
             this.mHeight = height;
+            this.mHasVideo = true;
         }
 
         public Builder(MediaFormat mediaFormat) {
             this.mMediaFormat = mediaFormat;
+            this.mHasVideo = true;
         }
 
         public Builder setPid(int pid) {
@@ -198,12 +233,18 @@ public class VideoParams {
             return this;
         }
 
+        public Builder setHasVideo(boolean hasVideo) {
+            this.mHasVideo = hasVideo;
+            return this;
+        }
+
         public VideoParams build() {
             VideoParams videoParams = new VideoParams(mMimeType, mWidth, mHeight);
             videoParams.setPid(mPid);
             videoParams.setTrackFilterId(mTrackFilterId);
             videoParams.setAvSyncHwId(mAvSyncHwId);
             videoParams.setScrambled(mScrambled);
+            videoParams.setHasVideo(mHasVideo);
             videoParams.setMediaFormat(mMediaFormat);
             return videoParams;
         }

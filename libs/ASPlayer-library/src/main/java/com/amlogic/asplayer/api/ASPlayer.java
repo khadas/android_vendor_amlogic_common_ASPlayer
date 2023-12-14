@@ -15,6 +15,11 @@ import android.media.tv.tuner.Tuner;
 import android.os.Looper;
 import android.view.Surface;
 
+import com.amlogic.asplayer.api.PlaybackControl.TransitionModeBefore;
+import com.amlogic.asplayer.api.PlaybackControl.TransitionModeAfter;
+import com.amlogic.asplayer.api.PlaybackControl.ScreenColor;
+import com.amlogic.asplayer.api.PlaybackControl.VideoMute;
+
 import com.amlogic.asplayer.BuildConfiguration;
 import com.amlogic.asplayer.core.ASPlayerConfig;
 import com.amlogic.asplayer.core.ASPlayerImpl;
@@ -377,14 +382,153 @@ public class ASPlayer implements IASPlayer {
     /**
      * Set if need keep last frame for video display for ASPlayer instance.
      *
-     * @param transitionModeBefore transition mode before.
+     * @param transitionModeBefore transition mode before. one of
+     *      {@link TransitionModeBefore#BLACK } or
+     *      {@link TransitionModeBefore#LAST_IMAGE}
      *
-     * @see com.amlogic.asplayer.api.TransitionSettings.TransitionModeBefore
+     * @return
      */
     @Override
     public int setTransitionModeBefore(int transitionModeBefore) {
-        if (DEBUG) ASPlayerLog.d("%s setTransitionModeBefore start, mode: %d", getTag(), transitionModeBefore);
+        ASPlayerLog.d("%s setTransitionModeBefore start, mode: %d", getTag(), transitionModeBefore);
+        if (transitionModeBefore != TransitionModeBefore.BLACK
+                && transitionModeBefore != TransitionModeBefore.LAST_IMAGE) {
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        }
+
+        if (mPlayer == null) {
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+
         return mPlayer.setTransitionModeBefore(transitionModeBefore);
+    }
+
+    /**
+     * Set if need show first image before sync for ASPlayer instance.
+     *
+     * @param transitionModeAfter transition mode after. one of
+     *      {@link TransitionModeAfter#PREROLL_FROM_FIRST_IMAGE } or
+     *      {@link TransitionModeAfter#WAIT_UNTIL_SYNC }
+     *
+     * @return
+     */
+    @Override
+    public int setTransitionModeAfter(int transitionModeAfter) {
+        ASPlayerLog.d("%s setTransitionModeAfter start, mode: %d", getTag(), transitionModeAfter);
+        if (transitionModeAfter != TransitionModeAfter.PREROLL_FROM_FIRST_IMAGE
+                && transitionModeAfter != TransitionModeAfter.WAIT_UNTIL_SYNC) {
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        }
+
+        if (mPlayer == null) {
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+
+        return mPlayer.setTransitionModeAfter(transitionModeAfter);
+    }
+
+    /**
+     * Set transition preroll rate
+     *
+     * @param rate
+     *
+     * @return
+     */
+    @Override
+    public int setTransitionPreRollRate(float rate) {
+        ASPlayerLog.d("%s setTransitionPreRollRate start, rate: %.3f", getTag(), rate);
+        if (rate < 0) {
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        }
+
+        if (mPlayer == null) {
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+
+        return mPlayer.setTransitionPreRollRate(rate);
+    }
+
+    /**
+     *  maximum a/v time difference in ms to start preroll.
+     *  This value limits the max time of preroll duration.
+     *
+     * @param milliSecond
+     *
+     * @return
+     */
+    @Override
+    public int setTransitionPreRollAVTolerance(int milliSecond) {
+        ASPlayerLog.d("%s setTransitionPreRollAVTolerance start, time: %d", getTag(), milliSecond);
+        if (milliSecond < 0) {
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        }
+
+        if (mPlayer == null) {
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+
+        return mPlayer.setTransitionPreRollAVTolerance(milliSecond);
+    }
+
+    /**
+     * Set video mute or not
+     *
+     * @param mute one of {@link VideoMute#UN_MUTE } or {@link VideoMute#MUTE }
+     *
+     * @return
+     */
+    @Override
+    public int setVideoMute(int mute) {
+        ASPlayerLog.d("%s setVideoMute start, mute: %d", getTag(), mute);
+        if (mute != VideoMute.UN_MUTE && mute != VideoMute.MUTE) {
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        }
+
+        if (mPlayer == null) {
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+
+        return mPlayer.setVideoMute(mute);
+    }
+
+    /**
+     * Set screen color
+     *
+     * @param screenColorMode screen color mode. one of
+     *      {@link ScreenColor#MODE_ONCE_TRANSITION} or
+     *      {@link ScreenColor#MODE_ONCE_SOLID} or
+     *      {@link ScreenColor#MODE_ALWAYS} or
+     *      {@link ScreenColor#MODE_ALWAYS_CANCEL}
+     *
+     * @param screenColor screen color. one of
+     *      {@link ScreenColor#BLACK } or
+     *      {@link ScreenColor#BLUE } or
+     *      {@link ScreenColor#GREEN }
+     *
+     * @return
+     */
+    @Override
+    public int setScreenColor(int screenColorMode, int screenColor) {
+        ASPlayerLog.d("%s setScreenColor start, mode: %d, color: %d",
+                getTag(), screenColorMode, screenColor);
+        if (screenColorMode != ScreenColor.MODE_ONCE_TRANSITION
+                && screenColorMode != ScreenColor.MODE_ONCE_SOLID
+                && screenColorMode != ScreenColor.MODE_ALWAYS
+                && screenColorMode != ScreenColor.MODE_ALWAYS_CANCEL) {
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        }
+
+        if (screenColor != ScreenColor.BLACK
+                && screenColor != ScreenColor.BLUE
+                && screenColor != ScreenColor.GREEN) {
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        }
+
+        if (mPlayer == null) {
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+
+        return mPlayer.setScreenColor(screenColorMode, screenColor);
     }
 
     /**
