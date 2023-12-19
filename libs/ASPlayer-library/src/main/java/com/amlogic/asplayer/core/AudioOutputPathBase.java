@@ -341,6 +341,11 @@ abstract class AudioOutputPathBase extends MediaOutputPath {
         mDualMonoMode = null;
     }
 
+    void resetForSeek() {
+        ASPlayerLog.i("%s resetForSeek", getTag());
+        super.reset();
+    }
+
     @Override
     void setSpeed(double speed) {
         super.setSpeed(speed);

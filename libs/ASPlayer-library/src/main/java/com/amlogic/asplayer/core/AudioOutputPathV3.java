@@ -273,6 +273,14 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
     }
 
     @Override
+    void resetForSeek() {
+        ASPlayerLog.i("%s resetForSeek", getTag());
+        super.resetForSeek();
+
+        releaseAudioRenderer();
+    }
+
+    @Override
     public void release() {
         super.release();
 
