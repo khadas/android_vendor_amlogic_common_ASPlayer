@@ -9,6 +9,7 @@
 package com.amlogic.asplayer.core;
 
 import android.media.AudioFormat;
+import android.media.AudioTrack;
 import android.media.MediaFormat;
 
 import com.amlogic.asplayer.api.AudioParams;
@@ -45,6 +46,7 @@ abstract class AudioOutputPathBase extends MediaOutputPath {
     protected boolean mHasAudio = false;
 
     protected Boolean mEnableADMix = null;
+    protected Integer mDualMonoMode = null;
 
     protected AudioParams mAudioParams;
 
@@ -164,6 +166,23 @@ abstract class AudioOutputPathBase extends MediaOutputPath {
 
     void switchAudioTrack(AudioParams audioParams) {
         setAudioParams(audioParams);
+    }
+
+    boolean setDualMonoMode(int dualMonoMode) {
+        mDualMonoMode = Integer.valueOf(dualMonoMode);
+        if (mAudioCodecRenderer != null) {
+            return mAudioCodecRenderer.setDualMonoMode(dualMonoMode);
+        }
+
+        return false;
+    }
+
+    int getDualMonoMode() {
+        if (mAudioCodecRenderer != null) {
+            return mAudioCodecRenderer.getDualMonoMode();
+        }
+
+        return AudioTrack.DUAL_MONO_MODE_OFF;
     }
 
     boolean isPlaying() {
@@ -319,6 +338,7 @@ abstract class AudioOutputPathBase extends MediaOutputPath {
 
         mAudioParams = null;
         mHasAudioFormatChanged = false;
+        mDualMonoMode = null;
     }
 
     @Override
@@ -360,6 +380,7 @@ abstract class AudioOutputPathBase extends MediaOutputPath {
         mHasAudio = false;
 
         mAudioParams = null;
+        mDualMonoMode = null;
         mHasAudioFormatChanged = false;
     }
 }

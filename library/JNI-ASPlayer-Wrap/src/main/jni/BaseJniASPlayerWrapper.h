@@ -58,6 +58,8 @@ public:
     virtual jni_asplayer_result getADVolumeDB(float *volumeDb) = 0;
     virtual jni_asplayer_result setADMixLevel(int32_t mixLevel) = 0;
     virtual jni_asplayer_result getADMixLevel(int32_t *mixLevel) = 0;
+    virtual jni_asplayer_result setAudioDualMonoMode(jni_asplayer_audio_dual_mono_mode mode) = 0;
+    virtual jni_asplayer_result getAudioDualMonoMode(jni_asplayer_audio_dual_mono_mode *mode) = 0;
     virtual jni_asplayer_result getVideoInfo(jni_asplayer_video_info *videoInfo) = 0;
     virtual jni_asplayer_result release() = 0;
 

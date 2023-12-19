@@ -840,6 +840,51 @@ asplayer_get_ad_mix_level(JNIEnv *env, jobject jniASPlayerWrapperObj, jint *mixL
 }
 
 jni_asplayer_result
+asplayer_set_audio_dual_mono_mode(JNIEnv *env, jobject jniASPlayerWrapperObj, jint mode) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr) {
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    BaseJniASPlayerWrapper *player = getASPlayer(env, jniASPlayerWrapperObj);
+    if (player == nullptr) {
+        LOG_GET_PLAYER_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jni_asplayer_audio_dual_mono_mode monoMode = static_cast<jni_asplayer_audio_dual_mono_mode>(mode);
+    jni_asplayer_result ret = player->setAudioDualMonoMode(monoMode);
+    return ret;
+}
+
+jni_asplayer_result
+asplayer_get_audio_dual_mono_mode(JNIEnv *env, jobject jniASPlayerWrapperObj, jint *mode) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr) {
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    } else if (mode == nullptr) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    BaseJniASPlayerWrapper *player = getASPlayer(env, jniASPlayerWrapperObj);
+    if (player == nullptr) {
+        LOG_GET_PLAYER_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jni_asplayer_audio_dual_mono_mode monoMode = JNI_ASPLAYER_DUAL_MONO_OFF;
+    jni_asplayer_result ret = player->getAudioDualMonoMode(&monoMode);
+    if (ret != JNI_ASPLAYER_OK) {
+        ALOGE("[%s/%d] failed to get audio dual mono mode, ret: %d", __func__, __LINE__, ret);
+    } else {
+        *mode = (jint)monoMode;
+    }
+
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result
 asplayer_set_work_mode(JNIEnv *env, jobject jniASPlayerWrapperObj, jint mode) {
     LOG_FUNCTION_ENTER();
     if (env == nullptr) {

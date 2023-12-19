@@ -134,6 +134,12 @@ jni_asplayer_result
 asplayer_get_ad_mix_level(JNIEnv *env, jobject jniASPlayerWrapperObj, jint *mixLevel);
 
 jni_asplayer_result
+asplayer_set_audio_dual_mono_mode(JNIEnv *env, jobject jniASPlayerWrapperObj, jint mode);
+
+jni_asplayer_result
+asplayer_get_audio_dual_mono_mode(JNIEnv *env, jobject jniASPlayerWrapperObj, jint *mode);
+
+jni_asplayer_result
 asplayer_set_work_mode(JNIEnv *env, jobject jniASPlayerWrapperObj, jint mode);
 
 jni_asplayer_result

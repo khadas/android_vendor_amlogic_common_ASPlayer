@@ -103,6 +103,18 @@ interface AudioCodecRenderer {
     void setSubAudioVolumeDb(float volumeDb);
 
     /**
+     * Sets the Dual Mono mode
+     * @param dualMonoMode
+     */
+    boolean setDualMonoMode(int dualMonoMode);
+
+    /**
+     * Returns the Dual Mono mode
+     * @return
+     */
+    int getDualMonoMode();
+
+    /**
      * Renders frame without synchronization with external track
      *
      * @return number of us to wait before calling this function again

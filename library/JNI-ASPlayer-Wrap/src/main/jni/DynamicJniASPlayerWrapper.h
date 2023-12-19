@@ -47,8 +47,8 @@ typedef jni_asplayer_result (*JniASPlayer_resumeVideoDecoding_FUNC)(jni_asplayer
 typedef jni_asplayer_result (*JniASPlayer_stopVideoDecoding_FUNC)(jni_asplayer_handle);
 typedef jni_asplayer_result (*JniASPlayer_setAudioVolume_FUNC)(jni_asplayer_handle, int32_t);
 typedef jni_asplayer_result (*JniASPlayer_getAudioVolume_FUNC)(jni_asplayer_handle, int32_t *);
-typedef jni_asplayer_result (*JniASPlayer_setAudioStereoMode_FUNC)(jni_asplayer_handle, jni_asplayer_audio_stereo_mode);
-typedef jni_asplayer_result (*JniASPlayer_getAudioStereoMode_FUNC)(jni_asplayer_handle, jni_asplayer_audio_stereo_mode *);
+typedef jni_asplayer_result (*JniASPlayer_setAudioDualMonoMode_FUNC)(jni_asplayer_handle, jni_asplayer_audio_dual_mono_mode);
+typedef jni_asplayer_result (*JniASPlayer_getAudioDualMonoMode_FUNC)(jni_asplayer_handle, jni_asplayer_audio_dual_mono_mode *);
 typedef jni_asplayer_result (*JniASPlayer_setAudioMute_FUNC)(jni_asplayer_handle, bool_t, bool_t);
 typedef jni_asplayer_result (*JniASPlayer_getAudioMute_FUNC)(jni_asplayer_handle Hadl, bool_t *, bool_t *);
 typedef jni_asplayer_result (*JniASPlayer_setAudioParams_FUNC)(jni_asplayer_handle, jni_asplayer_audio_params *);
@@ -129,6 +129,8 @@ public:
     jni_asplayer_result getADVolumeDB(float *volumeDb);
     jni_asplayer_result setADMixLevel(int32_t mixLevel);
     jni_asplayer_result getADMixLevel(int32_t *mixLevel);
+    jni_asplayer_result setAudioDualMonoMode(jni_asplayer_audio_dual_mono_mode mode);
+    jni_asplayer_result getAudioDualMonoMode(jni_asplayer_audio_dual_mono_mode *mode);
     jni_asplayer_result getVideoInfo(jni_asplayer_video_info *videoInfo);
     jni_asplayer_result release();
 
@@ -185,8 +187,8 @@ private:
     static JniASPlayer_stopVideoDecoding_FUNC ASPlayer_stopVideoDecoding;
     static JniASPlayer_setAudioVolume_FUNC ASPlayer_setAudioVolume;
     static JniASPlayer_getAudioVolume_FUNC ASPlayer_getAudioVolume;
-    static JniASPlayer_setAudioStereoMode_FUNC ASPlayer_setAudioStereoMode;
-    static JniASPlayer_getAudioStereoMode_FUNC ASPlayer_getAudioStereoMode;
+    static JniASPlayer_setAudioDualMonoMode_FUNC ASPlayer_setAudioDualMonoMode;
+    static JniASPlayer_getAudioDualMonoMode_FUNC ASPlayer_getAudioDualMonoMode;
     static JniASPlayer_setAudioMute_FUNC ASPlayer_setAudioMute;
     static JniASPlayer_getAudioMute_FUNC ASPlayer_getAudioMute;
     static JniASPlayer_setAudioParams_FUNC ASPlayer_setAudioParams;

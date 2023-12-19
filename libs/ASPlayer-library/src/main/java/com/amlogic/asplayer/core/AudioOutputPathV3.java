@@ -173,6 +173,9 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
         audioCodecRenderer.writeMetadata(mPlacementMetadata);
 
         audioCodecRenderer.configure(mAudioParams, null);
+        if (mDualMonoMode != null) {
+            audioCodecRenderer.setDualMonoMode(mDualMonoMode.intValue());
+        }
 
         mNeedToConfigureSubTrack = mSubTrackAudioParams != null;
 

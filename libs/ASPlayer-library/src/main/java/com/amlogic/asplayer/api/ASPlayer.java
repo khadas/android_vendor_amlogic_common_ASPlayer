@@ -9,6 +9,7 @@
 package com.amlogic.asplayer.api;
 
 import android.content.Context;
+import android.media.AudioTrack;
 import android.media.MediaFormat;
 import android.media.tv.tuner.Tuner;
 import android.os.Looper;
@@ -452,25 +453,40 @@ public class ASPlayer implements IASPlayer {
     }
 
     /**
-     * Set audio stereo mode to ASPlayer instance
+     * Sets the Dual Mono mode to ASPlayer instance
      *
-     * @see AudioStereoMode
-     *
-     * @param audioStereoMode audio stereo mode
+     * @param dualMonoMode one of {@link AudioTrack#DUAL_MONO_MODE_OFF},
+     *                     {@link AudioTrack#DUAL_MONO_MODE_LR},
+     *                     {@link AudioTrack#DUAL_MONO_MODE_LL},
+     *                     {@link AudioTrack#DUAL_MONO_MODE_RR}
      */
     @Override
-    public void setAudioStereoMode(int audioStereoMode) {
-        if (DEBUG) ASPlayerLog.d("%s setAudioStereoMode start, audioStereoMode: %d", getTag(), audioStereoMode);
-        throw new RuntimeException("Not Implementation");
+    public int setAudioDualMonoMode(int dualMonoMode) {
+        ASPlayerLog.i("%s setAudioDualMonoMode start, dualMonoMode: %d", getTag(), dualMonoMode);
+        if (dualMonoMode != AudioTrack.DUAL_MONO_MODE_OFF
+            && dualMonoMode != AudioTrack.DUAL_MONO_MODE_LR
+            && dualMonoMode != AudioTrack.DUAL_MONO_MODE_LL
+            && dualMonoMode != AudioTrack.DUAL_MONO_MODE_RR) {
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        }
+
+        if (mPlayer == null) {
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+
+        return mPlayer.setAudioDualMonoMode(dualMonoMode);
     }
 
     /**
-     * Get audio stereo mode to ASPlayer instance.
+     * Returns the Dual Mono mode of ASPlayer instance.
      */
     @Override
-    public int getAudioStereoMode() {
-        if (DEBUG) ASPlayerLog.d("%s getAudioStereoMode start", getTag());
-        throw new RuntimeException("Not Implementation");
+    public int getAudioDualMonoMode() {
+        if (mPlayer == null) {
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+
+        return mPlayer.getAudioDualMonoMode();
     }
 
     /**

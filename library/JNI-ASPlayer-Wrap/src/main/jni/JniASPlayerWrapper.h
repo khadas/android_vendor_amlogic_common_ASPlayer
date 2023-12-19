@@ -68,6 +68,8 @@ public:
     jni_asplayer_result getADVolumeDB(float *volumeDb);
     jni_asplayer_result setADMixLevel(int32_t mixLevel);
     jni_asplayer_result getADMixLevel(int32_t *mixLevel);
+    jni_asplayer_result setAudioDualMonoMode(jni_asplayer_audio_dual_mono_mode mode);
+    jni_asplayer_result getAudioDualMonoMode(jni_asplayer_audio_dual_mono_mode *mode);
     jni_asplayer_result getVideoInfo(jni_asplayer_video_info *videoInfo);
     jni_asplayer_result release();
 

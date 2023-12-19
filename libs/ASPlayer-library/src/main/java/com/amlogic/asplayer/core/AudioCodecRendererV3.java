@@ -137,6 +137,26 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     }
 
     @Override
+    public boolean setDualMonoMode(int dualMonoMode) {
+        if (mAudioTrack != null) {
+            ASPlayerLog.i("%s setDualMonoMode, mode: %d", getTag(), dualMonoMode);
+            return mAudioTrack.setDualMonoMode(dualMonoMode);
+        } else {
+            ASPlayerLog.i("%s setDualMonoMode, mode: %d failed, audioTrack is null", getTag(), dualMonoMode);
+        }
+
+        return false;
+    }
+
+    @Override
+    public int getDualMonoMode() {
+        if (mAudioTrack != null) {
+            return mAudioTrack.getDualMonoMode();
+        }
+        return AudioTrack.DUAL_MONO_MODE_OFF;
+    }
+
+    @Override
     public long renderFreeRun() {
         return 100000;
     }

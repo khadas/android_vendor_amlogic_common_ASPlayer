@@ -10,6 +10,7 @@ package com.amlogic.asplayer.core;
 
 import android.content.Context;
 import android.media.AudioFormat;
+import android.media.AudioTrack;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.tv.tuner.Tuner;
@@ -875,12 +876,30 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     @Override
-    public void setAudioStereoMode(int audioStereoMode) {
+    public int setAudioDualMonoMode(int dualMonoMode) {
+        if (mPlayerHandler != null) {
+            mPlayerHandler.post(() -> {
+                boolean success = false;
+                if (mAudioOutputPath != null) {
+                    success = mAudioOutputPath.setDualMonoMode(dualMonoMode);
+                }
+
+                ASPlayerLog.w("%s setAudioDualMonoMode result: %s",
+                        getTag(), success ? "success" : "failed");
+            });
+            return ErrorCode.SUCCESS;
+        } else {
+            ASPlayerLog.w("%s setAudioDualMonoMode failed, playerHandler is null", getTag());
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
     }
 
     @Override
-    public int getAudioStereoMode() {
-        return 0;
+    public int getAudioDualMonoMode() {
+        if (mAudioOutputPath != null) {
+            return mAudioOutputPath.getDualMonoMode();
+        }
+        return AudioTrack.DUAL_MONO_MODE_OFF;
     }
 
     @Override

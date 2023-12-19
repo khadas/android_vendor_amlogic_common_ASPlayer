@@ -271,13 +271,13 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
-    public void setAudioStereoMode(int audioStereoMode) {
-
+    public int setAudioDualMonoMode(int dualMonoMode) {
+        return native_setAudioDualMonoMode(dualMonoMode);
     }
 
     @Override
-    public int getAudioStereoMode() {
-        return 0;
+    public int getAudioDualMonoMode() {
+        return native_getAudioDualMonoMode();
     }
 
     @Override
@@ -437,6 +437,8 @@ public class JniASPlayerWrapper implements IASPlayer {
     private native float native_getADVolumeDB();
     private native int native_setADMixLevel(int mixLevel);
     private native int native_getADMixLevel();
+    private native int native_setAudioDualMonoMode(int mode);
+    private native int native_getAudioDualMonoMode();
     private native MediaFormat native_getVideoInfo();
     private native void native_release();
 }

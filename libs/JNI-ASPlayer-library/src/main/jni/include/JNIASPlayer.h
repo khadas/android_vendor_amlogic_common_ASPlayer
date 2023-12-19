@@ -167,14 +167,13 @@ typedef enum {
     JNI_ASPLAYER_PIP_MODE_PIP = 1               // PIP mode
 } jni_asplayer_pip_mode;
 
-/*Audio stereo output mode*/
+/*Audio dual mono output mode*/
 typedef enum {
-    JNI_ASPLAYER_AV_AUDIO_STEREO = 0,                   // Stereo mode
-    JNI_ASPLAYER_AV_AUDIO_LEFT = 1,                     // Output left channel
-    JNI_ASPLAYER_AV_AUDIO_RIGHT = 2,                    // Output right channel
-    JNI_ASPLAYER_AV_AUDIO_SWAP = 3,                     // Swap left and right channels
-    JNI_ASPLAYER_AV_AUDIO_LRMIX = 4                     // Mix left and right channels
-} jni_asplayer_audio_stereo_mode;
+    JNI_ASPLAYER_DUAL_MONO_OFF = 0,                     // This mode disables any Dual Mono presentation effect
+    JNI_ASPLAYER_DUAL_MONO_LR  = 1,                     // Output left and right channels both
+    JNI_ASPLAYER_DUAL_MONO_LL  = 2,                     // Output left channel
+    JNI_ASPLAYER_DUAL_MONO_RR  = 3                      // Output right channel
+} jni_asplayer_audio_dual_mono_mode;
 
 /*Video decoder trick mode*/
 typedef enum {
@@ -649,22 +648,22 @@ jni_asplayer_result  JniASPlayer_getAudioVolume(jni_asplayer_handle handle, int3
 
 /*Audio interface*/
 /**
- *@brief:        Set audio stereo mode to specified JniASPlayer instance .
+ *@brief:        Sets the Dual Mono mode to specified JniASPlayer instance .
  *@param:        handle     JniASPlayer handle.
- *@param:        Mode       Stereo mode.
+ *@param:        mode       dual mono mode.
  *@return:       The JniASPlayer result.
  */
-jni_asplayer_result  JniASPlayer_setAudioStereoMode(jni_asplayer_handle handle,
-                                                    jni_asplayer_audio_stereo_mode Mode);
+jni_asplayer_result  JniASPlayer_setAudioDualMonoMode(jni_asplayer_handle handle,
+                                                      jni_asplayer_audio_dual_mono_mode mode);
 
 /**
- *@brief:        Get audio stereo mode to specified JniASPlayer instance .
+ *@brief:        Returns the Dual Mono mode of specified JniASPlayer instance .
  *@param:        handle    JniASPlayer handle.
- *@param:        *pMode    Stereo mode.
+ *@param:        *pMode    dual mono mode.
  *@return:       The JniASPlayer result.
  */
-jni_asplayer_result  JniASPlayer_getAudioStereoMode(jni_asplayer_handle handle,
-                                                    jni_asplayer_audio_stereo_mode *pMode);
+jni_asplayer_result  JniASPlayer_getAudioDualMonoMode(jni_asplayer_handle handle,
+                                                      jni_asplayer_audio_dual_mono_mode *pMode);
 
 /**
  *@brief:        Set audio output mute to specified JniASPlayer instance .

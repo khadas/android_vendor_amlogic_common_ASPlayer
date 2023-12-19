@@ -8,6 +8,7 @@
  */
 package com.amlogic.asplayer.api;
 
+import android.media.AudioTrack;
 import android.media.MediaFormat;
 import android.view.Surface;
 
@@ -232,18 +233,19 @@ public interface IASPlayer {
     int getAudioVolume();
 
     /**
-     * Set audio stereo mode to ASPlayer instance
+     * Sets the Dual Mono mode to ASPlayer instance
      *
-     * @see AudioStereoMode
-     *
-     * @param audioStereoMode audio stereo mode
+     * @param dualMonoMode one of {@link AudioTrack#DUAL_MONO_MODE_OFF},
+     *                     {@link AudioTrack#DUAL_MONO_MODE_LR},
+     *                     {@link AudioTrack#DUAL_MONO_MODE_LL},
+     *                     {@link AudioTrack#DUAL_MONO_MODE_RR}
      */
-    void setAudioStereoMode(int audioStereoMode);
+    int setAudioDualMonoMode(int dualMonoMode);
 
     /**
-     * Get audio stereo mode to ASPlayer instance.
+     * Returns the Dual Mono mode of ASPlayer instance.
      */
-    int getAudioStereoMode();
+    int getAudioDualMonoMode();
 
     /**
      * Set audio output mute to ASPlayer instance.

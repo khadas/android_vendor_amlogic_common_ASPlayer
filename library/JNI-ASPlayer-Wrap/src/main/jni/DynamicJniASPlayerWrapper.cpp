@@ -65,8 +65,8 @@ JniASPlayer_resumeVideoDecoding_FUNC DynamicJniASPlayerWrapper::ASPlayer_resumeV
 JniASPlayer_stopVideoDecoding_FUNC DynamicJniASPlayerWrapper::ASPlayer_stopVideoDecoding = nullptr;
 JniASPlayer_setAudioVolume_FUNC DynamicJniASPlayerWrapper::ASPlayer_setAudioVolume = nullptr;
 JniASPlayer_getAudioVolume_FUNC DynamicJniASPlayerWrapper::ASPlayer_getAudioVolume = nullptr;
-JniASPlayer_setAudioStereoMode_FUNC DynamicJniASPlayerWrapper::ASPlayer_setAudioStereoMode = nullptr;
-JniASPlayer_getAudioStereoMode_FUNC DynamicJniASPlayerWrapper::ASPlayer_getAudioStereoMode = nullptr;
+JniASPlayer_setAudioDualMonoMode_FUNC DynamicJniASPlayerWrapper::ASPlayer_setAudioDualMonoMode = nullptr;
+JniASPlayer_getAudioDualMonoMode_FUNC DynamicJniASPlayerWrapper::ASPlayer_getAudioDualMonoMode = nullptr;
 JniASPlayer_setAudioMute_FUNC DynamicJniASPlayerWrapper::ASPlayer_setAudioMute = nullptr;
 JniASPlayer_getAudioMute_FUNC DynamicJniASPlayerWrapper::ASPlayer_getAudioMute = nullptr;
 JniASPlayer_setAudioParams_FUNC DynamicJniASPlayerWrapper::ASPlayer_setAudioParams = nullptr;
@@ -244,13 +244,17 @@ void DynamicJniASPlayerWrapper::initSymbols() {
     CHECK_SYMBOL(ASPlayer_stopVideoDecoding, "JniASPlayer_stopVideoDecoding");
     ASPlayer_setAudioVolume = (JniASPlayer_setAudioVolume_FUNC)(dlsym(handle, "JniASPlayer_setAudioVolume"));
     CHECK_SYMBOL(ASPlayer_setAudioVolume, "JniASPlayer_setAudioVolume");
-    ASPlayer_getAudioVolume = (JniASPlayer_getAudioVolume_FUNC)(dlsym(handle, "JniASPlayer_getAudioVolume"));
+    ASPlayer_getAudioVolume = (JniASPlayer_getAudioVolume_FUNC)
+            (dlsym(handle, "JniASPlayer_getAudioVolume"));
     CHECK_SYMBOL(ASPlayer_getAudioVolume, "JniASPlayer_getAudioVolume");
-    ASPlayer_setAudioStereoMode = (JniASPlayer_setAudioStereoMode_FUNC)(dlsym(handle, "JniASPlayer_setAudioStereoMode"));
-    CHECK_SYMBOL(ASPlayer_setAudioStereoMode, "JniASPlayer_setAudioStereoMode");
-    ASPlayer_getAudioStereoMode = (JniASPlayer_getAudioStereoMode_FUNC)(dlsym(handle, "JniASPlayer_getAudioStereoMode"));
-    CHECK_SYMBOL(ASPlayer_getAudioStereoMode, "JniASPlayer_getAudioStereoMode");
-    ASPlayer_setAudioMute = (JniASPlayer_setAudioMute_FUNC)(dlsym(handle, "JniASPlayer_setAudioMute"));
+    ASPlayer_setAudioDualMonoMode = (JniASPlayer_setAudioDualMonoMode_FUNC)
+            (dlsym(handle, "JniASPlayer_setAudioDualMonoMode"));
+    CHECK_SYMBOL(ASPlayer_setAudioDualMonoMode, "JniASPlayer_setAudioDualMonoMode");
+    ASPlayer_getAudioDualMonoMode = (JniASPlayer_getAudioDualMonoMode_FUNC)
+            (dlsym(handle, "JniASPlayer_getAudioDualMonoMode"));
+    CHECK_SYMBOL(ASPlayer_getAudioDualMonoMode, "JniASPlayer_getAudioDualMonoMode");
+    ASPlayer_setAudioMute = (JniASPlayer_setAudioMute_FUNC)
+            (dlsym(handle, "JniASPlayer_setAudioMute"));
     CHECK_SYMBOL(ASPlayer_setAudioMute, "JniASPlayer_setAudioMute");
     ASPlayer_getAudioMute = (JniASPlayer_getAudioMute_FUNC)(dlsym(handle, "JniASPlayer_getAudioMute"));
     CHECK_SYMBOL(ASPlayer_getAudioMute, "JniASPlayer_getAudioMute");
@@ -1200,6 +1204,54 @@ jni_asplayer_result DynamicJniASPlayerWrapper::getADMixLevel(int32_t *mixLevel) 
     }
 
     jni_asplayer_result ret = ASPlayer_getADMixLevel(handle, mixLevel);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result
+DynamicJniASPlayerWrapper::setAudioDualMonoMode(jni_asplayer_audio_dual_mono_mode mode) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_setAudioDualMonoMode == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_setAudioDualMonoMode(handle, mode);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
+jni_asplayer_result
+DynamicJniASPlayerWrapper::getAudioDualMonoMode(jni_asplayer_audio_dual_mono_mode *mode) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_getAudioDualMonoMode == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_getAudioDualMonoMode(handle, mode);
     if (ret != JNI_ASPLAYER_OK) {
         LOG_PLAYER_OP_FAILED(ret);
     }

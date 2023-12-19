@@ -94,6 +94,8 @@ struct asplayer_t {
     jmethodID getADVolumeDBMID;
     jmethodID setADMixLevelMID;
     jmethodID getADMixLevelMID;
+    jmethodID setAudioDualMonoModeMID;
+    jmethodID getAudioDualMonoModeMID;
     jmethodID getVideoInfoMID;
 };
 
@@ -553,6 +555,10 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
                 env, gASPlayerCls, "setADMixLevel", "(I)I");
         gASPlayerCtx.getADMixLevelMID = NativeHelper::GetMethodID(
                 env, gASPlayerCls, "getADMixLevel", "()I");
+        gASPlayerCtx.setAudioDualMonoModeMID = NativeHelper::GetMethodID(
+                env, gASPlayerCls, "setAudioDualMonoMode", "(I)I");
+        gASPlayerCtx.getAudioDualMonoModeMID = NativeHelper::GetMethodID(
+                env, gASPlayerCls, "getAudioDualMonoMode", "()I");
         gASPlayerCtx.getVideoInfoMID = NativeHelper::GetMethodID(
                 env, gASPlayerCls,
                 "getVideoInfo", "()Landroid/media/MediaFormat;");
@@ -1525,6 +1531,47 @@ jni_asplayer_result JniASPlayer::getADMixLevel(int32_t *mixLevel) {
     jint level = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.getADMixLevelMID);
     *mixLevel = (int32_t)level;
     return JNI_ASPLAYER_OK;
+}
+
+jni_asplayer_result JniASPlayer::setAudioDualMonoMode(jni_asplayer_audio_dual_mono_mode mode) {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED(__FUNCTION__);
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    AP_LOGI("setAudioDualMonoMode mode: %d", mode);
+
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setAudioDualMonoModeMID, (jint)mode);
+    return static_cast<jni_asplayer_result>(ret);
+}
+
+jni_asplayer_result JniASPlayer::getAudioDualMonoMode(jni_asplayer_audio_dual_mono_mode *mode) {
+    if (mode == nullptr) {
+        AP_LOGE("error, failed to get audio dual mono mode, invalid parameter");
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED(__FUNCTION__);
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jint monoMode = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.getAudioDualMonoModeMID);
+    if (monoMode < 0) {
+        return static_cast<jni_asplayer_result>(monoMode);
+    }
+
+    if (monoMode == JNI_ASPLAYER_DUAL_MONO_OFF
+        || monoMode == JNI_ASPLAYER_DUAL_MONO_LR
+        || monoMode == JNI_ASPLAYER_DUAL_MONO_LL
+        || monoMode == JNI_ASPLAYER_DUAL_MONO_RR) {
+        *mode = static_cast<jni_asplayer_audio_dual_mono_mode>(monoMode);
+        return JNI_ASPLAYER_OK;
+    } else {
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
 }
 
 jni_asplayer_result JniASPlayer::getVideoInfo(jni_asplayer_video_info *videoInfo) {

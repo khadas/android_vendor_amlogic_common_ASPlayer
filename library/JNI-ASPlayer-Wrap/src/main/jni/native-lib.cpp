@@ -351,6 +351,26 @@ native_get_ad_mix_level(JNIEnv *env, jobject thiz) {
     }
 }
 
+static jint
+native_set_audio_dual_mono_mode(JNIEnv* env, jobject thiz, jint mode) {
+    jni_asplayer_result result = asplayer_set_audio_dual_mono_mode(env, thiz, mode);
+
+    return result;
+}
+
+static jint
+native_get_audio_dual_mono_mode(JNIEnv *env, jobject thiz) {
+    jint mode = 0;
+
+    jni_asplayer_result result = asplayer_get_audio_dual_mono_mode(env, thiz, &mode);
+
+    if (result == JNI_ASPLAYER_OK) {
+        return mode;
+    } else {
+        return -1;
+    }
+}
+
 static jobject
 native_get_video_info(JNIEnv *env, jobject thiz) {
     jobject result = asplayer_get_video_info(env, thiz);
@@ -403,6 +423,8 @@ static JNINativeMethod methods[] = {
         {"native_getADVolumeDB", "()F", (void*)native_get_ad_volume_db },
         {"native_setADMixLevel", "(I)I", (void*)native_set_ad_mix_level },
         {"native_getADMixLevel", "()I", (void*)native_get_ad_mix_level },
+        {"native_setAudioDualMonoMode", "(I)I", (void*)native_set_audio_dual_mono_mode },
+        {"native_getAudioDualMonoMode", "()I", (void*)native_get_audio_dual_mono_mode },
         {"native_getVideoInfo", "()Landroid/media/MediaFormat;", (void*) native_get_video_info },
         {"native_release", "()V", (void*)native_release },
 };
