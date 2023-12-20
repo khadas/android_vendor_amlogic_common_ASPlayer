@@ -16,11 +16,13 @@ import com.amlogic.asplayer.api.PIPMode;
 import com.amlogic.asplayer.api.WorkMode;
 import com.amlogic.asplayer.core.encapsulation.EncapsulationEncoder;
 import com.amlogic.asplayer.core.encapsulation.Metadata;
+import com.amlogic.asplayer.core.utils.MathUtils;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.amlogic.asplayer.core.Constant.SPEED_DIFF_THRESHOLD;
 import static com.amlogic.asplayer.core.MediaContainerExtractor.INVALID_AV_SYNC_HW_ID;
 import static com.amlogic.asplayer.core.MediaContainerExtractor.INVALID_FILTER_ID;
 
@@ -271,7 +273,9 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
                 setAudioDescriptionVolume(mSubAudioVolumeDb);
 
-                if (mClock.getSpeed() == 0) {
+                ASPlayerLog.i("%s start paused: %b, speed: %.3f", getTag(), mPaused, mClock.getSpeed());
+
+                if (mPaused || MathUtils.equals(mClock.getSpeed(), 0, SPEED_DIFF_THRESHOLD)) {
                     pauseAudioTrack();
                 } else {
                     startAudioTrack();
@@ -419,12 +423,13 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
         ASPlayerLog.i("%s setSpeed %f", getTag(), speed);
         if (mAudioTrack == null)
             return;
-        if (speed != 0 && speed != 1) {
+        if (!MathUtils.equals(speed, 0, SPEED_DIFF_THRESHOLD)
+                && !MathUtils.equals(speed, 1, SPEED_DIFF_THRESHOLD)) {
             ASPlayerLog.w("%s unexpected speed %f, should be 0 or 1", getTag(), speed);
             return;
         }
         mClock.setSpeed(speed);
-        if (speed == 0) {
+        if (MathUtils.equals(speed, 0, SPEED_DIFF_THRESHOLD)) {
             pauseAudioTrack();
         } else {
             if (!mPaused) {
@@ -443,10 +448,8 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     @Override
     public void resume() {
         ASPlayerLog.i("%s resume start, paused: %b", getTag(), mPaused);
-        if (mPaused) {
-            startAudioTrack();
-            mPaused = false;
-        }
+        startAudioTrack();
+        mPaused = false;
     }
 
     @Override
@@ -462,19 +465,23 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
     @Override
     public void reset() {
-        ASPlayerLog.i("%s reset", getTag());
+        ASPlayerLog.i("%s reset, paused: %b, current speed: %.3f", getTag(), mPaused, mClock.getSpeed());
         synchronized (mLock) {
-            if (mAudioTrack != null) {
-                boolean isPlaying = mClock.getSpeed() != 0;
-                if (isPlaying) {
-                    pauseAudioTrack();
-                }
+            if (mAudioTrack == null) {
+                return;
+            }
 
-                flushAudioTrack();
+            final int playbackState = mAudioTrack.getPlayState();
+            final boolean isPlaying = playbackState == AudioTrack.PLAYSTATE_PLAYING;
+            ASPlayerLog.i("%s reset playbackState: %d, isPlaying: %b", getTag(), playbackState, isPlaying);
+            if (isPlaying) {
+                pauseAudioTrack();
+            }
 
-                if (isPlaying) {
-                    startAudioTrack();
-                }
+            flushAudioTrack();
+
+            if (isPlaying) {
+                startAudioTrack();
             }
         }
     }

@@ -9,4 +9,6 @@ public class Constant {
     public static final int INVALID_SYNC_INSTANCE_ID = -1;
 
     public static final int INVALID_AV_SYNC_ID = -1;
+
+    public static final double SPEED_DIFF_THRESHOLD = 0.001;
 }

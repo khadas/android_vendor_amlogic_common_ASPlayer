@@ -8,6 +8,8 @@
  */
 package com.amlogic.asplayer.core;
 
+import static com.amlogic.asplayer.core.Constant.SPEED_DIFF_THRESHOLD;
+
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaCodec;
@@ -17,13 +19,12 @@ import android.util.Log;
 
 import com.amlogic.asplayer.api.IASPlayer;
 import com.amlogic.asplayer.api.VideoTrickMode;
+import com.amlogic.asplayer.core.utils.MathUtils;
 
 class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
         MediaOutputPath.DataListener {
 
     private static final boolean DEBUG = false;
-
-    private static final double SPEED_DIFF_THRESHOLD = 0.001;
 
     private enum AVState {
         INIT,
@@ -143,6 +144,8 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
         mAudioOutputPath.setHandler(handler);
         mVideoOutputPath.setHandler(handler);
 
+        mSpeed = 1.0;
+
         // for tunneled playing
         AudioManager audioManager =
                 (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
@@ -200,10 +203,10 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     }
 
     private void selectRendererTask() {
-        ASPlayerLog.i("%s speed: %f", getTag(), mSpeed);
+        ASPlayerLog.i("%s speed: %f, hasVideo: %b, hasAudio: %b", getTag(), mSpeed, mHasVideo, mHasAudio);
 
-        boolean isNormalPlaySpeed = Math.abs(mSpeed - 1) < SPEED_DIFF_THRESHOLD;
-        boolean isPauseSpeed = Math.abs(mSpeed) < SPEED_DIFF_THRESHOLD;
+        boolean isNormalPlaySpeed = MathUtils.equals(mSpeed, 1, SPEED_DIFF_THRESHOLD);
+        boolean isPauseSpeed = MathUtils.equals(mSpeed, 0, SPEED_DIFF_THRESHOLD);
 
         Renderer selectedSpeedTask;
         if (isPauseSpeed) {
@@ -485,7 +488,7 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     }
 
     void setSpeed(double speed) {
-        if (Math.abs(mSpeed - speed) < SPEED_DIFF_THRESHOLD)
+        if (MathUtils.equals(mSpeed, speed, SPEED_DIFF_THRESHOLD))
             return;
 
         mSpeed = speed;
