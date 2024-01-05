@@ -88,6 +88,9 @@ class VideoOutputPathV3 extends VideoOutputPath {
     public static final String KEY_SCREEN_COLOR_MODE = "vendor.tunerhal.passthrough.screencolor-mode";
     public static final String KEY_SCREEN_COLOR = "vendor.tunerhal.passthrough.screencolor-color";
 
+    public static final String KEY_VIDEO_PLAYBACK_MODE = "vendor.tunerhal.passthrough.playback.status";
+    public static final String KEY_VIDEO_PLAYBACK_SPEED = "vendor.playback.speed";
+
     private static final int CHECK_DATA_LOSS_PERIOD = 100; // 100 millisecond
     private static final int DATA_LOSS_DURATION_MILLISECOND = 2 * 1000; // 2 second
 
@@ -720,6 +723,33 @@ class VideoOutputPathV3 extends VideoOutputPath {
         }
 
         mediaCodec.setParameters(params);
+    }
+
+    @Override
+    protected void setPlaybackStatus(int playbackStatus) {
+        ASPlayerLog.i("%s playbackStatus mode: %d", getTag(), playbackStatus);
+        super.setPlaybackStatus(playbackStatus);
+
+        if (mMediaCodec != null) {
+            handleSetPlaybackStatus(playbackStatus);
+            mVideoTargetPlaybackStatus = -1;
+        }
+    }
+
+    @Override
+    protected void handleSetPlaybackStatus(int playbackStatus) {
+        super.handleSetPlaybackStatus(playbackStatus);
+
+        if (playbackStatus == -1) {
+            return;
+        }
+
+        if (mMediaCodec != null) {
+            ASPlayerLog.i("%s handleSetPlaybackStatus status: %d", getTag(), playbackStatus);
+            Bundle parameter = new Bundle();
+            parameter.putInt(KEY_VIDEO_PLAYBACK_MODE, playbackStatus);
+            mMediaCodec.setParameters(parameter);
+        }
     }
 
     @Override

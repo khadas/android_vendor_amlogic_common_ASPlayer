@@ -31,4 +31,12 @@ class VideoPassthroughParameters {
          */
         public static final int SCREEN_COLOR_MODE_ALWAYS_CANCEL = 3;
     }
+
+    /**
+     * Control for Video only program
+     */
+    public class VideoOnlyPlayControl {
+        public static final int PLAYBACK_STATUS_PLAY = 0;     // play
+        public static final int PLAYBACK_STATUS_PAUSE = 1;    // pause
+    }
 }

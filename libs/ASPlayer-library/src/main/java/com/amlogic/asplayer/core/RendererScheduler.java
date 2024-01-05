@@ -19,6 +19,7 @@ import android.util.Log;
 
 import com.amlogic.asplayer.api.IASPlayer;
 import com.amlogic.asplayer.api.VideoTrickMode;
+import com.amlogic.asplayer.core.VideoPassthroughParameters.VideoOnlyPlayControl;
 import com.amlogic.asplayer.core.utils.MathUtils;
 
 class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
@@ -69,6 +70,8 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
 
     private int mWorkMode = -1;
     private int mPIPMode = -1;
+
+    private boolean mPausedByVideoOnly = false;
 
     RendererScheduler(int id,
                       Context context,
@@ -336,6 +339,10 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
         mTargetVideoState = AVState.START;
         mFirstVideoFrameDisplayed = false;
         startVideoRenderIfNeed();
+        if (mPausedByVideoOnly) {
+            mVideoOutputPath.setPlaybackStatus(VideoOnlyPlayControl.PLAYBACK_STATUS_PLAY);
+        }
+        mPausedByVideoOnly = false;
         ASPlayerLog.i("%s startVideoDecoding end", getTag());
     }
 
@@ -395,6 +402,7 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
 
         ASPlayerLog.i("%s reset VideoOutputPath", getTag());
         mVideoOutputPath.reset();
+        mPausedByVideoOnly = false;
 
         ASPlayerLog.i("%s stopVideoDecoding end", getTag());
     }
@@ -415,8 +423,16 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
         stopRendererTaskIfNeed();
 
         if (mConfig.getPlaybackMode() == ASPlayerConfig.PLAYBACK_MODE_PASSTHROUGH) {
-            // we can not pause video only
-            pauseAudioDecoding();
+            if (hasAudio()) {
+                mPausedByVideoOnly = false;
+                ASPlayerLog.i("%s pauseVideoDecoding has audio pause by audio", getTag());
+                // we can not pause video only
+                pauseAudioDecoding();
+            } else {
+                ASPlayerLog.i("%s pauseVideoDecoding has no audio, video only pause", getTag());
+                mVideoOutputPath.setPlaybackStatus(VideoOnlyPlayControl.PLAYBACK_STATUS_PAUSE);
+                mPausedByVideoOnly = true;
+            }
         }
     }
 
@@ -431,7 +447,16 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
         startRendererTaskIfNeed();
 
         if (mConfig.getPlaybackMode() == ASPlayerConfig.PLAYBACK_MODE_PASSTHROUGH) {
-            resumeAudioDecoding();
+            if (hasAudio()) {
+                ASPlayerLog.i("%s resumeVideoDecoding has audio resume by audio", getTag());
+                resumeAudioDecoding();
+            } else {
+                if (mPausedByVideoOnly) {
+                    ASPlayerLog.i("%s resumeVideoDecoding has no audio, video only resume", getTag());
+                    mVideoOutputPath.setPlaybackStatus(VideoOnlyPlayControl.PLAYBACK_STATUS_PLAY);
+                    mPausedByVideoOnly = false;
+                }
+            }
         }
     }
 

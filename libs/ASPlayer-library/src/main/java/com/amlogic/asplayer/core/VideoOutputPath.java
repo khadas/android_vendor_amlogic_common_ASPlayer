@@ -166,6 +166,8 @@ class VideoOutputPath extends MediaOutputPath {
 
     protected Integer mSolidScreenColor = null;
 
+    protected int mVideoTargetPlaybackStatus = -1;
+
     protected boolean mChangeWorkMode = false;
     protected boolean mMediaCodecStarted = false;
     protected long mMediaCodecStartTimeMillisecond = -1;
@@ -1095,6 +1097,14 @@ class VideoOutputPath extends MediaOutputPath {
 
     protected void setScreenColorOnce(int screenColor) {
         mSolidScreenColor = Integer.valueOf(screenColor);
+    }
+
+    protected void setPlaybackStatus(int playbackStatus) {
+        mVideoTargetPlaybackStatus = playbackStatus;
+    }
+
+    protected void handleSetPlaybackStatus(int playbackStatus) {
+
     }
 
     protected static long getCostTime(long startNanoTime) {
