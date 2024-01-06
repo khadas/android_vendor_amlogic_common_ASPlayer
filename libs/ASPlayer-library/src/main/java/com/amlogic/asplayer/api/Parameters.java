@@ -10,31 +10,11 @@ package com.amlogic.asplayer.api;
 
 public class Parameters {
 
-    public static final int KEY_AUDIO_PRESENTATION_ID = 0;
+    public static final String KEY_AUDIO_PRESENTATION_ID = "audio-presentation-id";
+    public static final String KEY_AUDIO_PROGRAM_ID = "audio-program-id";
 
-    public static final int KEY_VIDEO_SECLEVEL = KEY_AUDIO_PRESENTATION_ID + 1;
+    public static final String KEY_FIRST_LANGUAGE = "audio-first-language";
+    public static final String KEY_SECOND_LANGUAGE = "audio-second-language";
 
-    public static final int KEY_SET_AUDIO_PATCH_MANAGE_MODE = KEY_VIDEO_SECLEVEL + 1;
-
-    public static final int KEY_AUDIO_SECLEVEL = KEY_SET_AUDIO_PATCH_MANAGE_MODE + 1;
-
-    public static final int KEY_SET_SPDIF_STATUS = KEY_AUDIO_SECLEVEL + 1;
-
-    public static final int KEY_SET_VIDEO_RECOVERY_MODE = KEY_SET_SPDIF_STATUS + 1;
-
-    public static final int KEY_SET_OSD = KEY_SET_VIDEO_RECOVERY_MODE + 1;
-
-    public static final int KEY_SET_LOGGER_LEVEL = KEY_SET_OSD + 1;
-
-    public static final int KEY_SET_WMA_DESCR = KEY_SET_LOGGER_LEVEL + 1;
-
-    public static final int KEY_SET_ES_AUDIO_EXTRA_PARAM = KEY_SET_WMA_DESCR + 1;
-
-    public static final int KEY_SET_STREAM_EOF = KEY_SET_ES_AUDIO_EXTRA_PARAM + 1;
-
-    public static final int KEY_BOOTPLAY_MODE = KEY_SET_STREAM_EOF + 1;
-
-    public static final int KEY_ENABLE_VFRAME_COUNTER = KEY_BOOTPLAY_MODE + 1;
-
-    public static final int KEY_SET_AUDIO_LANG = KEY_ENABLE_VFRAME_COUNTER + 1;
+    public static final String KEY_SPDIF_PROTECTION_MODE = "spdif-protection-mode";
 }

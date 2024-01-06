@@ -10,6 +10,7 @@ package com.amlogic.asplayer.api;
 
 import android.media.AudioTrack;
 import android.media.MediaFormat;
+import android.os.Bundle;
 import android.view.Surface;
 
 import com.amlogic.asplayer.api.PlaybackControl.TransitionModeBefore;
@@ -417,6 +418,15 @@ public interface IASPlayer {
      * @return mix level
      */
     int getADMixLevel();
+
+    /**
+     * Set parameters for ASPlayer instance.
+     *
+     * @param parameters
+     *
+     * @return
+     */
+    int setParameters(Bundle parameters);
 
     /**
      * Set subtitle pid for ASPlayer instance.

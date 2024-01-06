@@ -24,26 +24,6 @@
 
 #define NELEM(arr) (sizeof(arr) / sizeof(arr[0]))
 
-#define CHECK_JNI_EXCEPTION(env)                \
-    do {                                        \
-        if (env != nullptr) {                   \
-            if (env->ExceptionOccurred()) {     \
-                env->ExceptionDescribe();       \
-                env->ExceptionClear();          \
-            }                                   \
-        }                                       \
-    } while (0)
-
-#define DELETE_LOCAL_REF(env, ref)              \
-    do {                                        \
-        if (ref != nullptr) {                   \
-            if (env != nullptr) {               \
-                env->DeleteLocalRef(ref);       \
-            }                                   \
-            ref = nullptr;                      \
-        }                                       \
-    } while (0)
-
 #define LOG_GET_JNIENV_FAILED(msg) AP_LOGE("%s failed, failed to get JNIEnv", msg)
 
 static const char *JNI_ASPLAYER_CLASSPATH_NAME = "com/amlogic/jniasplayer/JniASPlayer";
@@ -101,6 +81,7 @@ struct asplayer_t {
     jmethodID getADMixLevelMID;
     jmethodID setAudioDualMonoModeMID;
     jmethodID getAudioDualMonoModeMID;
+    jmethodID setParametersMID;
     jmethodID getVideoInfoMID;
 };
 
@@ -470,7 +451,7 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
             break;
         }
 
-        gASPlayerCls = NativeHelper::MakeGlobalRef(env, asplayerCls);
+        gASPlayerCls = NativeHelper::MakeGlobalRef(env, asplayerCls, "class<ASPlayer>");
         if (gASPlayerCls == nullptr) {
             error = true;
             break;
@@ -595,6 +576,8 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
         gASPlayerCtx.getVideoInfoMID = NativeHelper::GetMethodID(
                 env, gASPlayerCls,
                 "getVideoInfo", "()Landroid/media/MediaFormat;");
+        gASPlayerCtx.setParametersMID = NativeHelper::GetMethodID(
+                env, gASPlayerCls, "setParameters", "(Landroid/os/Bundle;)I");
 
         // InitParams
         initParamCls = NativeHelper::FindClass(env, "com/amlogic/asplayer/api/InitParams");
@@ -603,7 +586,7 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
             break;
         }
 
-        gInitParamsCls = NativeHelper::MakeGlobalRef(env, initParamCls);
+        gInitParamsCls = NativeHelper::MakeGlobalRef(env, initParamCls, "class<InitParams>");
         if (gInitParamsCls == nullptr) {
             error = true;
             break;
@@ -627,7 +610,7 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
             break;
         }
 
-        gVideoParamsCls = NativeHelper::MakeGlobalRef(env, videoParamCls);
+        gVideoParamsCls = NativeHelper::MakeGlobalRef(env, videoParamCls, "class<VideoParams>");
         if (gVideoParamsCls == nullptr) {
             error = true;
             break;
@@ -663,7 +646,7 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
             break;
         }
 
-        gAudioParamsCls = NativeHelper::MakeGlobalRef(env, audioParamCls);
+        gAudioParamsCls = NativeHelper::MakeGlobalRef(env, audioParamCls, "class<AudioParams>");
         if (gAudioParamsCls == nullptr) {
             error = true;
             break;
@@ -697,6 +680,9 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
         // MediaFormat
         JniMediaFormat::initJni(env);
 
+        // Bundle
+        JniBundle::initJni(env);
+
         // InputBuffer
         inputBufferCls = NativeHelper::FindClass(env, "com/amlogic/asplayer/api/InputBuffer");
         if (inputBufferCls == nullptr) {
@@ -704,7 +690,7 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
             break;
         }
 
-        gInputBufferCls = NativeHelper::MakeGlobalRef(env, inputBufferCls);
+        gInputBufferCls = NativeHelper::MakeGlobalRef(env, inputBufferCls, "class<InputBuffer>");
         if (gInputBufferCls == nullptr) {
             error = true;
             break;
@@ -725,17 +711,20 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
 
         nullPointerExceptionCls = NativeHelper::FindClass(
                 env, "java/lang/NullPointerException");
-        gExceptionsCtx.nullPointerExceptionCls = NativeHelper::MakeGlobalRef(env, nullPointerExceptionCls);
+        gExceptionsCtx.nullPointerExceptionCls = NativeHelper::MakeGlobalRef(
+                env, nullPointerExceptionCls, "class<NullPointerException>");
         DELETE_LOCAL_REF(env, nullPointerExceptionCls);
 
         illegalArgumentExceptionCls = NativeHelper::FindClass(
                 env, "java/lang/IllegalArgumentException");
-        gExceptionsCtx.illegalArgumentExceptionCls = NativeHelper::MakeGlobalRef(env, illegalArgumentExceptionCls);
+        gExceptionsCtx.illegalArgumentExceptionCls = NativeHelper::MakeGlobalRef(
+                env, illegalArgumentExceptionCls, "class<IllegalArgumentException>");
         DELETE_LOCAL_REF(env, illegalArgumentExceptionCls);
 
         illegalStateExceptionCls = NativeHelper::FindClass(
                 env, "java/lang/IllegalStateException");
-        gExceptionsCtx.illegalStateExceptionCls = NativeHelper::MakeGlobalRef(env, illegalStateExceptionCls);
+        gExceptionsCtx.illegalStateExceptionCls = NativeHelper::MakeGlobalRef(
+                env, illegalStateExceptionCls, "class<IllegalStateException>");
         DELETE_LOCAL_REF(env, illegalStateExceptionCls);
     } while (0);
 
@@ -1715,4 +1704,38 @@ jni_asplayer_result JniASPlayer::getVideoInfo(jni_asplayer_video_info *videoInfo
     DELETE_LOCAL_REF(env, jVideoMediaFormat);
 
     return JNI_ASPLAYER_OK;
+}
+
+jni_asplayer_result JniASPlayer::setParameter(jni_asplayer_parameter type, void *arg) {
+    jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+
+    switch (type) {
+        default:
+            ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+            break;
+    }
+
+    return ret;
+}
+
+jni_asplayer_result JniASPlayer::setBundleParameters(JNIEnv *env, JniBundle *bundle) {
+    if (!bundle) {
+        AP_LOGE("setBundleParameters failed, bundle is null");
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    return setParameters(env, bundle->getJavaBundleObject());
+}
+
+jni_asplayer_result JniASPlayer::setParameters(JNIEnv *env, jobject bundleObj) {
+    if (!env) {
+        AP_LOGE("setParameters failed, JNIEnv is null");
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    } else if (!bundleObj) {
+        AP_LOGE("setParameters failed, bundleObj is null");
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setParametersMID, bundleObj);
+    return static_cast<jni_asplayer_result>(ret);
 }

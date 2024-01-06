@@ -164,6 +164,10 @@ jobject
 asplayer_get_video_info(JNIEnv *env, jobject jniASPlayerWrapperObj);
 
 jni_asplayer_result
+asplayer_set_parameters(JNIEnv *env, jobject jniASPlayerWrapperObj,
+                        jobjectArray keys, jobjectArray values);
+
+jni_asplayer_result
 asplayer_release(JNIEnv *env, jobject jniASPlayerWrapperObj);
 
 #ifdef __cplusplus

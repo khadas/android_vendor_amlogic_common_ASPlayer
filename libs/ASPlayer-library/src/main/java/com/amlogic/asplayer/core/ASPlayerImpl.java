@@ -11,18 +11,19 @@ package com.amlogic.asplayer.core;
 import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioTrack;
-import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.tv.tuner.Tuner;
 import android.media.tv.tuner.dvr.DvrPlayback;
 import android.media.tv.tuner.dvr.DvrSettings;
 import android.media.tv.tuner.filter.Filter;
+import android.os.Bundle;
 import android.os.ConditionVariable;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Process;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceControl;
 
@@ -31,6 +32,7 @@ import com.amlogic.asplayer.api.ErrorCode;
 import com.amlogic.asplayer.api.InputBuffer;
 import com.amlogic.asplayer.api.InputFrameBuffer;
 import com.amlogic.asplayer.api.InputSourceType;
+import com.amlogic.asplayer.api.Parameters;
 import com.amlogic.asplayer.api.TsPlaybackListener;
 import com.amlogic.asplayer.api.VideoFormat;
 import com.amlogic.asplayer.api.VideoParams;
@@ -38,7 +40,9 @@ import com.amlogic.asplayer.api.IASPlayer;
 import com.amlogic.asplayer.api.WorkMode;
 import com.amlogic.asplayer.core.utils.Utils;
 
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import static com.amlogic.asplayer.api.ASPlayer.INFO_BUSY;
@@ -54,7 +58,6 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         AudioOutputPathBase.AudioFormatListener {
 
     private static final boolean DEBUG = false;
-    private static final String TAG = Constant.LOG_TAG;
 
     private Tuner mTuner;
     private Context mContext;
@@ -1285,6 +1288,73 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         int mixLevel = mAudioOutputPath.getADMixLevel();
         ASPlayerLog.i("%s getADMixLevel, mixLevel: %d", getTag(), mixLevel);
         return mixLevel;
+    }
+
+    @Override
+    public int setParameters(Bundle parameters) {
+        ASPlayerLog.d("%s setParameters start", getTag());
+        if (parameters == null) {
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        }
+
+        int ret = ErrorCode.ERROR_INVALID_OPERATION;
+
+        Set<String> keys = parameters.keySet();
+        Set<String> unHandledKeys = new HashSet<>(keys.size());
+        unHandledKeys.addAll(keys);
+
+        for (String key : keys) {
+            if (TextUtils.isEmpty(key)) {
+                break;
+            }
+
+            if (!unHandledKeys.contains(key)) {
+                // key has been handled
+                continue;
+            }
+
+            ret = setParameters(key, parameters, unHandledKeys);
+            if (ret != ErrorCode.SUCCESS) {
+                ASPlayerLog.e("%s setParameters failed, key: %s", getTag(), key);
+                continue;
+            }
+        }
+
+        for (String key : unHandledKeys) {
+            ASPlayerLog.e("%s setParameters failed, unhandled key: %s", getTag(), key);
+        }
+
+        return ret;
+    }
+
+    private int setParameters(final String key, final Bundle parameters, Set<String> unhandledKeys) {
+        if (TextUtils.isEmpty(key)) {
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        }
+
+        Set<String> keysHandled = new HashSet<>();
+
+        int ret = ErrorCode.ERROR_INVALID_OPERATION;
+        try {
+            switch (key) {
+                default:
+                    break;
+            }
+
+            if (!keysHandled.isEmpty()) {
+                unhandledKeys.removeAll(keysHandled);
+            }
+        } catch (ClassCastException e) {
+            ASPlayerLog.e("%s setParameters failed, ClassCastException, key: %s, error: %s",
+                    getTag(), key, Log.getStackTraceString(e));
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        } catch (Exception e) {
+            ASPlayerLog.e("%s setParameters failed, key: %s, error: %s",
+                    getTag(), key, Log.getStackTraceString(e));
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+
+        return ret;
     }
 
     @Override
