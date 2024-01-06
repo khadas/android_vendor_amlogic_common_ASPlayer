@@ -32,6 +32,7 @@ static const char *KEY_AUDIO_PRESENTATION_ID            = "audio-presentation-id
 static const char *KEY_AUDIO_PROGRAM_ID                 = "audio-program-id";
 static const char *KEY_FIRST_LANGUAGE                   = "audio-first-language";
 static const char *KEY_SECOND_LANGUAGE                  = "audio-second-language";
+static const char *KEY_AUDIO_SPDIF_PROTECTION_MODE      = "spdif-protection-mode";
 
 /**
  * ASPlayer interface
@@ -1914,6 +1915,9 @@ jni_asplayer_result JniASPlayer::setParameter(jni_asplayer_parameter type, void 
         case JNI_ASPLAYER_KEY_AUDIO_LANG:
             ret = setAudioLanguage((jni_asplayer_audio_lang*)arg);
             break;
+        case JNI_ASPLAYER_KEY_SPDIF_PROTECTION_MODE:
+            ret = setAudioSpdifProtectionMode(*((int32_t *)arg));
+            break;
         default:
             break;
     }
@@ -2029,6 +2033,33 @@ jni_asplayer_result JniASPlayer::setAudioLanguage(jni_asplayer_audio_lang *lang)
     if (ret != JNI_ASPLAYER_OK) {
         AP_LOGE("setAudioLanguage failed, result: %d, firstLanguage: %d, secondLanguage: %d",
                 ret, firstLang, secondLang);
+    }
+
+    JniBundle::release(env, bundle);
+
+    return ret;
+}
+
+jni_asplayer_result JniASPlayer::setAudioSpdifProtectionMode(int32_t mode) {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED(__FUNCTION__);
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    AP_LOGI("setAudioSpdifProtectionMode mode: %d", mode);
+
+    JniBundle *bundle = nullptr;
+    if (!JniBundle::create(env, &bundle)) {
+        AP_LOGE("setAudioSpdifProtectionMode failed, create bundle failed");
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    bundle->putInt(env, KEY_AUDIO_SPDIF_PROTECTION_MODE, (jint)mode);
+
+    jni_asplayer_result ret = setBundleParameters(env, bundle);
+    if (ret != JNI_ASPLAYER_OK) {
+        AP_LOGE("setAudioSpdifProtectionMode failed, result %d, mode: %d", ret, mode);
     }
 
     JniBundle::release(env, bundle);

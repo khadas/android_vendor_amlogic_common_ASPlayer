@@ -38,6 +38,7 @@ import com.amlogic.asplayer.api.VideoFormat;
 import com.amlogic.asplayer.api.VideoParams;
 import com.amlogic.asplayer.api.IASPlayer;
 import com.amlogic.asplayer.api.WorkMode;
+import com.amlogic.asplayer.api.audio.SpdifProtectionMode;
 import com.amlogic.asplayer.core.utils.Utils;
 
 import java.util.HashSet;
@@ -1352,6 +1353,10 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
                     ret = setAudioLanguage(parameters, keysHandled);
                     keysHandled.add(key);
                     break;
+                case Parameters.KEY_SPDIF_PROTECTION_MODE:
+                    ret = setAudioSpdifProtectionMode(parameters, keysHandled);
+                    keysHandled.add(key);
+                    break;
                 default:
                     break;
             }
@@ -1422,6 +1427,40 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             }
         } else {
             ASPlayerLog.e("%s setAudioLanguage failed, playerHandler is null", getTag());
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+    }
+
+    private int setAudioSpdifProtectionMode(Bundle parameters, Set<String> keysHandled) {
+        int mode = parameters.getInt(Parameters.KEY_SPDIF_PROTECTION_MODE, SpdifProtectionMode.SPDIF_PROTECTION_MODE_NONE);
+
+        keysHandled.add(Parameters.KEY_SPDIF_PROTECTION_MODE);
+
+        return setAudioSpdifProtectionMode(mode);
+    }
+
+    private int setAudioSpdifProtectionMode(int mode) {
+        if (mode != SpdifProtectionMode.SPDIF_PROTECTION_MODE_NONE
+                && mode != SpdifProtectionMode.SPDIF_PROTECTION_MODE_NEVER
+                && mode != SpdifProtectionMode.SPDIF_PROTECTION_MODE_ONCE) {
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        }
+
+        if (isAlive()) {
+            if (mAudioOutputPath == null) {
+                return ErrorCode.ERROR_INVALID_OPERATION;
+            }
+
+            int result = mAudioOutputPath.setSpdifProtectionMode(mode);
+            if (result == ErrorCode.SUCCESS) {
+                ASPlayerLog.i("%s setAudioSpdifProtectionMode success, mode: %d", getTag(), mode);
+            } else {
+                ASPlayerLog.e("%s setAudioSpdifProtectionMode failed, result: %d, mode: %d",
+                        getTag(), result, mode);
+            }
+            return result;
+        } else {
+            ASPlayerLog.e("%s setAudioSpdifProtectionMode failed, playerHandler is null", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
     }
