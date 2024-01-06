@@ -13,6 +13,27 @@
 #include <jni.h>
 #include "log.h"
 
+#define CHECK_JNI_EXCEPTION(env)                \
+    do {                                        \
+        if (env != nullptr) {                   \
+            if (env->ExceptionOccurred()) {     \
+                env->ExceptionDescribe();       \
+                env->ExceptionClear();          \
+            }                                   \
+        }                                       \
+    } while (0)
+
+#define DELETE_LOCAL_REF(env, ref)              \
+    do {                                        \
+        if (ref != nullptr) {                   \
+            if (env != nullptr) {               \
+                env->DeleteLocalRef(ref);       \
+            }                                   \
+            ref = nullptr;                      \
+        }                                       \
+    } while (0)
+
+
 class NativeHelper {
 public:
     static int registerNativeMethods(JNIEnv* env, const char* className,
@@ -57,9 +78,13 @@ public:
     }
 
     template <typename T>
-    static inline T MakeGlobalRef(JNIEnv* env, T in) {
+    static inline T MakeGlobalRef(JNIEnv* env, T in, const char *msg) {
         jobject res = env->NewGlobalRef(in);
-        AP_LOGE_IF(res == NULL, "Unable to create global reference.");
+        if (msg) {
+            AP_LOGE_IF(res == NULL, "Unable to create global reference for %s", msg);
+        } else {
+            AP_LOGE_IF(res == NULL, "Unable to create global reference.");
+        }
         return static_cast<T>(res);
     }
 };

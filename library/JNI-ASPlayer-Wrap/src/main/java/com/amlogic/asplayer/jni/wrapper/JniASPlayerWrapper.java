@@ -10,6 +10,7 @@ package com.amlogic.asplayer.jni.wrapper;
 
 import android.media.MediaFormat;
 import android.media.tv.tuner.Tuner;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.Surface;
 
@@ -400,6 +401,21 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
+    public int setParameters(Bundle parameters) {
+        String[] keys = new String[parameters.size()];
+        Object[] values = new Object[parameters.size()];
+
+        int i = 0;
+        for (final String key : parameters.keySet()) {
+            keys[i] = key;
+            values[i] = parameters.get(key);
+            i++;
+        }
+
+        return native_setParameters(keys, values);
+    }
+
+    @Override
     public int setSubtitlePid(int pid) {
         return 0;
     }
@@ -471,6 +487,7 @@ public class JniASPlayerWrapper implements IASPlayer {
     private native int native_getADMixLevel();
     private native int native_setAudioDualMonoMode(int mode);
     private native int native_getAudioDualMonoMode();
+    private native int native_setParameters(String[] keys, Object[] values);
     private native MediaFormat native_getVideoInfo();
     private native void native_release();
 }

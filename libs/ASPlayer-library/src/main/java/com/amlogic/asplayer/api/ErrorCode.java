@@ -27,4 +27,6 @@ public class ErrorCode {
     public static final int ERROR_IO = -7;
 
     public static final int ERROR_WOULD_BLOCK = -8;
+
+    public static final int ERROR_UNKNOWN = -254;
 }

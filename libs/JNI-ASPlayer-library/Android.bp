@@ -80,6 +80,7 @@ cc_library_shared {
         "src/main/jni/JniASPlayerJNI.cpp",
         "src/main/jni/JniMediaFormat.cpp",
         "src/main/jni/NativeHelper.cpp",
+        "src/main/jni/JniBundle.cpp",
         "src/main/jni/JniPlaybackListener.cpp",
         "src/main/jni/native-lib.cpp",
     ],

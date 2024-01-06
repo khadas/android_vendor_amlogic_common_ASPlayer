@@ -18,6 +18,7 @@
 #include "common/utils/AutoEnv.h"
 
 #include "JniNativeLib.h"
+#include "NativeHelper.h"
 
 #define LOG_NULL_PARAM(ptr) ALOGE("[%s/%d] failed, null pointer" #ptr "", __FUNCTION__, __LINE__)
 #define LOG_GET_JNIENV_FAILED() ALOGE("[%s/%d] failed to get jni env", __FUNCTION__, __LINE__)
@@ -406,6 +407,13 @@ native_get_audio_dual_mono_mode(JNIEnv *env, jobject thiz) {
     }
 }
 
+static jint
+native_set_parameters(JNIEnv *env, jobject thiz, jobjectArray keys, jobjectArray values) {
+    jni_asplayer_result result = asplayer_set_parameters(env, thiz, keys, values);
+
+    return result;
+}
+
 static jobject
 native_get_video_info(JNIEnv *env, jobject thiz) {
     jobject result = asplayer_get_video_info(env, thiz);
@@ -465,6 +473,7 @@ static JNINativeMethod methods[] = {
         {"native_getADMixLevel", "()I", (void*)native_get_ad_mix_level },
         {"native_setAudioDualMonoMode", "(I)I", (void*)native_set_audio_dual_mono_mode },
         {"native_getAudioDualMonoMode", "()I", (void*)native_get_audio_dual_mono_mode },
+        {"native_setParameters", "([Ljava/lang/String;[Ljava/lang/Object;)I", (void*)native_set_parameters },
         {"native_getVideoInfo", "()Landroid/media/MediaFormat;", (void*) native_get_video_info },
         {"native_release", "()V", (void*)native_release },
 };
@@ -511,6 +520,8 @@ jint JNI_OnLoad(JavaVM* vm, void* /*reserved*/) {
         ALOGE("ERROR: GetEnv failed");
         return result;
     }
+
+    NativeHelper::initJniEnv(env);
 
 #if (USE_SYSTEM_SO == 1)
     jni_asplayer_result ret = DynamicJniASPlayerWrapper::registerJni(env);

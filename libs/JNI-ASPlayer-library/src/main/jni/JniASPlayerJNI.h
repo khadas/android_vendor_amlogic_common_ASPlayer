@@ -12,7 +12,8 @@
 
 #include <jni.h>
 #include <mutex>
-#include <JNIASPlayer.h>
+#include "JNIASPlayer.h"
+#include "JniBundle.h"
 #include "JniPlaybackListener.h"
 
 #ifdef __cplusplus
@@ -164,8 +165,14 @@ public:
 
     jni_asplayer_result getVideoInfo(jni_asplayer_video_info *videoInfo);
 
+    jni_asplayer_result setParameter(jni_asplayer_parameter type, void *arg);
+
 private:
     int setJavaASPlayerHandle(JNIEnv *env, jobject javaPlayer);
+
+    jni_asplayer_result setBundleParameters(JNIEnv *env, JniBundle *bundle);
+
+    jni_asplayer_result setParameters(JNIEnv *env, jobject bundleObj);
 
 private:
     jobject mJavaPlayer;

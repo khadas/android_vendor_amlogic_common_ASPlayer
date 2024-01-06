@@ -34,16 +34,16 @@ public:
     virtual ~JniMediaFormat();
 
 private:
-    static bool sInited;
-    static jclass sMediaFormatCls;
-    static jmethodID sConstructorMID;
-    static jmethodID sGetIntegerMID;
-    static jmethodID sGetIntegerDefaultValueMID;
-    static jmethodID sGetFloatMID;
-    static jmethodID sGetFloatDefaultValueMID;
-    static jmethodID sGetLongDefaultValueMID;
-    static jmethodID sGetKeysMID;
-    static jmethodID sGetValueTypeForKeyMID;
+    static bool gInited;
+    static jclass gMediaFormatCls;
+    static jmethodID gConstructorMID;
+    static jmethodID gGetIntegerMID;
+    static jmethodID gGetIntegerDefaultValueMID;
+    static jmethodID gGetFloatMID;
+    static jmethodID gGetFloatDefaultValueMID;
+    static jmethodID gGetLongDefaultValueMID;
+    static jmethodID gGetKeysMID;
+    static jmethodID gGetValueTypeForKeyMID;
 };
 
 

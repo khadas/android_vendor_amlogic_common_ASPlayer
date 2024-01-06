@@ -7,6 +7,9 @@
  * Description:
  */
 
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 #include "config.h"
 #include "JniNativeLib.h"
 #include "common/utils/Log.h"
@@ -18,6 +21,17 @@
 #include "JniASPlayerWrapper.h"
 #endif
 #include "ASPlayerJni.h"
+#include "NativeHelper.h"
+
+#define DELETE_LOCAL_REF(env, ref)              \
+    do {                                        \
+        if (ref != nullptr) {                   \
+            if (env != nullptr) {               \
+                env->DeleteLocalRef(ref);       \
+            }                                   \
+            ref = nullptr;                      \
+        }                                       \
+    } while (0)
 
 #define LOG_GET_PLAYER_FAILED() ALOGE("[%s/%d] failed to get player instance", __FUNCTION__, __LINE__)
 
@@ -1033,6 +1047,146 @@ asplayer_get_video_info(JNIEnv *env, jobject jniASPlayerWrapperObj) {
     delete videoInfo;
 
     return mediaFormat;
+}
+
+jni_asplayer_result
+asplayer_set_parameters(JNIEnv *env, jobject jniASPlayerWrapperObj,
+                        jobjectArray keys, jobjectArray values) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr) {
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    BaseJniASPlayerWrapper *player = getASPlayer(env, jniASPlayerWrapperObj);
+    if (player == nullptr) {
+        LOG_GET_PLAYER_FAILED();
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    jsize numEntries = 0;
+
+    if (keys == NULL) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    } else if (values == NULL) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    } else {
+        numEntries = env->GetArrayLength(keys);
+
+        if (numEntries != env->GetArrayLength(values)) {
+            return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+        }
+    }
+
+    ALOGI("[%s/%d] setParameters numEntries: %d", __func__, __LINE__, numEntries);
+
+    jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OPERATION;
+
+    jobject keyObj = nullptr;
+    const char *stringKey = nullptr;
+    jobject valueObj = nullptr;
+    jint intValue = 0;
+    jlong longValue = 0;
+    jfloat floatValue = 0;
+    const char *stringValue = nullptr;
+
+    do {
+        for (jsize i = 0; i < numEntries; ++i) {
+            keyObj = env->GetObjectArrayElement(keys, i);
+            if (env->IsSameObject(keyObj, nullptr)) {
+                ALOGE("[%s/%d] setParameters failed, key is null", __func__, __LINE__);
+                ret = JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+                break;
+            }
+
+            if (!NativeHelper::isStringInstance(env, keyObj)) {
+                ALOGE("[%s/%d] setParameters failed, key is not string", __func__, __LINE__);
+                ret = JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+                break;
+            }
+
+            stringKey = env->GetStringUTFChars((jstring)keyObj, NULL);
+            if (stringKey == NULL) {
+                ret = JNI_ASPLAYER_ERROR_INVALID_OPERATION;
+                break;
+            }
+
+            ALOGI("[%s/%d] setParameters key: %s", __func__, __LINE__, stringKey);
+
+            valueObj = env->GetObjectArrayElement(values, i);
+            if (env->IsSameObject(valueObj, nullptr)) {
+                ALOGE("[%s/%d] setParameters failed, value is null, key: %s", __func__, __LINE__, stringKey);
+                ret = JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+                break;
+            }
+            if (NativeHelper::isStringInstance(env, valueObj)) {
+                const char *value = env->GetStringUTFChars((jstring)valueObj, NULL);
+                if (value == NULL) {
+                    ALOGE("[%s/%d] setParameters failed, failed to get string value, key: %s",
+                          __func__, __LINE__, stringKey);
+                    ret = JNI_ASPLAYER_ERROR_INVALID_OPERATION;
+                    break;
+                }
+
+                stringValue = value;
+                ALOGI("[%s/%d] setParameters %s=%s", __func__, __LINE__, stringKey, stringValue);
+            } else if (NativeHelper::isIntegerInstance(env, valueObj)) {
+                jint value = 0;
+                if (!NativeHelper::getIntFromInteger(env, valueObj, &value)) {
+                    ALOGE("[%s/%d] setParameters failed, failed to get int value, key: %s",
+                          __func__, __LINE__, stringKey);
+                    ret = JNI_ASPLAYER_ERROR_INVALID_OPERATION;
+                    break;
+                }
+
+                intValue = value;
+                ALOGI("[%s/%d] setParameters %s=%d", __func__, __LINE__, stringKey, intValue);
+            } else if (NativeHelper::isLongInstance(env, valueObj)) {
+                jlong value = 0;
+                if (!NativeHelper::getLongFromLongObj(env, valueObj, &value)) {
+                    ALOGE("[%s/%d] setParameters failed, failed to get long value, key: %s",
+                          __func__, __LINE__, stringKey);
+                    ret = JNI_ASPLAYER_ERROR_INVALID_OPERATION;
+                    break;
+                }
+
+                longValue = value;
+                ALOGI("[%s/%d] setParameters %s=%" PRId64 "", __func__, __LINE__, stringKey, longValue);
+            } else if (NativeHelper::isFloatInstance(env, valueObj)) {
+                jfloat value = 0;
+                if (!NativeHelper::getFloatFromFloatObj(env, valueObj, &value)) {
+                    ALOGE("[%s/%d] setParameters failed, failed to get float value, key: %s",
+                          __func__, __LINE__, stringKey);
+                    ret = JNI_ASPLAYER_ERROR_INVALID_OPERATION;
+                    break;
+                }
+
+                floatValue = value;
+                ALOGI("[%s/%d] setParameters %s=%f", __func__, __LINE__, stringKey, floatValue);
+            }
+
+            env->ReleaseStringUTFChars((jstring)keyObj, stringKey);
+            stringKey = NULL;
+
+            if (stringValue) {
+                env->ReleaseStringUTFChars((jstring)valueObj, stringValue);
+            }
+            stringValue = NULL;
+        }
+    } while (0);
+
+    if (stringKey) {
+        env->ReleaseStringUTFChars((jstring)keyObj, stringKey);
+        keyObj = NULL;
+        stringKey = NULL;
+    }
+
+    if (stringValue) {
+        env->ReleaseStringUTFChars((jstring)valueObj, stringValue);
+        valueObj = NULL;
+        stringValue = NULL;
+    }
+
+    return ret;
 }
 
 jni_asplayer_result

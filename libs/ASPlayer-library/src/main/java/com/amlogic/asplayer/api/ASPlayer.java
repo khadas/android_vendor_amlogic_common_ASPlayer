@@ -12,6 +12,7 @@ import android.content.Context;
 import android.media.AudioTrack;
 import android.media.MediaFormat;
 import android.media.tv.tuner.Tuner;
+import android.os.Bundle;
 import android.os.Looper;
 import android.view.Surface;
 
@@ -791,6 +792,17 @@ public class ASPlayer implements IASPlayer {
     @Override
     public int getADMixLevel() {
         return mPlayer.getADMixLevel();
+    }
+
+    /**
+     * Set parameter for ASPlayer instance.
+     *
+     * @param parameters
+     * @return
+     */
+    @Override
+    public int setParameters(Bundle parameters) {
+        return mPlayer.setParameters(parameters);
     }
 
     /**

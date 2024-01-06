@@ -828,6 +828,12 @@ public class TvPlayer {
         return 0;
     }
 
+    public void setParameters(Bundle parameters) {
+        if (mASPlayer != null) {
+            mASPlayer.setParameters(parameters);
+        }
+    }
+
     public void release() {
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
