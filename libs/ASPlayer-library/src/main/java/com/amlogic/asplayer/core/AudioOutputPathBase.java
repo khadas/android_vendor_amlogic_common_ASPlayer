@@ -8,11 +8,14 @@
  */
 package com.amlogic.asplayer.core;
 
+import static com.amlogic.asplayer.core.Constant.UNKNOWN_AUDIO_PRESENTATION_ID;
+
 import android.media.AudioFormat;
 import android.media.AudioTrack;
 import android.media.MediaFormat;
 
 import com.amlogic.asplayer.api.AudioParams;
+import com.amlogic.asplayer.api.ErrorCode;
 
 import java.util.Objects;
 
@@ -187,6 +190,61 @@ abstract class AudioOutputPathBase extends MediaOutputPath {
 
     boolean isPlaying() {
         return mAudioCodecRenderer != null && mAudioCodecRenderer.isPlaying();
+    }
+
+    /**
+     * Set Audio Presentation Id for AC-4
+     *
+     * @param presentationId
+     * @param programId
+     * @return
+     */
+    int setAudioPresentationId(int presentationId, int programId) {
+        if (mAudioCodecRenderer == null) {
+            ASPlayerLog.e("%s setAudioPresentationId failed, audioRender is null," +
+                            " presentationId: %d, programId: %d", getTag(), presentationId, programId);
+            return ErrorCode.ERROR_INVALID_OBJECT;
+        }
+
+        return mAudioCodecRenderer.setAudioPresentationId(presentationId, programId);
+    }
+
+    int getAudioPresentationId() {
+        if (mAudioCodecRenderer == null) {
+            ASPlayerLog.e("%s getAudioPresentationId failed, audioRender is null", getTag());
+            return UNKNOWN_AUDIO_PRESENTATION_ID;
+        }
+
+        return mAudioCodecRenderer.getAudioPresentationId();
+    }
+
+    /**
+     * Set Audio Language for AC-4
+     *
+     * @param firstLanguage
+     * @param secondLanguage
+     * @return
+     */
+    int setAudioLanguage(int firstLanguage, int secondLanguage) {
+        int setFirstLangRet = AudioUtils.setParameterToAudioManager(
+                AudioUtils.CMD_SET_AUDIO_FIRST_LANG, firstLanguage, getTag());
+
+        int setSecondLangRet = AudioUtils.setParameterToAudioManager(
+                AudioUtils.CMD_SET_AUDIO_SECOND_LANG, secondLanguage, getTag());
+
+        if (setFirstLangRet == ErrorCode.SUCCESS && setSecondLangRet == ErrorCode.SUCCESS) {
+            ASPlayerLog.i("%s setAudioLanguage success, firstLang: %d, 0x%x, secondLang: %d, 0x%x",
+                    getTag(), firstLanguage, firstLanguage, secondLanguage, secondLanguage);
+            return ErrorCode.SUCCESS;
+        } else {
+            ASPlayerLog.i("%s setAudioLanguage failed. firstLang result: %d, secondLang result: %d",
+                    getTag(), setFirstLangRet, setSecondLangRet);
+            if (setFirstLangRet != ErrorCode.SUCCESS) {
+                return setFirstLangRet;
+            } else {
+                return setSecondLangRet;
+            }
+        }
     }
 
     @Override

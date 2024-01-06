@@ -17,4 +17,13 @@
 <permissions>
     <library name="droidlogic.jniasplayer"
             file="/vendor/framework/droidlogic.jniasplayer.jar" />
+          <privapp-permissions package="com.amlogic.jniasplayer">
+               <permission name="android.permission.WRITE_SECURE_SETTINGS"/>
+               <permission name="android.permission.MANAGE_USERS"/>
+               <permission name="android.permission.INTERACT_ACROSS_USERS"/>
+               <permission name="android.permission.ACCESS_TV_TUNER" />
+               <permission name="android.permission.TUNER_RESOURCE_ACCESS" />
+               <permission name="android.permission.ACCESS_TV_DESCRAMBLER" />
+               <permission name="android.permission.MODIFY_AUDIO_SETTINGS" />
+          </privapp-permissions>
 </permissions>

@@ -264,4 +264,19 @@ interface AudioCodecRenderer {
     void resume();
 
     AudioFormat getAudioFormat();
+
+    /**
+     * Set Audio Presentation Id for AC-4
+     *
+     * @param presentationId
+     * @param programId
+     * @return
+     */
+    int setAudioPresentationId(int presentationId, int programId);
+
+    /**
+     * Get Audio Presentation Id for AC-4
+     * @return
+     */
+    int getAudioPresentationId();
 }

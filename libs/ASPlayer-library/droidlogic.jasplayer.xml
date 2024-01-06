@@ -24,5 +24,6 @@
         <permission name="android.permission.ACCESS_TV_TUNER" />
         <permission name="android.permission.TUNER_RESOURCE_ACCESS" />
         <permission name="android.permission.ACCESS_TV_DESCRAMBLER" />
+        <permission name="android.permission.MODIFY_AUDIO_SETTINGS" />
      </privapp-permissions>
 </permissions>

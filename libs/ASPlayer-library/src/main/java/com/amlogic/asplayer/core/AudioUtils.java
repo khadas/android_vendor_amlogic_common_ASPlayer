@@ -1,7 +1,13 @@
 package com.amlogic.asplayer.core;
 
+import static com.amlogic.asplayer.core.Constant.UNKNOWN_AUDIO_PRESENTATION_ID;
+import static com.amlogic.asplayer.core.Constant.UNKNOWN_AUDIO_PROGRAM_ID;
+
+import android.content.Context;
 import android.media.AudioDeviceInfo;
 import android.media.AudioFormat;
+import android.media.AudioManager;
+import android.media.AudioPresentation;
 import android.media.AudioTrack;
 import android.media.MediaFormat;
 import android.os.Build;
@@ -10,6 +16,7 @@ import android.util.Log;
 
 
 import com.amlogic.asplayer.api.AudioParams;
+import com.amlogic.asplayer.api.ErrorCode;
 import com.amlogic.asplayer.core.ts.TsAc3Parser;
 
 import org.json.JSONException;
@@ -17,7 +24,10 @@ import org.json.JSONObject;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 
 public class AudioUtils {
 
@@ -27,6 +37,11 @@ public class AudioUtils {
     public static final float VOLUME_MIN_DB = -758.0f;
 
     public static final float VOLUME_MAX_DB = 48.0f;
+
+    public static final String CMD_SET_AUDIO_PRESENTATION_ID = "hal_param_dtv_media_presentation_id"; // not used
+    public static final String CMD_GET_AUDIO_PRESENTATION_ID = "ac4_active_pres_id";
+    public static final String CMD_SET_AUDIO_FIRST_LANG = "hal_param_dtv_media_first_lang";
+    public static final String CMD_SET_AUDIO_SECOND_LANG = "hal_param_dtv_media_second_lang";
 
     public static int getEncoding(AudioParams audioParams) {
         MediaFormat mediaFormat = audioParams.getMediaFormat();
@@ -70,6 +85,9 @@ public class AudioUtils {
                 break;
             case MediaFormat.MIMETYPE_AUDIO_MPEG:
                 encoding = AudioFormat.ENCODING_MP3;
+                break;
+            case MediaFormat.MIMETYPE_AUDIO_AC4:
+                encoding = AudioFormat.ENCODING_AC4;
                 break;
             default:
                 ASPlayerLog.w("Invalid mime type: %s", mimeType);
@@ -332,5 +350,142 @@ public class AudioUtils {
         // mixLevel in [0, 100]
         float db = (mixLevel * 64 - 32 * 100) / 100; // [0, 100] mapping to [-32, 32]
         return db;
+    }
+
+    static int setAudioPresentationId(AudioTrack audioTrack, int presentationId, int programId, String tag) {
+        if (audioTrack == null) {
+            ASPlayerLog.e("%s setAudioPresentationId failed, AudioTrack is null, presentationId: %d," +
+                    " programId: %d", tag, presentationId, programId);
+            return ErrorCode.ERROR_INVALID_OBJECT;
+        }
+
+        try {
+            AudioPresentation.Builder builder = new AudioPresentation.Builder(presentationId);
+            if (programId != UNKNOWN_AUDIO_PROGRAM_ID) {
+                builder.setProgramId(programId);
+            }
+
+            AudioPresentation presentation = builder.build();
+            int result = audioTrack.setPresentation(presentation);
+            if (result == AudioTrack.SUCCESS) {
+                ASPlayerLog.i("%s setAudioPresentationId success, presentationId: %d, programId: %d",
+                        tag, presentationId, programId);
+                return ErrorCode.SUCCESS;
+            } else {
+                ASPlayerLog.e("%s setAudioPresentationId failed, result: %d, presentationId: %d," +
+                                " programId: %d", tag, result, presentationId, programId);
+                if (result == AudioTrack.ERROR_BAD_VALUE) {
+                    return ErrorCode.ERROR_INVALID_PARAMS;
+                } else if (result == AudioTrack.ERROR_INVALID_OPERATION) {
+                    return ErrorCode.ERROR_INVALID_OPERATION;
+                } else {
+                    return ErrorCode.ERROR_UNKNOWN;
+                }
+            }
+        } catch (Exception e) {
+            ASPlayerLog.e("%s setAudioPresentationId failed, error: %s, presentationId: %d, programId: %d",
+                    tag, (e != null ? e.getMessage() : ""), presentationId, programId);
+            ASPlayerLog.e("%s setAudioPresentationId failed, error: %s", tag, Log.getStackTraceString(e));
+        }
+
+        return ErrorCode.ERROR_UNKNOWN;
+    }
+
+    static int getAudioPresentationId(String tag) {
+        Map<String, String> parameters = getParametersFromAudioManager(CMD_GET_AUDIO_PRESENTATION_ID, tag);
+        if (parameters == null || parameters.isEmpty() || !parameters.containsKey(CMD_GET_AUDIO_PRESENTATION_ID)) {
+            ASPlayerLog.e("%s getAudioPresentationId failed", tag);
+            return UNKNOWN_AUDIO_PRESENTATION_ID;
+        }
+
+        int presentationId = UNKNOWN_AUDIO_PRESENTATION_ID;
+
+        try {
+            String presentationIdStr = parameters.get(CMD_GET_AUDIO_PRESENTATION_ID);
+            presentationId = Integer.parseInt(presentationIdStr);
+        } catch (Exception e) {
+            ASPlayerLog.e("%s getAudioPresentationId error: %s, \n%s",
+                    tag, (e != null ? e.getMessage() : ""), Log.getStackTraceString(e));
+        }
+
+        return presentationId;
+    }
+
+    protected static <T> int setParameterToAudioManager(String key, T value, String tag) {
+        if (TextUtils.isEmpty(key)) {
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        }
+
+        Context context = BaseAppContext.getAppContext();
+        if (context == null) {
+            ASPlayerLog.e("%s setParameterToAudioManager failed, failed to get context", tag);
+            return ErrorCode.ERROR_INVALID_OBJECT;
+        }
+
+        AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        if (audioManager == null) {
+            ASPlayerLog.e("%s setParameterToAudioManager failed, failed to get AudioManager", tag);
+            return ErrorCode.ERROR_INVALID_OBJECT;
+        }
+
+        String parameters = key + "=" + value;
+
+        ASPlayerLog.i("%s setParametersToAudioManager, parameter: %s", tag, parameters);
+
+        audioManager.setParameters(parameters);
+
+        return ErrorCode.SUCCESS;
+    }
+
+    protected static Map<String, String> getParametersFromAudioManager(String keys, String tag) {
+        if (TextUtils.isEmpty(keys)) {
+            return null;
+        }
+
+        Context context = BaseAppContext.getAppContext();
+        if (context == null) {
+            ASPlayerLog.e("%s getParametersFromAudioManager failed, failed to get context", tag);
+            return null;
+        }
+
+        AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        if (audioManager == null) {
+            ASPlayerLog.e("%s getParametersFromAudioManager failed, failed to get AudioManager", tag);
+            return null;
+        }
+
+        String resultStr = null;
+
+        try {
+            resultStr = audioManager.getParameters(keys);
+        } catch (Exception e) {
+            ASPlayerLog.e("%s getParametersFromAudioManager failed, error: %s,\n%s",
+                    tag, (e != null ? e.getMessage() : ""), Log.getStackTraceString(e));
+        }
+
+        ASPlayerLog.i("%s getParametersFromAudioManager, keys: %s, parameters: %s",
+                tag, keys, resultStr);
+
+        if (TextUtils.isEmpty(resultStr)) {
+            ASPlayerLog.e("% getParametersFromAudioManager failed, result is empty", tag);
+            return null;
+        }
+
+        String[] kvs = resultStr.split(";");
+        if (kvs == null) {
+            ASPlayerLog.e("% getParametersFromAudioManager failed, no parameters returned", tag);
+            return null;
+        }
+
+        Map<String, String> result = new HashMap<>();
+
+        Arrays.stream(kvs).forEach(s -> {
+            String[] kv = s.split("=");
+            if (kv != null && kv.length == 2) {
+                result.put(kv[0], kv[1]);
+            }
+        });
+
+        return result;
     }
 }

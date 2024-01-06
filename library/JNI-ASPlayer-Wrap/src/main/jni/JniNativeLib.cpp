@@ -41,7 +41,6 @@ static const char *KEY_AUDIO_PRESENTATION_ID            = "audio-presentation-id
 static const char *KEY_AUDIO_PROGRAM_ID                 = "audio-program-id";
 static const char *KEY_FIRST_LANGUAGE                   = "audio-first-language";
 static const char *KEY_SECOND_LANGUAGE                  = "audio-second-language";
-static const char *KEY_AUDIO_SPDIF_PROTECTION_MODE      = "spdif-protection-mode";
 
 struct field_t {
     jfieldID context;
@@ -1055,6 +1054,43 @@ asplayer_get_video_info(JNIEnv *env, jobject jniASPlayerWrapperObj) {
     return mediaFormat;
 }
 
+static jni_asplayer_result
+asplayer_set_audio_presentation_id(BaseJniASPlayerWrapper *player, jint jPresentationId, jint jProgramId) {
+    jni_asplayer_audio_presentation presentation {
+        .presentation_id = (int32_t)jPresentationId,
+        .program_id = (int32_t)jProgramId
+    };
+    return player->setParameter(JNI_ASPLAYER_KEY_AUDIO_PRESENTATION_ID, &presentation);
+}
+
+static jni_asplayer_result
+asplayer_get_audio_presentation_id(BaseJniASPlayerWrapper *player, jni_asplayer_audio_presentation *presentation) {
+    if (player == nullptr) {
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    } else if (presentation == nullptr) {
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    jni_asplayer_result result = player->getParameter(JNI_ASPLAYER_KEY_AUDIO_PRESENTATION_ID, presentation);
+    if (result != JNI_ASPLAYER_OK) {
+        ALOGE("[%s/%d] getAudioPresentationId failed, result: %d", __func__, __LINE__, result);
+    } else {
+        ALOGI("[%s/%d] getAudioPresentationId success, presentationId: %d, programId: %d",
+              __func__, __LINE__, presentation->presentation_id, presentation->program_id);
+    }
+    return result;
+}
+
+static jni_asplayer_result
+asplayer_set_audio_language(BaseJniASPlayerWrapper *player, jint firstLanguage, jint secondLanguage) {
+    jni_asplayer_audio_lang language {
+            .first_lang = (int32_t) firstLanguage,
+            .second_lang = (int32_t) secondLanguage
+    };
+
+    return player->setParameter(JNI_ASPLAYER_KEY_AUDIO_LANG, &language);
+}
+
 jni_asplayer_result
 asplayer_set_parameters(JNIEnv *env, jobject jniASPlayerWrapperObj,
                         jobjectArray keys, jobjectArray values) {
@@ -1170,6 +1206,38 @@ asplayer_set_parameters(JNIEnv *env, jobject jniASPlayerWrapperObj,
                 ALOGI("[%s/%d] setParameters %s=%f", __func__, __LINE__, stringKey, floatValue);
             }
 
+            if (strcmp(KEY_AUDIO_PRESENTATION_ID, stringKey) == 0) {
+                ALOGI("[%s/%d] setParameters %s found", __func__, __LINE__, KEY_AUDIO_PRESENTATION_ID);
+                jint audioPresentationId = intValue;
+                jint programId = -1;
+
+                jobject programIdObj = nullptr;
+                if (NativeHelper::findObjectValue(env, keys, values, KEY_AUDIO_PROGRAM_ID, &programIdObj)
+                    && NativeHelper::getIntFromInteger(env, programIdObj, &programId)) {
+                    ALOGI("[%s/%d] setParameters %s: %d, %s: %d", __func__, __LINE__,
+                        KEY_AUDIO_PRESENTATION_ID, audioPresentationId, KEY_AUDIO_PROGRAM_ID, programId);
+                } else {
+                    ALOGI("[%s/%d] setParameters %s: %d, %s not set", __func__, __LINE__,
+                        KEY_AUDIO_PRESENTATION_ID, audioPresentationId, KEY_AUDIO_PROGRAM_ID);
+                }
+                ret = asplayer_set_audio_presentation_id(player, audioPresentationId, programId);
+            } else if (strcmp(KEY_FIRST_LANGUAGE, stringKey) == 0) {
+                jint firstLang = intValue;
+                jint secondLang = -1;
+
+                jobject secondLanguageObj = nullptr;
+                if (NativeHelper::findObjectValue(env, keys, values, KEY_SECOND_LANGUAGE, &secondLanguageObj)
+                    && NativeHelper::getIntFromInteger(env, secondLanguageObj, &secondLang)) {
+                    ALOGI("[%s/%d] setParameters %s: %d, %s: %d", __func__, __LINE__,
+                        KEY_FIRST_LANGUAGE, firstLang, KEY_SECOND_LANGUAGE, secondLang);
+                } else {
+                    ALOGI("[%s/%d] setParameters %s: %d, %s not set", __func__, __LINE__,
+                        KEY_FIRST_LANGUAGE, firstLang, KEY_SECOND_LANGUAGE);
+                }
+
+                ret = asplayer_set_audio_language(player, firstLang, secondLang);
+            }
+
             env->ReleaseStringUTFChars((jstring)keyObj, stringKey);
             stringKey = NULL;
 
@@ -1235,6 +1303,18 @@ asplayer_get_parameters(JNIEnv *env, jobject jniASPlayerWrapperObj, jobjectArray
         }
 
         ALOGI("[%s/%d] getParameters, key: %s", __func__, __LINE__, stringKey);
+
+        if (strcmp(KEY_AUDIO_PRESENTATION_ID, stringKey) == 0) {
+            jni_asplayer_audio_presentation audioPresentation {
+                .presentation_id = -1,
+                .program_id = -1
+            };
+            jni_asplayer_result ret = asplayer_get_audio_presentation_id(player, &audioPresentation);
+            if (ret == JNI_ASPLAYER_OK) {
+                ASPlayerJni::putIntToBundle(env, bundleObj, KEY_AUDIO_PRESENTATION_ID, audioPresentation.presentation_id);
+                ASPlayerJni::putIntToBundle(env, bundleObj, KEY_AUDIO_PROGRAM_ID, audioPresentation.program_id);
+            }
+        }
 
         env->ReleaseStringUTFChars((jstring)keyObj, stringKey);
     }

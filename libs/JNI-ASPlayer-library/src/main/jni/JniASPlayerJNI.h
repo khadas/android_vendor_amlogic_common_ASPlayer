@@ -172,6 +172,11 @@ public:
 private:
     int setJavaASPlayerHandle(JNIEnv *env, jobject javaPlayer);
 
+    jni_asplayer_result setAudioPresentationId(jni_asplayer_audio_presentation *audioPresentation);
+    jni_asplayer_result getAudioPresentationId(jni_asplayer_audio_presentation *audioPresentation);
+
+    jni_asplayer_result setAudioLanguage(jni_asplayer_audio_lang *lang);
+
     jni_asplayer_result setBundleParameters(JNIEnv *env, JniBundle *bundle);
 
     jni_asplayer_result setParameters(JNIEnv *env, jobject bundleObj);
