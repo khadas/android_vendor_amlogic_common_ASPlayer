@@ -12,6 +12,7 @@ import android.os.SystemClock;
 
 
 import com.amlogic.asplayer.api.AudioParams;
+import com.amlogic.asplayer.api.ErrorCode;
 import com.amlogic.asplayer.api.PIPMode;
 import com.amlogic.asplayer.api.WorkMode;
 import com.amlogic.asplayer.core.encapsulation.EncapsulationEncoder;
@@ -22,9 +23,9 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.amlogic.asplayer.core.Constant.SPEED_DIFF_THRESHOLD;
 import static com.amlogic.asplayer.core.Constant.INVALID_AV_SYNC_ID;
 import static com.amlogic.asplayer.core.Constant.INVALID_FILTER_ID;
+import static com.amlogic.asplayer.core.Constant.SPEED_DIFF_THRESHOLD;
 
 
 public class AudioCodecRendererV3 implements AudioCodecRenderer {
@@ -156,6 +157,22 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
             return mAudioTrack.getDualMonoMode();
         }
         return AudioTrack.DUAL_MONO_MODE_OFF;
+    }
+
+    @Override
+    public int setAudioPresentationId(int presentationId, int programId) {
+        if (mAudioTrack == null) {
+            ASPlayerLog.e("%s setAudioPresentationId failed, AudioTrack is null, presentationId: %d," +
+                            " programId: %d", getTag(), presentationId, programId);
+            return ErrorCode.ERROR_INVALID_OBJECT;
+        }
+
+        return AudioUtils.setAudioPresentationId(mAudioTrack, presentationId, programId, getTag());
+    }
+
+    @Override
+    public int getAudioPresentationId() {
+        return AudioUtils.getAudioPresentationId(getTag());
     }
 
     @Override

@@ -315,6 +315,11 @@ typedef struct {
 } jni_asplayer_audio_format_t;
 
 typedef struct {
+    int32_t presentation_id;
+    int32_t program_id;
+} jni_asplayer_audio_presentation;
+
+typedef struct {
     int32_t first_lang;
     int32_t second_lang;
 } jni_asplayer_audio_lang;

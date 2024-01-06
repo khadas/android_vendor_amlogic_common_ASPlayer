@@ -13,4 +13,9 @@ public class Constant {
     public static final int INVALID_AV_SYNC_ID = -1;
 
     public static final double SPEED_DIFF_THRESHOLD = 0.001;
+
+    public static final int UNKNOWN_AUDIO_PRESENTATION_ID = -1;
+    public static final int UNKNOWN_AUDIO_PROGRAM_ID = -1;
+
+    public static final int UNKNOWN_AUDIO_LANGUAGE = 0;
 }

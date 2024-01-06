@@ -20,6 +20,7 @@
     <uses-permission android:name="android.permission.TUNER_RESOURCE_ACCESS" />
     <uses-permission android:name="android.permission.ACCESS_TV_DESCRAMBLER" />
     <uses-permission android:name="android.permission.READ_MEDIA_STORAGE" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
 
     <application
         android:allowBackup="true"

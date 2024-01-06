@@ -28,6 +28,11 @@
 
 static const char *JNI_ASPLAYER_CLASSPATH_NAME = "com/amlogic/jniasplayer/JniASPlayer";
 
+static const char *KEY_AUDIO_PRESENTATION_ID            = "audio-presentation-id";
+static const char *KEY_AUDIO_PROGRAM_ID                 = "audio-program-id";
+static const char *KEY_FIRST_LANGUAGE                   = "audio-first-language";
+static const char *KEY_SECOND_LANGUAGE                  = "audio-second-language";
+
 /**
  * ASPlayer interface
  */
@@ -1733,6 +1738,12 @@ jni_asplayer_result JniASPlayer::setParameter(jni_asplayer_parameter type, void 
     jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OPERATION;
 
     switch (type) {
+        case JNI_ASPLAYER_KEY_AUDIO_PRESENTATION_ID:
+            ret = setAudioPresentationId((jni_asplayer_audio_presentation*)arg);
+            break;
+        case JNI_ASPLAYER_KEY_AUDIO_LANG:
+            ret = setAudioLanguage((jni_asplayer_audio_lang*)arg);
+            break;
         default:
             break;
     }
@@ -1744,9 +1755,113 @@ jni_asplayer_result JniASPlayer::getParameter(jni_asplayer_parameter type, void 
     jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OPERATION;
 
     switch (type) {
+        case JNI_ASPLAYER_KEY_AUDIO_PRESENTATION_ID:
+            ret = getAudioPresentationId((jni_asplayer_audio_presentation*)arg);
+            break;
         default:
             break;
     }
+
+    return ret;
+}
+
+jni_asplayer_result JniASPlayer::setAudioPresentationId(jni_asplayer_audio_presentation *audioPresentation) {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED(__FUNCTION__);
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    if (!audioPresentation) {
+        AP_LOGE("setAudioPresentationId failed, invalid param");
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    int32_t presentationId = audioPresentation->presentation_id;
+    int32_t programId = audioPresentation->program_id;
+
+    AP_LOGI("setAudioPresentationId presentationId: %d, programId: %d", presentationId, programId);
+
+    JniBundle *bundle = nullptr;
+    if (!JniBundle::create(env, &bundle)) {
+        AP_LOGE("setAudioPresentationId failed, create bundle failed");
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    bundle->putInt(env, KEY_AUDIO_PRESENTATION_ID, presentationId);
+    bundle->putInt(env, KEY_AUDIO_PROGRAM_ID, programId);
+
+    jni_asplayer_result ret = setBundleParameters(env, bundle);
+    if (ret != JNI_ASPLAYER_OK) {
+        AP_LOGE("setAudioPresentationId failed, result: %d, presentationId: %d, programId: %d",
+                ret, presentationId, programId);
+    }
+
+    JniBundle::release(env, bundle);
+
+    return ret;
+}
+
+jni_asplayer_result
+JniASPlayer::getAudioPresentationId(jni_asplayer_audio_presentation *audioPresentation) {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED(__FUNCTION__);
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    if (!audioPresentation) {
+        AP_LOGE("getAudioPresentationId failed, invalid param");
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    CHECK_JNI_EXCEPTION(env);
+
+    jint unknownPresentationId = -1;
+    jstring presentationIdKey = env->NewStringUTF(KEY_AUDIO_PRESENTATION_ID);
+    jint presentationId = env->CallIntMethod(
+            mJavaPlayer, gASPlayerCtx.getParameterIntMID, presentationIdKey, unknownPresentationId);
+    env->DeleteLocalRef(presentationIdKey);
+
+    audioPresentation->presentation_id = (int32_t) presentationId;
+    audioPresentation->program_id = (int32_t) (-1);
+
+    return JNI_ASPLAYER_OK;
+}
+
+jni_asplayer_result JniASPlayer::setAudioLanguage(jni_asplayer_audio_lang *lang) {
+    JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
+    if (env == nullptr) {
+        LOG_GET_JNIENV_FAILED(__FUNCTION__);
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    if (!lang) {
+        AP_LOGE("setAudioLanguage failed, invalid param");
+        return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    }
+
+    int32_t firstLang = lang->first_lang;
+    int32_t secondLang = lang->second_lang;
+
+    AP_LOGI("setAudioLanguage firstLanguage: %d, secondLanguage: %d", firstLang, secondLang);
+
+    JniBundle *bundle = nullptr;
+    if (!JniBundle::create(env, &bundle)) {
+        AP_LOGE("setAudioLanguage failed, create bundle failed");
+        return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+    }
+
+    bundle->putInt(env, KEY_FIRST_LANGUAGE, firstLang);
+    bundle->putInt(env, KEY_SECOND_LANGUAGE, secondLang);
+
+    jni_asplayer_result ret = setBundleParameters(env, bundle);
+    if (ret != JNI_ASPLAYER_OK) {
+        AP_LOGE("setAudioLanguage failed, result: %d, firstLanguage: %d, secondLanguage: %d",
+                ret, firstLang, secondLang);
+    }
+
+    JniBundle::release(env, bundle);
 
     return ret;
 }

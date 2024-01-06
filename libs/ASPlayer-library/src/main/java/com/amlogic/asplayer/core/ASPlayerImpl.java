@@ -51,6 +51,9 @@ import static com.amlogic.asplayer.api.ASPlayer.INFO_INVALID_OPERATION;
 import static com.amlogic.asplayer.api.ASPlayer.INFO_INVALID_PARAMS;
 import static com.amlogic.asplayer.core.Constant.INVALID_AV_SYNC_ID;
 import static com.amlogic.asplayer.core.Constant.INVALID_SYNC_INSTANCE_ID;
+import static com.amlogic.asplayer.core.Constant.UNKNOWN_AUDIO_LANGUAGE;
+import static com.amlogic.asplayer.core.Constant.UNKNOWN_AUDIO_PRESENTATION_ID;
+import static com.amlogic.asplayer.core.Constant.UNKNOWN_AUDIO_PROGRAM_ID;
 import static com.amlogic.asplayer.core.TsPlaybackConfig.PLAYBACK_BUFFER_SIZE;
 import static com.amlogic.asplayer.core.TsPlaybackConfig.TS_PACKET_SIZE;
 
@@ -1337,6 +1340,14 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         int ret = ErrorCode.ERROR_INVALID_OPERATION;
         try {
             switch (key) {
+                case Parameters.KEY_AUDIO_PRESENTATION_ID:
+                    ret = setAudioPresentationId(parameters, keysHandled);
+                    keysHandled.add(key);
+                    break;
+                case Parameters.KEY_FIRST_LANGUAGE:
+                    ret = setAudioLanguage(parameters, keysHandled);
+                    keysHandled.add(key);
+                    break;
                 default:
                     break;
             }
@@ -1357,6 +1368,60 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         return ret;
     }
 
+    private int setAudioPresentationId(Bundle parameters, Set<String> keysHandled) {
+        int audioPresentationId = parameters.getInt(Parameters.KEY_AUDIO_PRESENTATION_ID, UNKNOWN_AUDIO_PRESENTATION_ID);
+        int programId = parameters.getInt(Parameters.KEY_AUDIO_PROGRAM_ID, UNKNOWN_AUDIO_PROGRAM_ID);
+
+        keysHandled.add(Parameters.KEY_AUDIO_PRESENTATION_ID);
+        keysHandled.add(Parameters.KEY_AUDIO_PROGRAM_ID);
+
+        return setAudioPresentationId(audioPresentationId, programId);
+    }
+
+    private int setAudioPresentationId(int presentationId, int programId) {
+        ASPlayerLog.i("%s setAudioPresentationId presentationId: %d, programId: %d",
+                getTag(), presentationId, programId);
+
+        if (isAlive()) {
+            if (mAudioOutputPath != null) {
+                return mAudioOutputPath.setAudioPresentationId(presentationId, programId);
+            } else {
+                ASPlayerLog.e("%s setAudioPresentationId failed, AudioOutputPath is null", getTag());
+                return ErrorCode.ERROR_INVALID_OBJECT;
+            }
+        } else {
+            ASPlayerLog.e("%s setAudioPresentationId failed, playerHandler is null", getTag());
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+    }
+
+    private int setAudioLanguage(Bundle parameters, Set<String> keysHandled) {
+        int firstLanguage = parameters.getInt(Parameters.KEY_FIRST_LANGUAGE, UNKNOWN_AUDIO_LANGUAGE);
+        int secondLanguage = parameters.getInt(Parameters.KEY_SECOND_LANGUAGE, UNKNOWN_AUDIO_LANGUAGE);
+
+        keysHandled.add(Parameters.KEY_FIRST_LANGUAGE);
+        keysHandled.add(Parameters.KEY_SECOND_LANGUAGE);
+
+        return setAudioLanguage(firstLanguage, secondLanguage);
+    }
+
+    private int setAudioLanguage(int firstLanguage, int secondLanguage) {
+        ASPlayerLog.i("%s setAudioLanguage firstLanguage: %d, secondLanguage: %d",
+                getTag(), firstLanguage, secondLanguage);
+
+        if (isAlive()) {
+            if (mAudioOutputPath != null) {
+                return mAudioOutputPath.setAudioLanguage(firstLanguage, secondLanguage);
+            } else {
+                ASPlayerLog.e("%s setAudioLanguage failed, AudioOutputPath is null", getTag());
+                return ErrorCode.ERROR_INVALID_OBJECT;
+            }
+        } else {
+            ASPlayerLog.e("%s setAudioLanguage failed, playerHandler is null", getTag());
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+    }
+
     @Override
     public Bundle getParameters(String[] keys) {
         if (keys == null || keys.length <= 0) {
@@ -1373,7 +1438,11 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             ASPlayerLog.i("%s getParameters for %s", getTag(), key);
 
             switch (key) {
+                case Parameters.KEY_AUDIO_PRESENTATION_ID:
+                    bundle.putInt(Parameters.KEY_AUDIO_PRESENTATION_ID, getAudioPresentationId());
+                    break;
                 default:
+                    ASPlayerLog.i("%s getParameters unhandled key: %s", getTag(), key);
                     break;
             }
         }
@@ -1396,6 +1465,17 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         }
 
         return getParameters(new String[] { key });
+    }
+
+    private int getAudioPresentationId() {
+        if (mAudioOutputPath == null) {
+            ASPlayerLog.e("%s getAudioPresentationId failed, audioOutputPath is null", getTag());
+            return UNKNOWN_AUDIO_PRESENTATION_ID;
+        }
+
+        int audioPresentationId = mAudioOutputPath.getAudioPresentationId();;
+        ASPlayerLog.i("%s getAudioPresentationId return: %d", getTag(), audioPresentationId);
+        return audioPresentationId;
     }
 
     @Override
