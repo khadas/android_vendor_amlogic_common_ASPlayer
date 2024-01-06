@@ -179,6 +179,8 @@ private:
 
     jni_asplayer_result setAudioLanguage(jni_asplayer_audio_lang *lang);
 
+    jni_asplayer_result setAudioSpdifProtectionMode(int32_t mode);
+
     jni_asplayer_result setBundleParameters(JNIEnv *env, JniBundle *bundle);
 
     jni_asplayer_result setParameters(JNIEnv *env, jobject bundleObj);

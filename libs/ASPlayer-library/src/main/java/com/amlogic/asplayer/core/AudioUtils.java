@@ -42,6 +42,7 @@ public class AudioUtils {
     public static final String CMD_GET_AUDIO_PRESENTATION_ID = "ac4_active_pres_id";
     public static final String CMD_SET_AUDIO_FIRST_LANG = "hal_param_dtv_media_first_lang";
     public static final String CMD_SET_AUDIO_SECOND_LANG = "hal_param_dtv_media_second_lang";
+    public static final String CMD_SET_SPDIF_PROTECTION_MODE = "hal_param_dtv_spdif_protection_mode";
 
     public static int getEncoding(AudioParams audioParams) {
         MediaFormat mediaFormat = audioParams.getMediaFormat();

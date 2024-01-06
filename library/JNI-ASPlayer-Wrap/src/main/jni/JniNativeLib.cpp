@@ -41,6 +41,7 @@ static const char *KEY_AUDIO_PRESENTATION_ID            = "audio-presentation-id
 static const char *KEY_AUDIO_PROGRAM_ID                 = "audio-program-id";
 static const char *KEY_FIRST_LANGUAGE                   = "audio-first-language";
 static const char *KEY_SECOND_LANGUAGE                  = "audio-second-language";
+static const char *KEY_AUDIO_SPDIF_PROTECTION_MODE      = "spdif-protection-mode";
 
 struct field_t {
     jfieldID context;
@@ -1091,6 +1092,12 @@ asplayer_set_audio_language(BaseJniASPlayerWrapper *player, jint firstLanguage, 
     return player->setParameter(JNI_ASPLAYER_KEY_AUDIO_LANG, &language);
 }
 
+static jni_asplayer_result
+asplayer_set_audio_spdif_protection_mode(BaseJniASPlayerWrapper *player, jint jMode) {
+    int32_t mode = (int32_t)jMode;
+    return player->setParameter(JNI_ASPLAYER_KEY_SPDIF_PROTECTION_MODE, &mode);
+}
+
 jni_asplayer_result
 asplayer_set_parameters(JNIEnv *env, jobject jniASPlayerWrapperObj,
                         jobjectArray keys, jobjectArray values) {
@@ -1236,6 +1243,8 @@ asplayer_set_parameters(JNIEnv *env, jobject jniASPlayerWrapperObj,
                 }
 
                 ret = asplayer_set_audio_language(player, firstLang, secondLang);
+            } else if (strcmp(KEY_AUDIO_SPDIF_PROTECTION_MODE, stringKey) == 0) {
+                ret = asplayer_set_audio_spdif_protection_mode(player, intValue);
             }
 
             env->ReleaseStringUTFChars((jstring)keyObj, stringKey);

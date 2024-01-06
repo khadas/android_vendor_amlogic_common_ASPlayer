@@ -245,6 +245,11 @@ abstract class AudioOutputPathBase extends MediaOutputPath {
         }
     }
 
+    int setSpdifProtectionMode(int mode) {
+        return AudioUtils.setParameterToAudioManager(
+                AudioUtils.CMD_SET_SPDIF_PROTECTION_MODE, mode, getTag());
+    }
+
     @Override
     boolean hasOutputBuffers() {
         return (mAudioCodecRenderer != null) && mAudioCodecRenderer.hasOutputBuffer();

@@ -66,10 +66,10 @@ typedef enum {
 } jni_asplayer_state_type;
 
 typedef enum {
-    JNI_ASPLAYER_KEY_SPDIF_MODE_NONE  = 0,
-    JNI_ASPLAYER_KEY_SPDIF_MODE_NEVER = 1,
-    JNI_ASPLAYER_KEY_SPDIF_MODE_ONCE  = 2,
-} jni_asplayer_spdif_mode;
+    JNI_ASPLAYER_KEY_SPDIF_PROTECTION_MODE_NONE  = 0,
+    JNI_ASPLAYER_KEY_SPDIF_PROTECTION_MODE_NEVER = 1,
+    JNI_ASPLAYER_KEY_SPDIF_PROTECTION_MODE_ONCE  = 2,
+} jni_asplayer_spdif_protection_mode;
 
 typedef enum {
     JNI_ASPLAYER_AV_INFO  = 0,              // Get audio and video information
