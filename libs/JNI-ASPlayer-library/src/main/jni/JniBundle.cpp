@@ -21,6 +21,8 @@
 jclass JniBundle::gBundleCls = nullptr;
 jmethodID JniBundle::gConstructorMID = nullptr;
 jmethodID JniBundle::gPutIntMID = nullptr;
+jmethodID JniBundle::gGetIntMID = nullptr;
+jmethodID JniBundle::gGetIntDefaultValueMID = nullptr;
 jmethodID JniBundle::gPutLongMID = nullptr;
 jmethodID JniBundle::gPutFloatMID = nullptr;
 bool JniBundle::gIsInited = false;
@@ -55,6 +57,16 @@ bool JniBundle::initJni(JNIEnv *env) {
         gPutIntMID = NativeHelper::GetMethodID(
                 env, gBundleCls, "putInt", "(Ljava/lang/String;I)V");
         BREAK_IF_NULLPTR(gPutIntMID);
+
+        gGetIntMID = NativeHelper::GetMethodID(
+                env, gBundleCls, "getInt", "(Ljava/lang/String;)I");
+
+        BREAK_IF_NULLPTR(gGetIntMID);
+
+        gGetIntDefaultValueMID = NativeHelper::GetMethodID(
+                env, gBundleCls, "getInt", "(Ljava/lang/String;I)I");
+
+        BREAK_IF_NULLPTR(gGetIntDefaultValueMID);
 
         gPutLongMID = NativeHelper::GetMethodID(
                 env, gBundleCls, "putLong", "(Ljava/lang/String;J)V");
@@ -119,6 +131,31 @@ bool JniBundle::putInt(JNIEnv *env, const char *key, int32_t value) {
     env->DeleteLocalRef(jKey);
 
     return true;
+}
+
+bool JniBundle::getInt(JNIEnv *env, const char *key, int32_t *value) {
+    if (!env || !key || !value) {
+        return false;
+    }
+
+    jstring jKey = env->NewStringUTF(key);
+    jint temp = env->CallIntMethod(mBundleObj, gGetIntMID, jKey);
+    env->DeleteLocalRef(jKey);
+    *value = (int32_t)temp;
+
+    return true;
+}
+
+int32_t JniBundle::getInt(JNIEnv *env, const char *key, int32_t defaultValue) {
+    if (!env || !key) {
+        return defaultValue;
+    }
+
+    jstring jKey = env->NewStringUTF(key);
+    jint result = env->CallIntMethod(mBundleObj, gGetIntDefaultValueMID, jKey, (jint)defaultValue);
+    env->DeleteLocalRef(jKey);
+
+    return (int32_t) result;
 }
 
 bool JniBundle::putLong(JNIEnv *env, const char *key, int64_t value) {

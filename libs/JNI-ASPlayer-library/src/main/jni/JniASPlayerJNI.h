@@ -167,6 +167,8 @@ public:
 
     jni_asplayer_result setParameter(jni_asplayer_parameter type, void *arg);
 
+    jni_asplayer_result getParameter(jni_asplayer_parameter type, void *arg);
+
 private:
     int setJavaASPlayerHandle(JNIEnv *env, jobject javaPlayer);
 

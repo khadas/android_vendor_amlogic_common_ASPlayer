@@ -416,6 +416,57 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
+    public Bundle getParameters(String[] keys) {
+        return native_getParameters(keys);
+    }
+
+    private Bundle getParameters(String key) {
+        return getParameters(new String[] { key });
+    }
+
+    @Override
+    public Object getParameter(String key) {
+        Bundle parameters = getParameters(key);
+        return parameters != null ? parameters.get(key) : null;
+    }
+
+    @Override
+    public boolean getParameterBoolean(String key, boolean fallback) {
+        Bundle parameters = getParameters(key);
+        return parameters != null ? parameters.getBoolean(key, fallback) : fallback;
+    }
+
+    @Override
+    public double getParameterDouble(String key, double fallback) {
+        Bundle parameters = getParameters(key);
+        return parameters != null ? parameters.getDouble(key, fallback) : fallback;
+    }
+
+    @Override
+    public int getParameterInt(String key, int fallback) {
+        Bundle parameters = getParameters(key);
+        return parameters != null ? parameters.getInt(key, fallback) : fallback;
+    }
+
+    @Override
+    public long getParameterLong(String key, long fallback) {
+        Bundle parameters = getParameters(key);
+        return parameters != null ? parameters.getLong(key, fallback) : fallback;
+    }
+
+    @Override
+    public float getParameterFloat(String key, float fallback) {
+        Bundle parameters = getParameters(key);
+        return parameters != null ? parameters.getFloat(key, fallback) : fallback;
+    }
+
+    @Override
+    public String getParameterString(String key) {
+        Bundle parameters = getParameters(key);
+        return parameters != null ? parameters.getString(key) : null;
+    }
+
+    @Override
     public int setSubtitlePid(int pid) {
         return 0;
     }
@@ -488,6 +539,7 @@ public class JniASPlayerWrapper implements IASPlayer {
     private native int native_setAudioDualMonoMode(int mode);
     private native int native_getAudioDualMonoMode();
     private native int native_setParameters(String[] keys, Object[] values);
+    private native Bundle native_getParameters(String[] keys);
     private native MediaFormat native_getVideoInfo();
     private native void native_release();
 }

@@ -31,6 +31,8 @@ public:
     static bool createDecodeFirstAudioFrameEvent(JNIEnv *env, jni_asplayer_event *event, jobject *jEvent);
     static bool createMediaFormat(JNIEnv *env, jni_asplayer_video_info *videoInfo, jobject *jMediaFormat);
     static bool createPlaybackInfoEvent(JNIEnv *env, jni_asplayer_event *event, jobject *jEvent);
+    static bool createBundleObject(JNIEnv *env, jobject *jBundleObj);
+    static bool putIntToBundle(JNIEnv *env, jobject bundleObj, const char *key, int32_t value);
 
     static bool notifyPlaybackEvent(JNIEnv *env, jobject jPlaybackListener, jobject playbackEvent);
 

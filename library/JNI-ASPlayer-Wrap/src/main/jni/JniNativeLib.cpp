@@ -37,6 +37,12 @@
 
 const char *CLASS_PATH_NAME = "com/amlogic/asplayer/jni/wrapper/JniASPlayerWrapper";
 
+static const char *KEY_AUDIO_PRESENTATION_ID            = "audio-presentation-id";
+static const char *KEY_AUDIO_PROGRAM_ID                 = "audio-program-id";
+static const char *KEY_FIRST_LANGUAGE                   = "audio-first-language";
+static const char *KEY_SECOND_LANGUAGE                  = "audio-second-language";
+static const char *KEY_AUDIO_SPDIF_PROTECTION_MODE      = "spdif-protection-mode";
+
 struct field_t {
     jfieldID context;
 };
@@ -1187,6 +1193,53 @@ asplayer_set_parameters(JNIEnv *env, jobject jniASPlayerWrapperObj,
     }
 
     return ret;
+}
+
+jobject
+asplayer_get_parameters(JNIEnv *env, jobject jniASPlayerWrapperObj, jobjectArray jKeys) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr || jKeys == nullptr) {
+        return nullptr;
+    }
+
+    BaseJniASPlayerWrapper *player = getASPlayer(env, jniASPlayerWrapperObj);
+    if (player == nullptr) {
+        LOG_GET_PLAYER_FAILED();
+        return nullptr;
+    }
+
+    jsize numEntries = env->GetArrayLength(jKeys);
+
+    jobject bundleObj = nullptr;
+    if (!ASPlayerJni::createBundleObject(env, &bundleObj)) {
+        ALOGE("[%s/%d] getParameters failed, create bundle failed", __func__, __LINE__);
+        return nullptr;
+    }
+
+    for (jsize i = 0; i < numEntries; ++i) {
+        jobject keyObj = env->GetObjectArrayElement(jKeys, i);
+        if (env->IsSameObject(keyObj, nullptr)) {
+            ALOGE("[%s/%d] getParameters failed, key is null", __func__, __LINE__);
+            continue;
+        }
+
+        if (!NativeHelper::isStringInstance(env, keyObj)) {
+            ALOGE("[%s/%d] getParameters failed, key is not string", __func__, __LINE__);
+            continue;
+        }
+
+        const char* stringKey = env->GetStringUTFChars((jstring)keyObj, NULL);
+        if (stringKey == NULL) {
+            ALOGE("[%s/%d] getParameters failed, failed to get key string", __func__, __LINE__);
+            continue;
+        }
+
+        ALOGI("[%s/%d] getParameters, key: %s", __func__, __LINE__, stringKey);
+
+        env->ReleaseStringUTFChars((jstring)keyObj, stringKey);
+    }
+
+    return bundleObj;
 }
 
 jni_asplayer_result

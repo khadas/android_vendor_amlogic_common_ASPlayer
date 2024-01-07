@@ -1358,6 +1358,93 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     @Override
+    public Bundle getParameters(String[] keys) {
+        if (keys == null || keys.length <= 0) {
+            return null;
+        }
+
+        Bundle bundle = new Bundle();
+
+        for (String key : keys) {
+            if (TextUtils.isEmpty(key)) {
+                continue;
+            }
+
+            ASPlayerLog.i("%s getParameters for %s", getTag(), key);
+
+            switch (key) {
+                default:
+                    break;
+            }
+        }
+
+        return null;
+    }
+
+    private Bundle getParameters(Set<String> keys) {
+        if (keys == null || keys.isEmpty()) {
+            return null;
+        }
+
+        String[] keyArray = keys.stream().toArray(String[]::new);
+        return getParameters(keyArray);
+    }
+
+    private Bundle getParameters(String key) {
+        if (TextUtils.isEmpty(key)) {
+            return null;
+        }
+
+        return getParameters(new String[] { key });
+    }
+
+    @Override
+    public Object getParameter(String key) {
+        Bundle parameters = getParameters(key);
+        if (parameters == null) {
+            return null;
+        }
+
+        return parameters.get(key);
+    }
+
+    @Override
+    public boolean getParameterBoolean(String key, boolean fallback) {
+        Bundle parameters = getParameters(key);
+        return parameters != null ? parameters.getBoolean(key, fallback) : fallback;
+    }
+
+    @Override
+    public double getParameterDouble(String key, double fallback) {
+        Bundle parameters = getParameters(key);
+        return parameters != null ? parameters.getDouble(key, fallback) : fallback;
+    }
+
+    @Override
+    public int getParameterInt(String key, int fallback) {
+        Bundle parameters = getParameters(key);
+        return parameters != null ? parameters.getInt(key, fallback) : fallback;
+    }
+
+    @Override
+    public long getParameterLong(String key, long fallback) {
+        Bundle parameters = getParameters(key);
+        return parameters != null ? parameters.getLong(key, fallback) : fallback;
+    }
+
+    @Override
+    public float getParameterFloat(String key, float fallback) {
+        Bundle parameters = getParameters(key);
+        return parameters != null ? parameters.getFloat(key, fallback) : fallback;
+    }
+
+    @Override
+    public String getParameterString(String key) {
+        Bundle parameters = getParameters(key);
+        return parameters != null ? parameters.getString(key, null) : null;
+    }
+
+    @Override
     public int setSubtitlePid(int pid) {
         if (DEBUG) ASPlayerLog.d("%s setSubtitlePid start", getTag());
         return 0;

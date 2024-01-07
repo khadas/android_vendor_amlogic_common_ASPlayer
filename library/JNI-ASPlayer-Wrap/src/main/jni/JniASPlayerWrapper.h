@@ -78,6 +78,7 @@ public:
     jni_asplayer_result getAudioDualMonoMode(jni_asplayer_audio_dual_mono_mode *mode);
     jni_asplayer_result getVideoInfo(jni_asplayer_video_info *videoInfo);
     jni_asplayer_result setParameter(jni_asplayer_parameter type, void *arg);
+    jni_asplayer_result getParameter(jni_asplayer_parameter type, void *arg);
     jni_asplayer_result release();
 
     void notifyPlaybackListeners(jni_asplayer_event *event);
