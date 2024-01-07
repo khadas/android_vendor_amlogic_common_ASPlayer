@@ -429,6 +429,89 @@ public interface IASPlayer {
     int setParameters(Bundle parameters);
 
     /**
+     * Get parameters for ASPlayer instance.
+     *
+     * @param keys
+     *
+     * @return
+     */
+    Bundle getParameters(String[] keys);
+
+    /**
+     * Get parameter for ASPlayer instance.
+     *
+     * @param key
+     *
+     * @return
+     */
+    Object getParameter(String key);
+
+    /**
+     * Get parameter for ASPlayer instance if it exists and is a boolean or
+     * can be coerced to a boolean, or fallback otherwise.
+     *
+     * @param key
+     * @param fallback
+     *
+     * @return
+     */
+    boolean getParameterBoolean(String key, boolean fallback);
+
+    /**
+     * Get parameter for ASPlayer instance if it exists and is a double or
+     * can be coerced to a double, or fallback otherwise.
+     *
+     * @param key
+     * @param fallback
+     *
+     * @return
+     */
+    double getParameterDouble(String key, double fallback);
+
+    /**
+     * Get parameter for ASPlayer instance if it exists and is an int or
+     * can be coerced to an int, or fallback otherwise.
+     *
+     * @param key
+     * @param fallback
+     *
+     * @return
+     */
+    int getParameterInt(String key, int fallback);
+
+    /**
+     * Get parameter for ASPlayer instance if it exists and is a long or
+     * can be coerced to a long, or fallback otherwise.
+     *
+     * @param key
+     * @param fallback
+     *
+     * @return
+     */
+    long getParameterLong(String key, long fallback);
+
+    /**
+     * Get parameter for ASPlayer instance if it exists and is a float or
+     * can be coerced to a float, or fallback otherwise.
+     *
+     * @param key
+     * @param fallback
+     *
+     * @return
+     */
+    float getParameterFloat(String key, float fallback);
+
+    /**
+     * Get parameter for ASPlayer instance if it exists and is a string,
+     * coercing it if necessary, or null if not exists, or null if not a string
+     *
+     * @param key
+     *
+     * @return
+     */
+    String getParameterString(String key);
+
+    /**
      * Set subtitle pid for ASPlayer instance.
      *
      * @param pid

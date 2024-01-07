@@ -23,6 +23,8 @@ public:
     jobject getJavaBundleObject();
 
     bool putInt(JNIEnv *env, const char *key, int32_t value);
+    bool getInt(JNIEnv *env, const char *key, int32_t *value);
+    int32_t getInt(JNIEnv *env, const char *key, int32_t defaultValue);
 
     bool putLong(JNIEnv *env, const char *key, int64_t value);
 
@@ -35,6 +37,8 @@ private:
     static jclass gBundleCls;
     static jmethodID gConstructorMID;
     static jmethodID gPutIntMID;
+    static jmethodID gGetIntMID;
+    static jmethodID gGetIntDefaultValueMID;
     static jmethodID gPutLongMID;
     static jmethodID gPutFloatMID;
     static bool gIsInited;

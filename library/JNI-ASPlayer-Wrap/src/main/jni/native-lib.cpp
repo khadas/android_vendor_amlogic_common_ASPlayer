@@ -415,6 +415,12 @@ native_set_parameters(JNIEnv *env, jobject thiz, jobjectArray keys, jobjectArray
 }
 
 static jobject
+native_get_parameters(JNIEnv *env, jobject thiz, jobjectArray jKeys) {
+    jobject result = asplayer_get_parameters(env, thiz, jKeys);
+    return result;
+}
+
+static jobject
 native_get_video_info(JNIEnv *env, jobject thiz) {
     jobject result = asplayer_get_video_info(env, thiz);
     return result;
@@ -474,6 +480,7 @@ static JNINativeMethod methods[] = {
         {"native_setAudioDualMonoMode", "(I)I", (void*)native_set_audio_dual_mono_mode },
         {"native_getAudioDualMonoMode", "()I", (void*)native_get_audio_dual_mono_mode },
         {"native_setParameters", "([Ljava/lang/String;[Ljava/lang/Object;)I", (void*)native_set_parameters },
+        {"native_getParameters", "([Ljava/lang/String;)Landroid/os/Bundle;", (void*)native_get_parameters },
         {"native_getVideoInfo", "()Landroid/media/MediaFormat;", (void*) native_get_video_info },
         {"native_release", "()V", (void*)native_release },
 };

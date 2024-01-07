@@ -167,6 +167,9 @@ jni_asplayer_result
 asplayer_set_parameters(JNIEnv *env, jobject jniASPlayerWrapperObj,
                         jobjectArray keys, jobjectArray values);
 
+jobject
+asplayer_get_parameters(JNIEnv *env, jobject jniASPlayerWrapperObj, jobjectArray jKeys);
+
 jni_asplayer_result
 asplayer_release(JNIEnv *env, jobject jniASPlayerWrapperObj);
 

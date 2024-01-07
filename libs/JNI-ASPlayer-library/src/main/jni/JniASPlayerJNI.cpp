@@ -82,6 +82,13 @@ struct asplayer_t {
     jmethodID setAudioDualMonoModeMID;
     jmethodID getAudioDualMonoModeMID;
     jmethodID setParametersMID;
+    jmethodID getParameterBooleanMID;
+    jmethodID getParameterDoubleMID;
+    jmethodID getParameterIntMID;
+    jmethodID getParameterLongMID;
+    jmethodID getParameterFloatMID;
+    jmethodID getParameterStringMID;
+    jmethodID getParameterObjectMID;
     jmethodID getVideoInfoMID;
 };
 
@@ -578,6 +585,22 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
                 "getVideoInfo", "()Landroid/media/MediaFormat;");
         gASPlayerCtx.setParametersMID = NativeHelper::GetMethodID(
                 env, gASPlayerCls, "setParameters", "(Landroid/os/Bundle;)I");
+        gASPlayerCtx.getParameterBooleanMID = NativeHelper::GetMethodID(
+                env, gASPlayerCls, "getParameterBoolean", "(Ljava/lang/String;Z)Z");
+        gASPlayerCtx.getParameterDoubleMID = NativeHelper::GetMethodID(
+                env, gASPlayerCls, "getParameterDouble", "(Ljava/lang/String;D)D");
+        gASPlayerCtx.getParameterIntMID = NativeHelper::GetMethodID(
+                env, gASPlayerCls, "getParameterInt", "(Ljava/lang/String;I)I");
+        gASPlayerCtx.getParameterLongMID = NativeHelper::GetMethodID(
+                env, gASPlayerCls, "getParameterLong", "(Ljava/lang/String;J)J");
+        gASPlayerCtx.getParameterFloatMID = NativeHelper::GetMethodID(
+                env, gASPlayerCls, "getParameterFloat", "(Ljava/lang/String;F)F");
+        gASPlayerCtx.getParameterStringMID = NativeHelper::GetMethodID(
+                env, gASPlayerCls,
+                "getParameterString", "(Ljava/lang/String;)Ljava/lang/String;");
+        gASPlayerCtx.getParameterObjectMID = NativeHelper::GetMethodID(
+                env, gASPlayerCls,
+                "getParameter", "(Ljava/lang/String;)Ljava/lang/Object;");
 
         // InitParams
         initParamCls = NativeHelper::FindClass(env, "com/amlogic/asplayer/api/InitParams");
@@ -1707,11 +1730,21 @@ jni_asplayer_result JniASPlayer::getVideoInfo(jni_asplayer_video_info *videoInfo
 }
 
 jni_asplayer_result JniASPlayer::setParameter(jni_asplayer_parameter type, void *arg) {
-    jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_PARAMS;
+    jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OPERATION;
 
     switch (type) {
         default:
-            ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+            break;
+    }
+
+    return ret;
+}
+
+jni_asplayer_result JniASPlayer::getParameter(jni_asplayer_parameter type, void *arg) {
+    jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OPERATION;
+
+    switch (type) {
+        default:
             break;
     }
 

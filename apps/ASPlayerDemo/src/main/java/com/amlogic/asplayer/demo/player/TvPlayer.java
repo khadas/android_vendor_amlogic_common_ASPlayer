@@ -834,6 +834,10 @@ public class TvPlayer {
         }
     }
 
+    public Bundle getParameters(String[] keys) {
+        return mASPlayer != null ? mASPlayer.getParameters(keys) : null;
+    }
+
     public void release() {
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {

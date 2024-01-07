@@ -55,6 +55,11 @@ struct media_format_t {
     jmethodID setLong;
 };
 
+struct bundle_t {
+    jmethodID constructor;
+    jmethodID putInt;
+};
+
 struct video_format_change_event_t {
     jmethodID constructor;
     jfieldID mediaFormat;
@@ -115,6 +120,9 @@ static input_buffer_t gInputBufferCtx;
 
 static jclass gMediaFormatCls;
 static media_format_t gMediaFormatCtx;
+
+static jclass gBundleCls;
+static bundle_t gBundleCtx;
 
 static jclass gVideoFormatChangeEventCls;
 static video_format_change_event_t gVideoFormatChangeEventCtx;
@@ -325,6 +333,12 @@ bool ASPlayerJni::initJni(JNIEnv *env) {
         gPlaybackListenerCtx.onPlaybackEvent = env->GetMethodID(
                 gPlaybackListenerCls, "onPlaybackEvent",
                 "(Lcom/amlogic/asplayer/api/TsPlaybackListener$PlaybackEvent;)V");
+    }
+
+    // init Bundle
+    if (makeClassGlobalRef(&gBundleCls, env, "android/os/Bundle")) {
+        gBundleCtx.constructor = env->GetMethodID(gBundleCls, "<init>", "()V");
+        gBundleCtx.putInt = env->GetMethodID(gBundleCls, "putInt", "(Ljava/lang/String;I)V");
     }
 
     g_inited = true;
@@ -641,6 +655,32 @@ bool ASPlayerJni::createMediaFormat(JNIEnv *env, jni_asplayer_video_info *videoI
     env->DeleteLocalRef(vfType);
 
     *jMediaFormat = mediaFormat;
+    return true;
+}
+
+bool ASPlayerJni::createBundleObject(JNIEnv *env, jobject *jBundleObj) {
+    if (env == nullptr || jBundleObj == nullptr) {
+        return false;
+    }
+
+    jobject bundle = env->NewObject(gBundleCls, gBundleCtx.constructor);
+    if (env->IsSameObject(bundle, nullptr)) {
+        return false;
+    }
+
+    *jBundleObj = bundle;
+    return true;
+}
+
+bool ASPlayerJni::putIntToBundle(JNIEnv *env, jobject bundleObj, const char *key, int32_t value) {
+    if (env == nullptr || key == nullptr) {
+        return false;
+    }
+
+    jstring keyStr = env->NewStringUTF(key);
+    env->CallVoidMethod(bundleObj, gBundleCtx.putInt, keyStr, (jint)value);
+    env->DeleteLocalRef(keyStr);
+
     return true;
 }
 

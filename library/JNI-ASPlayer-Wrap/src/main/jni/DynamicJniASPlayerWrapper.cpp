@@ -1477,6 +1477,30 @@ DynamicJniASPlayerWrapper::setParameter(jni_asplayer_parameter type, void *arg) 
     return ret;
 }
 
+jni_asplayer_result
+DynamicJniASPlayerWrapper::getParameter(jni_asplayer_parameter type, void *arg) {
+    LOG_FUNCTION_ENTER();
+    jni_asplayer_handle handle = mHandle;
+    if (handle == 0) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    if (ASPlayer_getParams == nullptr) {
+        jni_asplayer_result ret = JNI_ASPLAYER_ERROR_INVALID_OBJECT;
+        LOG_FUNCTION_INT_END(ret);
+        return ret;
+    }
+
+    jni_asplayer_result ret = ASPlayer_getParams(handle, type, arg);
+    if (ret != JNI_ASPLAYER_OK) {
+        LOG_PLAYER_OP_FAILED(ret);
+    }
+    LOG_FUNCTION_INT_END(ret);
+    return ret;
+}
+
 jni_asplayer_result DynamicJniASPlayerWrapper::release() {
     LOG_FUNCTION_ENTER();
     jni_asplayer_handle handle = mHandle;

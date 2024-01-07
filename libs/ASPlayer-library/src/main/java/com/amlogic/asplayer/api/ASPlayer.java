@@ -14,6 +14,7 @@ import android.media.MediaFormat;
 import android.media.tv.tuner.Tuner;
 import android.os.Bundle;
 import android.os.Looper;
+import android.text.TextUtils;
 import android.view.Surface;
 
 import com.amlogic.asplayer.api.PlaybackControl.TransitionModeBefore;
@@ -803,6 +804,113 @@ public class ASPlayer implements IASPlayer {
     @Override
     public int setParameters(Bundle parameters) {
         return mPlayer.setParameters(parameters);
+    }
+
+    /**
+     * Get parameters for ASPlayer instance.
+     *
+     * @param keys
+     *
+     * @return
+     */
+    @Override
+    public Bundle getParameters(String[] keys) {
+        return mPlayer.getParameters(keys);
+    }
+
+    /**
+     * Get parameter for ASPlayer instance.
+     *
+     * @param key
+     *
+     * @return
+     */
+    @Override
+    public Object getParameter(String key) {
+        return mPlayer.getParameter(key);
+    }
+
+    /**
+     * Get parameter for ASPlayer instance if it exists and is a boolean or
+     * can be coerced to a boolean, or fallback otherwise.
+     *
+     * @param key
+     * @param fallback
+     *
+     * @return
+     */
+    @Override
+    public boolean getParameterBoolean(String key, boolean fallback) {
+        return mPlayer.getParameterBoolean(key, fallback);
+    }
+
+    /**
+     * Get parameter for ASPlayer instance if it exists and is a double or
+     * can be coerced to a double, or fallback otherwise.
+     *
+     * @param key
+     * @param fallback
+     *
+     * @return
+     */
+    @Override
+    public double getParameterDouble(String key, double fallback) {
+        return mPlayer.getParameterDouble(key, fallback);
+    }
+
+    /**
+     * Get parameter for ASPlayer instance if it exists and is an int or
+     * can be coerced to an int, or fallback otherwise.
+     *
+     * @param key
+     * @param fallback
+     *
+     * @return
+     */
+    @Override
+    public int getParameterInt(String key, int fallback) {
+        return mPlayer.getParameterInt(key, fallback);
+    }
+
+    /**
+     * Get parameter for ASPlayer instance if it exists and is a long or
+     * can be coerced to a long, or fallback otherwise.
+     *
+     * @param key
+     * @param fallback
+     *
+     * @return
+     */
+    @Override
+    public long getParameterLong(String key, long fallback) {
+        return mPlayer.getParameterLong(key, fallback);
+    }
+
+    /**
+     * Get parameter for ASPlayer instance if it exists and is a float or
+     * can be coerced to a float, or fallback otherwise.
+     *
+     * @param key
+     * @param fallback
+     *
+     * @return
+     */
+    @Override
+    public float getParameterFloat(String key, float fallback) {
+        return mPlayer.getParameterFloat(key, fallback);
+    }
+
+    /**
+     * Get parameter for ASPlayer instance if it exists and is a string,
+     * coercing it if necessary, or null if not exists, or null if not a string
+     *
+     * @param key
+     *
+     * @return
+     */
+    @Override
+    public String getParameterString(String key) {
+        return mPlayer.getParameterString(key);
     }
 
     /**
