@@ -53,7 +53,7 @@ public class VideoParams {
     /**
      * Has video or not(set this to false when audio only)
      */
-    private boolean mHasVideo = false;
+    private boolean mHasVideo;
 
     /**
      * Video media format

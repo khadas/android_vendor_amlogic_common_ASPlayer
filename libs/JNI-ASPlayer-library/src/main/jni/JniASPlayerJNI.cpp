@@ -331,8 +331,18 @@ bool JniASPlayerJNI::createVideoParams(JNIEnv *env, jni_asplayer_video_params *p
     env->SetIntField(videoParams, gVideoParamsCtx.trackFilterId, (jint) params->filterId);
     env->SetIntField(videoParams, gVideoParamsCtx.avSyncHwId, (jint) params->avSyncHwId);
     env->SetBooleanField(videoParams, gVideoParamsCtx.scrambled, (jboolean) params->scrambled);
-    env->SetBooleanField(videoParams, gVideoParamsCtx.hasVideo, (jboolean) params->hasVideo);
     env->SetObjectField(videoParams, gVideoParamsCtx.mediaFormat, params->mediaFormat);
+
+    bool hasVideo = params->hasVideo;
+    if (!hasVideo) {
+        if ((params->pid > 0 && params->pid != 0x1fff)
+            || (params->mimeType && (strcmp(params->mimeType, "video/unknown") != 0))) {
+            // has video pid or mimeType
+            hasVideo = true;
+        }
+    }
+
+    env->SetBooleanField(videoParams, gVideoParamsCtx.hasVideo, (jboolean) hasVideo);
 
     *outJVideoParams = videoParams;
 
@@ -808,10 +818,12 @@ bool JniASPlayer::create(jni_asplayer_init_params *params, void *tuner) {
         return false;
     }
 
-    AP_LOGI("JniASPlayer create playback mode: %d, input source type: %d, event mask: %" PRId64,
-        params->playback_mode,
-        params->source,
-        params->event_mask);
+    AP_LOGI("JniASPlayer create playback mode: %d, input source type: %d, "
+            "event mask: %" PRId64 ", has tuner: %s",
+            params->playback_mode,
+            params->source,
+            params->event_mask,
+            (tuner != nullptr) ? "true" : "false");
 
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
@@ -1046,7 +1058,7 @@ jni_asplayer_result JniASPlayer::setVideoParams(jni_asplayer_video_params *param
     }
 
     AP_LOGI("setVideoParams mimeType: %s, size: %d x %d, pid: %d, filterId: %d, 0x%x, "
-            "avSyncHwId: %d, 0x%x, scrambled: %s",
+            "avSyncHwId: %d, 0x%x, hasVideo: %s, scrambled: %s",
         params->mimeType ? params->mimeType : "null",
         params->width,
         params->height,
@@ -1055,6 +1067,7 @@ jni_asplayer_result JniASPlayer::setVideoParams(jni_asplayer_video_params *param
         params->filterId,
         params->avSyncHwId,
         params->avSyncHwId,
+        params->hasVideo ? "true" : "false",
         params->scrambled ? "true" : "false");
 
     CHECK_JNI_EXCEPTION(env);
