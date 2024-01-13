@@ -19,6 +19,9 @@ public:
     bool initJni(JNIEnv *env);
     bool convertInitParams(JNIEnv *env, jobject jInitParam, jni_asplayer_init_params* outParams);
     bool convertVideoParams(JNIEnv *env, jobject jVideoParam, jni_asplayer_video_params *outParams);
+    bool convertAudioPresentation(JNIEnv *env, jobject jAudioPresentation,
+                                  jni_asplayer_audio_presentation *outPresentation);
+    bool convertAudioLanguage(JNIEnv *env, jobject jAudioLanguage, jni_asplayer_audio_lang *outLanguage);
     bool convertAudioParams(JNIEnv *env, jobject jAudioParam, jni_asplayer_audio_params *outParams);
     bool convertInputBuffer(JNIEnv *env, jobject jInputBuffer, jni_asplayer_input_buffer *outInputBuffer);
 

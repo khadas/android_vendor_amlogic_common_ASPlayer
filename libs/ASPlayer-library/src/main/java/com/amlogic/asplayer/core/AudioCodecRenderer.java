@@ -1,6 +1,7 @@
 package com.amlogic.asplayer.core;
 
 import android.media.AudioFormat;
+import android.media.AudioPresentation;
 import android.media.MediaCodec;
 import android.media.MediaDescrambler;
 import android.media.MediaFormat;
@@ -279,4 +280,12 @@ interface AudioCodecRenderer {
      * @return
      */
     int getAudioPresentationId();
+
+    /**
+     * Set audio presentation
+     *
+     * @param audioPresentation
+     * @return
+     */
+    int setAudioPresentation(AudioPresentation audioPresentation);
 }

@@ -17,6 +17,8 @@ import android.media.MediaFormat;
 import com.amlogic.asplayer.api.AudioParams;
 import com.amlogic.asplayer.api.ErrorCode;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 abstract class AudioOutputPathBase extends MediaOutputPath {
@@ -226,24 +228,20 @@ abstract class AudioOutputPathBase extends MediaOutputPath {
      * @return
      */
     int setAudioLanguage(int firstLanguage, int secondLanguage) {
-        int setFirstLangRet = AudioUtils.setParameterToAudioManager(
-                AudioUtils.CMD_SET_AUDIO_FIRST_LANG, firstLanguage, getTag());
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put(AudioUtils.CMD_SET_AUDIO_FIRST_LANG, Integer.valueOf(firstLanguage));
+        parameters.put(AudioUtils.CMD_SET_AUDIO_SECOND_LANG, Integer.valueOf(secondLanguage));
 
-        int setSecondLangRet = AudioUtils.setParameterToAudioManager(
-                AudioUtils.CMD_SET_AUDIO_SECOND_LANG, secondLanguage, getTag());
-
-        if (setFirstLangRet == ErrorCode.SUCCESS && setSecondLangRet == ErrorCode.SUCCESS) {
+        int result = AudioUtils.setParametersToAudioManager(parameters, getTag());
+        if (result == ErrorCode.SUCCESS) {
             ASPlayerLog.i("%s setAudioLanguage success, firstLang: %d, 0x%x, secondLang: %d, 0x%x",
                     getTag(), firstLanguage, firstLanguage, secondLanguage, secondLanguage);
             return ErrorCode.SUCCESS;
         } else {
-            ASPlayerLog.i("%s setAudioLanguage failed. firstLang result: %d, secondLang result: %d",
-                    getTag(), setFirstLangRet, setSecondLangRet);
-            if (setFirstLangRet != ErrorCode.SUCCESS) {
-                return setFirstLangRet;
-            } else {
-                return setSecondLangRet;
-            }
+            ASPlayerLog.i("%s setAudioLanguage failed result: %d," +
+                            " firstLang: %d, 0x%x, secondLang: %d, 0x%x",
+                    getTag(), result, firstLanguage, firstLanguage, secondLanguage, secondLanguage);
+            return result;
         }
     }
 

@@ -45,6 +45,8 @@ public:
     static bool createJniASPlayer(JNIEnv *env, jni_asplayer_init_params *params, void *tuner, jobject *outJniASPlayer);
     static bool createInitParams(JNIEnv *env, jni_asplayer_init_params *params, jobject *outJInitParams);
     static bool createVideoParams(JNIEnv *env, jni_asplayer_video_params *params, jobject *outJVideoParams);
+    static bool createAudioPresentation(JNIEnv *env, jni_asplayer_audio_presentation *presentation, jobject *outAudioPresentation);
+    static bool createAudioLanguage(JNIEnv *env, jni_asplayer_audio_lang *lang, jobject *outJAudioLang);
     static bool createAudioParams(JNIEnv *env, jni_asplayer_audio_params *params, jobject *outJAudioParams);
     static bool createInputBuffer(JNIEnv *env, jni_asplayer_input_buffer *inputBuffer, jobject *outJInputBuffer);
 

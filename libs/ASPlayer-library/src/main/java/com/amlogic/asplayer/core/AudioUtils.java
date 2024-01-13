@@ -391,6 +391,45 @@ public class AudioUtils {
         return ErrorCode.ERROR_UNKNOWN;
     }
 
+    static int setAudioPresentation(AudioTrack audioTrack, AudioPresentation presentation, String tag) {
+        if (presentation == null) {
+            ASPlayerLog.e("%s setAudioPresentation failed, audioPresentation is null", tag);
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        }
+        if (audioTrack == null) {
+            ASPlayerLog.e("%s setAudioPresentation failed, AudioTrack is null, presentationId: %d," +
+                    " programId: %d", tag, presentation.getPresentationId(), presentation.getProgramId());
+            return ErrorCode.ERROR_INVALID_OBJECT;
+        }
+
+        try {
+            int result = audioTrack.setPresentation(presentation);
+            if (result == AudioTrack.SUCCESS) {
+                ASPlayerLog.i("%s setAudioPresentation success, presentationId: %d, programId: %d",
+                        tag, presentation.getPresentationId(), presentation.getProgramId());
+                return ErrorCode.SUCCESS;
+            } else {
+                ASPlayerLog.e("%s setAudioPresentation failed, result: %d, presentationId: %d," +
+                        " programId: %d",
+                        tag, result, presentation.getPresentationId(), presentation.getProgramId());
+                if (result == AudioTrack.ERROR_BAD_VALUE) {
+                    return ErrorCode.ERROR_INVALID_PARAMS;
+                } else if (result == AudioTrack.ERROR_INVALID_OPERATION) {
+                    return ErrorCode.ERROR_INVALID_OPERATION;
+                } else {
+                    return ErrorCode.ERROR_UNKNOWN;
+                }
+            }
+        } catch (Exception e) {
+            ASPlayerLog.e("%s setAudioPresentation failed, error: %s, presentationId: %d, programId: %d",
+                    tag, (e != null ? e.getMessage() : ""),
+                    presentation.getPresentationId(), presentation.getProgramId());
+            ASPlayerLog.e("%s setAudioPresentation failed, error: %s", tag, Log.getStackTraceString(e));
+        }
+
+        return ErrorCode.ERROR_UNKNOWN;
+    }
+
     static int getAudioPresentationId(String tag) {
         Map<String, String> parameters = getParametersFromAudioManager(CMD_GET_AUDIO_PRESENTATION_ID, tag);
         if (parameters == null || parameters.isEmpty() || !parameters.containsKey(CMD_GET_AUDIO_PRESENTATION_ID)) {
@@ -433,6 +472,63 @@ public class AudioUtils {
         ASPlayerLog.i("%s setParametersToAudioManager, parameter: %s", tag, parameters);
 
         audioManager.setParameters(parameters);
+
+        return ErrorCode.SUCCESS;
+    }
+
+    protected static int setParametersToAudioManager(Map<String, Object> parameters, String tag) {
+        if (parameters == null || parameters.isEmpty()) {
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        }
+
+        Context context = BaseAppContext.getAppContext();
+        if (context == null) {
+            ASPlayerLog.e("%s setParametersToAudioManager failed, failed to get context", tag);
+            return ErrorCode.ERROR_INVALID_OBJECT;
+        }
+
+        AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        if (audioManager == null) {
+            ASPlayerLog.e("%s setParametersToAudioManager failed, failed to get AudioManager", tag);
+            return ErrorCode.ERROR_INVALID_OBJECT;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (String key : parameters.keySet()) {
+            if (TextUtils.isEmpty(key)) {
+                continue;
+            }
+
+            Object value = parameters.get(key);
+            if (value == null) {
+                continue;
+            }
+
+            sb.append(key);
+            sb.append("=");
+
+            if (value instanceof Integer) {
+                sb.append(((Integer) value).intValue());
+            } else if (value instanceof Long) {
+                sb.append(((Long) value).longValue());
+            } else if (value instanceof Boolean) {
+                boolean boolValue = ((Boolean) value).booleanValue();
+                sb.append(boolValue ? 1 : 0);
+            } else if (value instanceof Float) {
+                sb.append(((Float) value).floatValue());
+            } else if (value instanceof Double) {
+                sb.append(((Double) value).doubleValue());
+            } else {
+                sb.append(value);
+            }
+
+            sb.append(";");
+        }
+
+        String parameterStr = sb.toString();
+        ASPlayerLog.i("%s setParametersToAudioManager, parameters: %s", tag, parameterStr);
+
+        audioManager.setParameters(parameterStr);
 
         return ErrorCode.SUCCESS;
     }

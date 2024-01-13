@@ -252,18 +252,30 @@ typedef struct {
     jobject mediaFormat;                   // Video MediaFormat
 } jni_asplayer_video_params;
 
+typedef struct {
+    int32_t presentation_id;
+    int32_t program_id;
+} jni_asplayer_audio_presentation;
+
+typedef struct {
+    int32_t first_lang;
+    int32_t second_lang;
+} jni_asplayer_audio_lang;
+
 /*JniASPlayer audio init parameters*/
 typedef struct {
-    const char* mimeType;                   // Audio mimeType
-    int32_t sampleRate;                     // Audio sampleRate
-    int32_t channelCount;                   // Audio channel count
-    int32_t pid;                            // Audio pid in ts
-    int32_t filterId;                       // Audio track filter id in Tuner
-    int32_t avSyncHwId;                     // AvSyncHwId
-    int32_t seclevel;                       // Audio security level
-    bool scrambled;                         // scrambled or not
-    jobject mediaFormat;                    // Audio MediaFormat
-    const char *extraInfoJson;              // Audio extra info (format: json)
+    const char* mimeType;                               // Audio mimeType
+    int32_t sampleRate;                                 // Audio sampleRate
+    int32_t channelCount;                               // Audio channel count
+    int32_t pid;                                        // Audio pid in ts
+    int32_t filterId;                                   // Audio track filter id in Tuner
+    int32_t avSyncHwId;                                 // AvSyncHwId
+    int32_t seclevel;                                   // Audio security level
+    bool scrambled;                                     // scrambled or not
+    jni_asplayer_audio_presentation presentation;       // Audio Presentation
+    jni_asplayer_audio_lang language;                   // Audio Language
+    jobject mediaFormat;                                // Audio MediaFormat
+    const char *extraInfoJson;                          // Audio extra info (format: json)
 } jni_asplayer_audio_params;
 
 /*Video basic information*/
@@ -314,16 +326,6 @@ typedef struct {
     uint32_t channel_mask;
 } jni_asplayer_audio_format_t;
 
-typedef struct {
-    int32_t presentation_id;
-    int32_t program_id;
-} jni_asplayer_audio_presentation;
-
-typedef struct {
-    int32_t first_lang;
-    int32_t second_lang;
-} jni_asplayer_audio_lang;
-
 
 typedef struct {
     jni_asplayer_stream_type stream_type;
@@ -354,7 +356,7 @@ typedef struct {
     union {
         /*If type is VIDEO_CHANGED send new video basic info*/
         jni_asplayer_video_format_t video_format;
-        /*If type is AUDIO_CHANGED send new video basic info*/
+        /*If type is AUDIO_CHANGED send new audio basic info*/
         jni_asplayer_audio_format_t audio_format;
         /*Audio/Video/Subtitle pts after pes parser*/
         jni_asplayer_pts_t pts;

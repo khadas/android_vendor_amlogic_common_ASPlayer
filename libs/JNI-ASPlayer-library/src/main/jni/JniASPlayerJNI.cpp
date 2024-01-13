@@ -119,6 +119,13 @@ struct video_param_t {
     jfieldID mediaFormat;
 };
 
+// AudioLang
+struct audio_language_t {
+    jmethodID constructorMID;
+    jmethodID setFirstLanguage;
+    jmethodID setSecondLanguage;
+};
+
 // AudioParams
 struct audio_param_t {
     jmethodID constructorMID;
@@ -130,6 +137,8 @@ struct audio_param_t {
     jfieldID avSyncHwId;
     jfieldID secLevel;
     jfieldID scrambled;
+    jfieldID audioPresentation;
+    jfieldID audioLanguage;
     jfieldID mediaFormat;
     jfieldID extraInfoJson;
 };
@@ -154,6 +163,8 @@ static jclass gInitParamsCls;
 static init_param_t gInitParamsCtx;
 static jclass gVideoParamsCls;
 static video_param_t gVideoParamsCtx;
+static jclass gAudioLanguageCls;
+static audio_language_t gAudioLanguageCtx;
 static jclass gAudioParamsCls;
 static audio_param_t gAudioParamsCtx;
 static jclass gInputBufferCls;
@@ -343,6 +354,106 @@ bool JniASPlayerJNI::createVideoParams(JNIEnv *env, jni_asplayer_video_params *p
     return true;
 }
 
+bool
+JniASPlayerJNI::createAudioPresentation(JNIEnv *env,
+                                        jni_asplayer_audio_presentation *presentation,
+                                        jobject *outAudioPresentation) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr) {
+        AP_LOGE("create AudioPresentation failed, env is null");
+        return false;
+    } else if (presentation == nullptr) {
+        AP_LOGE("create AudioPresentation failed, invalid audio_presentation");
+        return false;
+    } else if (outAudioPresentation == nullptr) {
+        AP_LOGE("create AudioPresentation failed, invalid out presentation");
+        return false;
+    }
+
+    CHECK_JNI_EXCEPTION(env);
+
+    jclass builderCls = NativeHelper::FindClass(
+            env, "android/media/AudioPresentation$Builder");
+    if (builderCls == NULL) {
+        AP_LOGE("create AudioPresentation failed, failed to find class android/media/AudioPresentation$Builder");
+        return false;
+    }
+
+    jmethodID constructorMID = NativeHelper::GetMethodID(
+            env, builderCls, "<init>", "(I)V");
+    jmethodID setProgramIdMID = NativeHelper::GetMethodID(env, builderCls,
+              "setProgramId", "(I)Landroid/media/AudioPresentation$Builder;");
+    jmethodID buildMID = NativeHelper::GetMethodID(env, builderCls,
+               "build", "()Landroid/media/AudioPresentation;");
+
+    if (constructorMID == NULL || setProgramIdMID == NULL || buildMID == NULL) {
+        AP_LOGE("create AudioPresentation failed, failed to constructor AudioPresentation");
+        env->DeleteLocalRef(builderCls);
+        return false;
+    }
+
+    jobject builder = env->NewObject(builderCls, constructorMID, (jint)(presentation->presentation_id));
+    if (builder == nullptr) {
+        AP_LOGE("create AudioPresentation failed, failed to create AudioPresentation.Builder");
+        env->DeleteLocalRef(builderCls);
+        return false;
+    }
+
+    env->CallObjectMethod(builder, setProgramIdMID, (jint)(presentation->program_id));
+
+    jobject audioPresentation = env->CallObjectMethod(builder, buildMID);
+    if (audioPresentation == nullptr) {
+        AP_LOGE("create AudioPresentation failed, failed to call AudioPresentation.Builder.build()");
+        env->DeleteLocalRef(builderCls);
+        return false;
+    }
+
+    env->DeleteLocalRef(builderCls);
+
+    AP_LOGI("create AudioPresentation success, AudioPresentationId: %d, programId: %d",
+            presentation->presentation_id, presentation->program_id);
+
+    *outAudioPresentation = audioPresentation;
+
+    LOG_FUNCTION_END();
+    return true;
+}
+
+bool JniASPlayerJNI::createAudioLanguage(JNIEnv *env,
+                                         jni_asplayer_audio_lang *lang,
+                                         jobject *outJAudioLang) {
+    LOG_FUNCTION_ENTER();
+    if (env == nullptr) {
+        AP_LOGE("create AudioLang failed, env is null");
+        return false;
+    } else if (lang == nullptr) {
+        AP_LOGE("create AudioLang failed, invalid audio_lang");
+        return false;
+    } else if (outJAudioLang == nullptr) {
+        AP_LOGE("create AudioLang failed, invalid out audioLang");
+        return false;
+    }
+
+    CHECK_JNI_EXCEPTION(env);
+
+    jobject audioLang = env->NewObject(gAudioLanguageCls, gAudioLanguageCtx.constructorMID);
+    if (audioLang == nullptr) {
+        AP_LOGE("create AudioLang failed");
+        return false;
+    }
+
+    env->CallVoidMethod(audioLang, gAudioLanguageCtx.setFirstLanguage, (jint)(lang->first_lang));
+    env->CallVoidMethod(audioLang, gAudioLanguageCtx.setSecondLanguage, (jint)(lang->second_lang));
+
+    AP_LOGI("create AudioLang success, firstLanguage: %d, 0x%x secondLanguage: %d, 0x%x",
+            lang->first_lang, lang->first_lang, lang->second_lang, lang->second_lang);
+
+    *outJAudioLang = audioLang;
+
+    LOG_FUNCTION_END();
+    return true;
+}
+
 bool JniASPlayerJNI::createAudioParams(JNIEnv *env, jni_asplayer_audio_params *params, jobject *outJAudioParams) {
     LOG_FUNCTION_ENTER();
     if (env == nullptr) {
@@ -376,6 +487,37 @@ bool JniASPlayerJNI::createAudioParams(JNIEnv *env, jni_asplayer_audio_params *p
     env->SetIntField(audioParams, gAudioParamsCtx.avSyncHwId, (jint)params->avSyncHwId);
     env->SetIntField(audioParams, gAudioParamsCtx.secLevel, (jint) params->seclevel);
     env->SetBooleanField(audioParams, gAudioParamsCtx.scrambled, (jboolean) params->scrambled);
+
+    AP_LOGI("createAudioParams AudioPresentationId: %d, programId: %d",
+            params->presentation.presentation_id, params->presentation.program_id);
+
+    jobject audioPresentation = nullptr;
+    if (params->presentation.presentation_id > 0) {
+        if (!createAudioPresentation(env, &(params->presentation), &audioPresentation)) {
+            AP_LOGE("createAudioParams error, create AudioPresentation failed,"
+                    " AudioPresentationId: %d, programId: %d",
+                    params->presentation.presentation_id, params->presentation.program_id);
+            audioPresentation = nullptr;
+        }
+    }
+    env->SetObjectField(audioParams, gAudioParamsCtx.audioPresentation, audioPresentation);
+
+    AP_LOGI("createAudioParams AudioLanguage first_lang: %d, 0x%x, second_lang: %d, 0x%x",
+            params->language.first_lang, params->language.first_lang,
+            params->language.second_lang, params->language.second_lang);
+
+    jobject audioLang = nullptr;
+    if (params->language.first_lang > 0 || params->language.second_lang > 0) {
+        if (!createAudioLanguage(env, &(params->language), &audioLang)) {
+            AP_LOGE("createAudioParams error, failed to create AudioLanguage,"
+                    " first_lang: %d, 0x%x, second_lang: %d, 0x%x",
+                    params->language.first_lang, params->language.first_lang,
+                    params->language.second_lang, params->language.second_lang);
+            audioLang = nullptr;
+        }
+    }
+    env->SetObjectField(audioParams, gAudioParamsCtx.audioLanguage, audioLang);
+
     env->SetObjectField(audioParams, gAudioParamsCtx.mediaFormat, params->mediaFormat);
     if (params->extraInfoJson) {
         jstring jExtraInfoJson = env->NewStringUTF(params->extraInfoJson);
@@ -449,6 +591,7 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
     jclass asplayerCls = nullptr;
     jclass initParamCls = nullptr;
     jclass videoParamCls = nullptr;
+    jclass audioLangCls = nullptr;
     jclass audioParamCls = nullptr;
     jclass inputBufferCls = nullptr;
     jclass nullPointerExceptionCls = nullptr;
@@ -667,6 +810,28 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
         gVideoParamsCtx.mediaFormat = NativeHelper::GetFieldID(
                 env, gVideoParamsCls, "mMediaFormat", "Landroid/media/MediaFormat;");
 
+        // AudioLang
+        audioLangCls = NativeHelper::FindClass(env, "com/amlogic/asplayer/api/AudioLang");
+        if (audioLangCls == nullptr) {
+            error = true;
+            break;
+        }
+
+        gAudioLanguageCls = NativeHelper::MakeGlobalRef(env, audioLangCls, "class<AudioLang>");
+        if (gAudioLanguageCls == nullptr) {
+            error = true;
+            break;
+        }
+
+        DELETE_LOCAL_REF(env, audioLangCls);
+
+        gAudioLanguageCtx.constructorMID = NativeHelper::GetMethodID(
+                env, gAudioLanguageCls, "<init>", "()V");
+        gAudioLanguageCtx.setFirstLanguage = NativeHelper::GetMethodID(
+                env, gAudioLanguageCls, "setFirstLanguage", "(I)V");
+        gAudioLanguageCtx.setSecondLanguage = NativeHelper::GetMethodID(
+                env, gAudioLanguageCls, "setSecondLanguage", "(I)V");
+
         // AudioParams
         audioParamCls = NativeHelper::FindClass(env, "com/amlogic/asplayer/api/AudioParams");
         if (audioParamCls == nullptr) {
@@ -700,6 +865,10 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
                 env, gAudioParamsCls, "mSecLevel", "I");
         gAudioParamsCtx.scrambled = NativeHelper::GetFieldID(
                 env, gAudioParamsCls, "mScrambled", "Z");
+        gAudioParamsCtx.audioPresentation = NativeHelper::GetFieldID(
+                env, gAudioParamsCls, "mAudioPresentation", "Landroid/media/AudioPresentation;");
+        gAudioParamsCtx.audioLanguage = NativeHelper::GetFieldID(
+                env, gAudioParamsCls, "mAudioLanguage", "Lcom/amlogic/asplayer/api/AudioLang;");
         gAudioParamsCtx.mediaFormat = NativeHelper::GetFieldID(
                 env, gAudioParamsCls, "mMediaFormat", "Landroid/media/MediaFormat;");
         gAudioParamsCtx.extraInfoJson = NativeHelper::GetFieldID(
@@ -759,6 +928,7 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
     DELETE_LOCAL_REF(env, asplayerCls);
     DELETE_LOCAL_REF(env, initParamCls);
     DELETE_LOCAL_REF(env, videoParamCls);
+    DELETE_LOCAL_REF(env, audioLangCls);
     DELETE_LOCAL_REF(env, audioParamCls);
     DELETE_LOCAL_REF(env, inputBufferCls);
     DELETE_LOCAL_REF(env, nullPointerExceptionCls);
