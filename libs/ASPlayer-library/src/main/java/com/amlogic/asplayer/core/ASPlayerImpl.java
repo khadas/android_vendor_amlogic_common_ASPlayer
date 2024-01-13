@@ -1029,7 +1029,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
-                handleSetAudioParams(params);
+                handleSetAudioParams(params.clone());
             });
         } else {
             ASPlayerLog.e("%s setAudioParams failed, playerHandler is null", getTag());
@@ -1088,7 +1088,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
 
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
-                handleSwitchAudioTrack(params);
+                handleSwitchAudioTrack(params.clone());
             });
             return ErrorCode.SUCCESS;
         } else {
@@ -1199,13 +1199,17 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     @Override
     public int setADParams(AudioParams params) {
         if (DEBUG) ASPlayerLog.d("%s setAudioDescriptionParams start", getTag());
+        if (params == null) {
+            return ErrorCode.ERROR_INVALID_PARAMS;
+        }
+
         if (mPlayerHandler != null) {
             mPlayerHandler.post(() -> {
                 ASPlayerLog.i("%s setADParams pid: %d, filterId: %d, format: %s",
                         getTag(), params.getPid(), params.getTrackFilterId(), params.getMediaFormat());
                 if (mAudioOutputPath instanceof AudioOutputPathV3) {
                     AudioOutputPathV3 outputPathV3 = (AudioOutputPathV3)mAudioOutputPath;
-                    outputPathV3.setSubTrackAudioParams(params);
+                    outputPathV3.setSubTrackAudioParams(params.clone());
                 }
             });
             return ErrorCode.SUCCESS;

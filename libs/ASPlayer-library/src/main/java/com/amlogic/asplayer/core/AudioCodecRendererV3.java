@@ -2,6 +2,7 @@ package com.amlogic.asplayer.core;
 
 import android.media.AudioAttributes;
 import android.media.AudioFormat;
+import android.media.AudioPresentation;
 import android.media.AudioTimestamp;
 import android.media.AudioTrack;
 import android.media.MediaDescrambler;
@@ -161,18 +162,17 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 
     @Override
     public int setAudioPresentationId(int presentationId, int programId) {
-        if (mAudioTrack == null) {
-            ASPlayerLog.e("%s setAudioPresentationId failed, AudioTrack is null, presentationId: %d," +
-                            " programId: %d", getTag(), presentationId, programId);
-            return ErrorCode.ERROR_INVALID_OBJECT;
-        }
-
         return AudioUtils.setAudioPresentationId(mAudioTrack, presentationId, programId, getTag());
     }
 
     @Override
     public int getAudioPresentationId() {
         return AudioUtils.getAudioPresentationId(getTag());
+    }
+
+    @Override
+    public int setAudioPresentation(AudioPresentation audioPresentation) {
+        return AudioUtils.setAudioPresentation(mAudioTrack, audioPresentation, getTag());
     }
 
     @Override

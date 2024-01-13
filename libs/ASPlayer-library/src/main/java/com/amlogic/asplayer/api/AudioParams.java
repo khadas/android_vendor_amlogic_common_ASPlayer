@@ -8,6 +8,7 @@
  */
 package com.amlogic.asplayer.api;
 
+import android.media.AudioPresentation;
 import android.media.MediaFormat;
 
 /**
@@ -59,6 +60,16 @@ public class AudioParams {
      * Audio media format
      */
     private MediaFormat mMediaFormat;
+
+    /**
+     * Audio presentation
+     */
+    private AudioPresentation mAudioPresentation;
+
+    /**
+     * Audio language
+     */
+    private AudioLang mAudioLanguage;
 
     /**
      * Audio Extra info, format: json
@@ -152,12 +163,46 @@ public class AudioParams {
         this.mMediaFormat = mediaFormat;
     }
 
+    public AudioPresentation getAudioPresentation() {
+        return mAudioPresentation;
+    }
+
+    private void setAudioPresentation(AudioPresentation audioPresentation) {
+        this.mAudioPresentation = audioPresentation;
+    }
+
+    public AudioLang getAudioLanguage() {
+        return mAudioLanguage;
+    }
+
+    private void setAudioLanguage(AudioLang audioLanguage) {
+        this.mAudioLanguage = audioLanguage;
+    }
+
     public String getExtraInfo() {
         return mExtraInfoJson;
     }
 
     private void setExtraInfo(String extraInfoJson) {
         this.mExtraInfoJson = extraInfoJson;
+    }
+
+    @Override
+    public AudioParams clone() {
+        AudioParams audioParams = new AudioParams();
+        audioParams.mMimeType = mMimeType;
+        audioParams.mSampleRate = mSampleRate;
+        audioParams.mChannelCount = mChannelCount;
+        audioParams.mPid = mPid;
+        audioParams.mTrackFilterId = mTrackFilterId;
+        audioParams.mAvSyncHwId = mAvSyncHwId;
+        audioParams.mSecLevel = mSecLevel;
+        audioParams.mScrambled = mScrambled;
+        audioParams.mMediaFormat = mMediaFormat;
+        audioParams.mAudioPresentation = mAudioPresentation;
+        audioParams.mAudioLanguage = mAudioLanguage;
+        audioParams.mExtraInfoJson = mExtraInfoJson;
+        return audioParams;
     }
 
     @Override
@@ -174,6 +219,12 @@ public class AudioParams {
         sb.append(", mScrambled=").append(mScrambled);
         if (mMediaFormat != null) {
             sb.append(", mMediaFormat=").append(mMediaFormat);
+        }
+        if (mAudioPresentation != null) {
+            sb.append(", mAudioPresentation=").append(mAudioPresentation);
+        }
+        if (mAudioLanguage != null) {
+            sb.append(", mAudioLanguage=").append(mAudioLanguage);
         }
         if (mExtraInfoJson != null) {
             sb.append(", mExtraInfoJson=").append(mExtraInfoJson);
@@ -199,6 +250,10 @@ public class AudioParams {
         private int mSecLevel;
 
         private boolean mScrambled;
+
+        private AudioPresentation mAudioPresentation;
+
+        private AudioLang mAudioLanguage;
 
         private MediaFormat mMediaFormat;
 
@@ -239,6 +294,16 @@ public class AudioParams {
             return this;
         }
 
+        public Builder setAudioPresentation(AudioPresentation presentation) {
+            this.mAudioPresentation = presentation;
+            return this;
+        }
+
+        public Builder setAudioLanguage(AudioLang audioLanguage) {
+            this.mAudioLanguage = audioLanguage;
+            return this;
+        }
+
         public Builder setExtraInfo(String extraInfo) {
             this.mExtraInfoJson = extraInfo;
             return this;
@@ -251,6 +316,8 @@ public class AudioParams {
             audioParams.setAvSyncHwId(mAvSyncHwId);
             audioParams.setSecLevel(mSecLevel);
             audioParams.setScrambled(mScrambled);
+            audioParams.setAudioPresentation(mAudioPresentation);
+            audioParams.setAudioLanguage(mAudioLanguage);
             audioParams.setMediaFormat(mMediaFormat);
             audioParams.setExtraInfo(mExtraInfoJson);
             return audioParams;

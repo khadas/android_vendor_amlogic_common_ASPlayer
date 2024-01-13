@@ -29,6 +29,11 @@ struct video_param_t {
     jfieldID mediaFormat;
 };
 
+struct audio_lang_t {
+    jmethodID getFirstLanguage;
+    jmethodID getSecondLanguage;
+};
+
 struct audio_param_t {
     jfieldID mimeType;
     jfieldID sampleRate;
@@ -38,6 +43,8 @@ struct audio_param_t {
     jfieldID avSyncHwId;
     jfieldID secLevel;
     jfieldID scrambled;
+    jfieldID audioPresentation;
+    jfieldID audioLanguage;
     jfieldID mediaFormat;
     jfieldID extraInfoJson;
 };
@@ -113,6 +120,8 @@ static jclass gInitParamsCls;
 static init_param_t gInitParamsCtx;
 static jclass gVideoParamsCls;
 static video_param_t gVideoParamsCtx;
+static jclass gAudioLangCls;
+static audio_lang_t gAudioLanguageCtx;
 static jclass gAudioParamsCls;
 static audio_param_t gAudioParamsCtx;
 static jclass gInputBufferCls;
@@ -209,6 +218,12 @@ bool ASPlayerJni::initJni(JNIEnv *env) {
                 gVideoParamsCls, "mMediaFormat", "Landroid/media/MediaFormat;");
     }
 
+    // init AudioLang
+    if (makeClassGlobalRef(&gAudioLangCls, env, "com/amlogic/asplayer/api/AudioLang")) {
+        gAudioLanguageCtx.getFirstLanguage = env->GetMethodID(gAudioLangCls, "getFirstLanguage", "()I");
+        gAudioLanguageCtx.getSecondLanguage = env->GetMethodID(gAudioLangCls, "getSecondLanguage", "()I");
+    }
+
     // init AudioParams
     if (makeClassGlobalRef(&gAudioParamsCls, env,
                            "com/amlogic/asplayer/api/AudioParams")) {
@@ -228,6 +243,10 @@ bool ASPlayerJni::initJni(JNIEnv *env) {
                 gAudioParamsCls, "mSecLevel", "I");
         gAudioParamsCtx.scrambled = env->GetFieldID(
                 gAudioParamsCls, "mScrambled", "Z");
+        gAudioParamsCtx.audioPresentation = env->GetFieldID(
+                gAudioParamsCls, "mAudioPresentation", "Landroid/media/AudioPresentation;");
+        gAudioParamsCtx.audioLanguage = env->GetFieldID(
+                gAudioParamsCls, "mAudioLanguage", "Lcom/amlogic/asplayer/api/AudioLang;");
         gAudioParamsCtx.mediaFormat = env->GetFieldID(
                 gAudioParamsCls, "mMediaFormat", "Landroid/media/MediaFormat;");
         gAudioParamsCtx.extraInfoJson = env->GetFieldID(
@@ -408,6 +427,49 @@ bool ASPlayerJni::convertVideoParams(
     return true;
 }
 
+bool ASPlayerJni::convertAudioPresentation(JNIEnv *env, jobject jAudioPresentation,
+                                           jni_asplayer_audio_presentation *outPresentation) {
+    if (env == nullptr || jAudioPresentation == nullptr || outPresentation == nullptr) {
+        return false;
+    }
+
+    jclass audioPresentationCls = env->FindClass("android/media/AudioPresentation");
+    if (audioPresentationCls == nullptr) {
+        return false;
+    }
+
+    jmethodID getPresentationMID = env->GetMethodID(audioPresentationCls, "getPresentationId", "()I");
+    jmethodID getProgramMID = env->GetMethodID(audioPresentationCls, "getProgramId", "()I");
+
+    outPresentation->presentation_id = static_cast<int32_t>(
+            env->CallIntMethod(jAudioPresentation, getPresentationMID));
+    outPresentation->program_id = static_cast<int32_t>(
+            env->CallIntMethod(jAudioPresentation, getProgramMID));
+
+    env->DeleteLocalRef(audioPresentationCls);
+    return true;
+}
+
+bool ASPlayerJni::convertAudioLanguage(JNIEnv *env, jobject jAudioLanguage,
+                                       jni_asplayer_audio_lang *outLanguage) {
+    if (env == nullptr || jAudioLanguage == nullptr || outLanguage == nullptr) {
+        ALOGE("convertAudioLanguage failed, invalid params");
+        return false;
+    }
+
+    if (gAudioLangCls == nullptr) {
+        ALOGE("convertAudioLanguage failed, failed to find class com/amlogic/asplayer/api/AudioLang");
+        return false;
+    }
+
+    outLanguage->first_lang = static_cast<int32_t>(
+            env->CallIntMethod(jAudioLanguage, gAudioLanguageCtx.getFirstLanguage));
+    outLanguage->second_lang = static_cast<int32_t>(
+            env->CallIntMethod(jAudioLanguage, gAudioLanguageCtx.getSecondLanguage));
+
+    return true;
+}
+
 bool ASPlayerJni::convertAudioParams(
         JNIEnv *env, jobject jAudioParam, jni_asplayer_audio_params *outParams) {
     if (env == nullptr || jAudioParam == nullptr || outParams == nullptr) {
@@ -423,6 +485,8 @@ bool ASPlayerJni::convertAudioParams(
     jint avSyncHwId = env->GetIntField(jAudioParam, gAudioParamsCtx.avSyncHwId);
     jint secLevel = env->GetIntField(jAudioParam, gAudioParamsCtx.secLevel);
     jboolean scrambled = env->GetBooleanField(jAudioParam, gAudioParamsCtx.scrambled);
+    jobject audioPresentation = env->GetObjectField(jAudioParam, gAudioParamsCtx.audioPresentation);
+    jobject audioLanguage = env->GetObjectField(jAudioParam, gAudioParamsCtx.audioLanguage);
     jobject mediaFormat = env->GetObjectField(jAudioParam, gAudioParamsCtx.mediaFormat);
     jstring jExtraInfoJson = static_cast<jstring>(env->GetObjectField(jAudioParam, gAudioParamsCtx.extraInfoJson));
 
@@ -445,6 +509,26 @@ bool ASPlayerJni::convertAudioParams(
     outParams->seclevel = secLevel;
     outParams->scrambled = scrambled;
     outParams->mediaFormat = mediaFormat;
+
+    if (audioPresentation != nullptr) {
+        if (!convertAudioPresentation(env, audioPresentation, &(outParams->presentation))) {
+            ALOGE("convertAudioPresentation failed");
+        }
+    }
+
+    ALOGI("audioPresentationId: %d, programId: %d",
+          outParams->presentation.presentation_id,
+          outParams->presentation.program_id);
+
+    if (audioLanguage != nullptr) {
+        if (!convertAudioLanguage(env, audioLanguage, &(outParams->language))) {
+            ALOGE("convertAudioLanguage failed");
+        }
+    }
+
+    ALOGI("audioLanguage, firstLanguage: %d, 0x%x, secondLanguage: %d, 0x%x",
+          outParams->language.first_lang, outParams->language.first_lang,
+          outParams->language.second_lang, outParams->language.second_lang);
 
     if (jExtraInfoJson != nullptr) {
         jsize extraInfoLen = env->GetStringUTFLength(jExtraInfoJson);

@@ -5,11 +5,14 @@ import static android.media.MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayb
 import static com.amlogic.asplayer.core.Constant.INVALID_FILTER_ID;
 
 import android.media.AudioFormat;
+import android.media.AudioPresentation;
 import android.media.MediaFormat;
 import android.os.Build;
 import android.text.TextUtils;
 
+import com.amlogic.asplayer.api.AudioLang;
 import com.amlogic.asplayer.api.AudioParams;
+import com.amlogic.asplayer.api.ErrorCode;
 import com.amlogic.asplayer.api.PIPMode;
 import com.amlogic.asplayer.api.WorkMode;
 import com.amlogic.asplayer.core.encapsulation.Metadata;
@@ -192,6 +195,8 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
             mAudioFormatListener.onAudioFormat(audioFormat);
         }
 
+        setInitAudioParams();
+
         ASPlayerLog.i("%s start audio render", getTag());
         audioCodecRenderer.start();
 
@@ -217,6 +222,38 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
         }
 
         return success;
+    }
+
+    private void setInitAudioParams() {
+        if (mAudioParams == null || mAudioCodecRenderer == null) {
+            return;
+        }
+
+        AudioPresentation presentation = mAudioParams.getAudioPresentation();
+        if (presentation != null) {
+            int result = mAudioCodecRenderer.setAudioPresentation(presentation);
+            if (result != ErrorCode.SUCCESS) {
+                ASPlayerLog.e("%s setInitAudioParams setAudioPresentation failed, " +
+                                "audioPresentation id: %d, program id: %d",
+                        getTag(), presentation.getPresentationId(), presentation.getProgramId());
+            }
+        }
+
+        AudioLang language = mAudioParams.getAudioLanguage();
+        if (language != null) {
+            int firstLang = language.getFirstLanguage();
+            int secondLang = language.getSecondLanguage();
+            ASPlayerLog.i("%s setInitAudioParams firstLanguage: %d, 0x%x, secondLanguage: %d, 0x%x",
+                    getTag(), firstLang, firstLang, secondLang, secondLang);
+            if (firstLang > 0 || secondLang > 0) {
+                int result = setAudioLanguage(firstLang, secondLang);
+                if (result != ErrorCode.SUCCESS) {
+                    ASPlayerLog.e("%s setInitAudioParams setAudioLanguage failed, " +
+                                    "firstLanguage: %d, 0x%x, secondLanguage: %d, 0x%x",
+                            getTag(), firstLang, firstLang, secondLang, secondLang);
+                }
+            }
+        }
     }
 
     private void setTrackWithTunerMetaData(AudioParams audioParams) {
