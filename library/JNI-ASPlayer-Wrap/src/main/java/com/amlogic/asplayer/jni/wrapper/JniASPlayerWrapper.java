@@ -39,6 +39,8 @@ public class JniASPlayerWrapper implements IASPlayer {
     private Object mListenersLock = new Object();
 
     static {
+        System.loadLibrary("jniasplayer-jni");
+
         // JniASPlayerWrapper built in app
         // JniASPlayer built in app
         loadAppSo();

@@ -514,13 +514,16 @@ jint JNI_OnLoad(JavaVM* vm, void* /*reserved*/) {
 
 #if (USE_SYSTEM_SO == 1)
     jni_asplayer_result ret = DynamicJniASPlayerWrapper::registerJni(env);
-#else
-    jni_asplayer_result ret = JniASPlayer_registerJNI(env);
-#endif
-
     if (ret != JNI_ASPLAYER_OK) {
         ALOGE("ERROR: JniASPlayer register jni env failed");
     }
+//#else
+//    jni_asplayer_result ret = JniASPlayer_registerJNI(env);
+#endif
+
+//    if (ret != JNI_ASPLAYER_OK) {
+//        ALOGE("ERROR: JniASPlayer register jni env failed");
+//    }
 
     if (registerNatives(env) != JNI_TRUE) {
         ALOGE("ERROR: registerNatives failed");
