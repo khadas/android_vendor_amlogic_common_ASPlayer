@@ -145,6 +145,35 @@ class VideoOutputPathV3 extends VideoOutputPath {
 
     private boolean mAudioOnly = false;
 
+    private class MediaCodecCallback extends MediaCodec.Callback {
+
+        @Override
+        public void onInputBufferAvailable(MediaCodec codec, int index) {
+
+        }
+
+        @Override
+        public void onOutputBufferAvailable(MediaCodec codec, int index, MediaCodec.BufferInfo info) {
+
+        }
+
+        @Override
+        public void onError(MediaCodec codec, MediaCodec.CodecException e) {
+            if (codec != mMediaCodec)
+                return;
+
+            ASPlayerLog.w("%s error=%s", getTag(), e.getMessage());
+            setError(e.getMessage());
+            setConfigurationError(e.toString());
+            setConfigured(false);
+        }
+
+        @Override
+        public void onOutputFormatChanged(MediaCodec codec, MediaFormat format) {
+
+        }
+    }
+
     private class VideoMediaCodecOnFrameCallback implements MediaCodec.OnFrameRenderedListener {
         @Override
         public void onFrameRendered(MediaCodec codec, long presentationTimeUs, long nanoTime) {
@@ -241,6 +270,7 @@ class VideoOutputPathV3 extends VideoOutputPath {
 
     VideoOutputPathV3(int id, int playbackMode) {
         super(id);
+        mMediaCodecCallback = new MediaCodecCallback();
         mMediaCodecOnFrameCallback = new VideoMediaCodecOnFrameCallback();
         mPlaybackMode = playbackMode;
     }

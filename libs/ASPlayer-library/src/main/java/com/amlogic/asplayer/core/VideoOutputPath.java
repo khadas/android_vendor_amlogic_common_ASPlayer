@@ -29,55 +29,11 @@ import static android.media.MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayb
 class VideoOutputPath extends MediaOutputPath {
 
     private static final boolean DEBUG = false;
-    private static final String TAG = Constant.LOG_TAG;
 
     interface VideoFormatListener {
         void onVideoSizeInfoChanged(int width, int height, int pixelAspectRatio);
         void onAfdInfoChanged(byte activeFormat);
         void onFrameRateChanged(int frameRate);
-    }
-
-    private class VideoMediaCodecCallback extends MediaCodec.Callback {
-        @Override
-        public void onInputBufferAvailable(MediaCodec codec, int index) {
-            if (mMediaCodecStarter != null)
-                return;
-            onMediaCodecInputBufferAvailable(codec, index);
-        }
-
-        @Override
-        public void onOutputBufferAvailable(MediaCodec codec, int index, MediaCodec.BufferInfo info) {
-            if (mMediaCodecStarter != null)
-                return;
-            onMediaCodecOutputBufferAvailable(codec, index, info);
-        }
-
-        @Override
-        public void onError(MediaCodec codec, MediaCodec.CodecException e) {
-            if (mMediaCodecStarter != null)
-                return;
-            onMediaCodecError(codec, e);
-        }
-
-        @Override
-        public void onOutputFormatChanged(MediaCodec codec, MediaFormat format) {
-            ASPlayerLog.i("%s onOutputFormatChanged, format: %s", getTag(), format);
-            if (mMediaCodecStarter != null)
-                return;
-            onMediaCodecOutputFormatChanged(codec, format);
-        }
-    }
-
-    private class VideoMediaCodecOnFrameCallback implements MediaCodec.OnFrameRenderedListener {
-        @Override
-        public void onFrameRendered(MediaCodec codec, long presentationTimeUs, long nanoTime) {
-            if (mTimestampKeeper.isEmpty())
-                return;
-            mTimestampKeeper.removeTimestamp(presentationTimeUs);
-            ASPlayerLog.i("%s [KPI-FCC] onFrameRendered pts: %d, nanoTime: %d",
-                    getTag(), presentationTimeUs, nanoTime);
-            notifyFrameDisplayed(presentationTimeUs, nanoTime / 1000);
-        }
     }
 
     private class MediaCodecStarter implements Runnable {
@@ -110,7 +66,7 @@ class VideoOutputPath extends MediaOutputPath {
     private static final int MAX_THRESHOLD_BETWEEN_PTS_US = 600000;
 
     protected MediaCodec mMediaCodec;
-    protected VideoMediaCodecCallback mMediaCodecCallback;
+    protected MediaCodec.Callback mMediaCodecCallback;
     protected boolean mSecurePlayback;
 
     protected int mAudioSessionId = Constant.INVALID_AUDIO_SESSION_ID;
@@ -180,9 +136,6 @@ class VideoOutputPath extends MediaOutputPath {
         mOutputBufferInfos = new MediaCodec.BufferInfo[MAX_BUFFER_INFOS];
         mVisible = true;
         mInputBuffer = new InputBuffer();
-
-        mMediaCodecCallback = new VideoMediaCodecCallback();
-        mMediaCodecOnFrameCallback = new VideoMediaCodecOnFrameCallback();
     }
 
     void setAudioSessionId(int sessionId) {
