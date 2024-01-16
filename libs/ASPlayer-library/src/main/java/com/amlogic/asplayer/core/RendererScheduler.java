@@ -63,6 +63,7 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     private final Renderer mPlaybackTask;
     private final Renderer mSmoothSpeedTask;
     private final Renderer mSpeedBySeekTask;
+    private final Renderer mSpeedByIOnlyTask;
     private final Renderer mNoVideoSpeedTask;
 
     private boolean mFirstVideoFrameDisplayed = false;
@@ -104,11 +105,13 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
             mPlaybackTask = new RendererPlaybackV3(mId, this);
             mSmoothSpeedTask = new RendererTrickSmoothV3(mId, this);
             mSpeedBySeekTask = new RendererTrickBySeekV3(mId, this);
+            mSpeedByIOnlyTask = new RendererTrickIOnlyV3(mId, this);
         } else {
             ASPlayerLog.i("%s playback mode normal mode", getTag());
             mPlaybackTask = new RendererPlayback(mId, this);
             mSmoothSpeedTask = new RendererTrickSmooth(mId, this);
             mSpeedBySeekTask = new RendererTrickBySeek(mId, this);
+            mSpeedByIOnlyTask = new RendererTrickIOnly(mId, this);
         }
 
         mNoVideoSpeedTask = new RendererTrickNoVideo(mId, this);
@@ -231,8 +234,10 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
                     selectedSpeedTask = mSmoothSpeedTask;
                     break;
                 case VideoTrickMode.TRICK_MODE_BY_SEEK:
-                case VideoTrickMode.TRICK_MODE_IONLY:
                     selectedSpeedTask = mSpeedBySeekTask;
+                    break;
+                case VideoTrickMode.TRICK_MODE_IONLY:
+                    selectedSpeedTask = mSpeedByIOnlyTask;
                     break;
                 case VideoTrickMode.NONE:
                 default:

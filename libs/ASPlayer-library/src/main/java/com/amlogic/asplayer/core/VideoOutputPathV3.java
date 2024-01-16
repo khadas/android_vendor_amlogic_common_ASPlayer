@@ -12,6 +12,7 @@ import com.amlogic.asplayer.api.PlaybackControl.TransitionModeBefore;
 import com.amlogic.asplayer.api.PlaybackControl.TransitionModeAfter;
 import com.amlogic.asplayer.api.PlaybackControl.VideoMute;
 import com.amlogic.asplayer.api.VideoParams;
+import com.amlogic.asplayer.api.VideoTrickMode;
 import com.amlogic.asplayer.api.WorkMode;
 import com.amlogic.asplayer.core.utils.StringUtils;
 
@@ -47,9 +48,10 @@ class VideoOutputPathV3 extends VideoOutputPath {
     /*
         trick modes
      */
-    public static final int TRICK_MODE_NONE = 0;
-    public static final int TRICK_MODE_SMOOTH = 1;
-    public static final int TRICK_MODE_BY_SEEK = 2;
+    public static final int TRICK_MODE_NONE = VideoTrickMode.NONE;
+    public static final int TRICK_MODE_SMOOTH = VideoTrickMode.TRICK_MODE_SMOOTH;
+    public static final int TRICK_MODE_BY_SEEK = VideoTrickMode.TRICK_MODE_BY_SEEK;
+    public static final int TRICK_MODE_IONLY = VideoTrickMode.TRICK_MODE_IONLY;
 
     public static final String KEY_TRICK_MODE = "vendor.tunerhal.passthrough.trick-mode";
     public static final String KEY_TRICK_SPEED = "vendor.tunerhal.passthrough.trick-speed";
