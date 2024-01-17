@@ -53,8 +53,6 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
 
     @Override
     void switchAudioTrack(AudioParams audioParams) {
-        super.switchAudioTrack(audioParams);
-
         if (audioParams != null && audioParams.getTrackFilterId() != INVALID_FILTER_ID) {
             setTrackWithTunerMetaData(audioParams);
         }
@@ -151,14 +149,11 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
             }
         });
 
-        ASPlayerLog.i("%s source:%s, tunneled:%b", getTag(), mimeType, mTunneledPlayback);
-
         // check secure playback or not
-        mSecurePlayback = mAudioParams.isScrambled();
-        if (!mSecurePlayback && format != null) {
-            mSecurePlayback = format.containsFeature(FEATURE_SecurePlayback) &&
-                    format.getFeatureEnabled(FEATURE_SecurePlayback);
-        }
+        mSecurePlayback = checkSecurePlayback(mAudioParams);
+
+        ASPlayerLog.i("%s source: %s, tunneled: %b, secure: %b",
+                getTag(), mimeType, mTunneledPlayback, mSecurePlayback);
 
         audioCodecRenderer.setAudioSessionId(mAudioSessionId);
         audioCodecRenderer.setTunneledPlayback(mTunneledPlayback);
@@ -262,9 +257,15 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
         }
 
         ASPlayerLog.i("%s setTrackWithTunerMetaData filterId: %d", getTag(), audioParams.getTrackFilterId());
+
         boolean success = changeMainTrack(audioParams);
-        if (success) {
-            mAudioParams = audioParams;
+        ASPlayerLog.i("%s changeMainTrack result: %s", getTag(), success ? "success" : "failed");
+        mAudioParams = audioParams;
+        mSecurePlayback = checkSecurePlayback(mAudioParams);
+        mHasAudio = true;
+
+        if (!success) {
+            setConfigured(false);
         }
     }
 
@@ -307,6 +308,8 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
     public void reset() {
         super.reset();
 
+        mSubTrackAudioParams = null;
+
         releaseAudioRenderer();
     }
 
@@ -344,14 +347,14 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
                 return false;
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                ASPlayerLog.i("%s changeMainTrack start writeMetadata", getTag());
                 Metadata.TunerMetadata metadata = mTunerMetadataMain.clone();
                 ((AudioCodecRendererV3) mAudioCodecRenderer).writeMetadata(metadata);
             }
 
-            mNeedToConfigureSubTrack = mSubTrackAudioParams != null;
+            return true;
         }
-        return true;
+
+        return false;
     }
 
     @Override
@@ -366,8 +369,16 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
     void disableADMix() {
         ASPlayerLog.i("%s disableADMix start", getTag());
         super.disableADMix();
-        mNeedToConfigureSubTrack = true;
-        ASPlayerLog.i("%s disableADMix enable reconfiguring sub track", getTag());
+
+        if (mAudioCodecRenderer != null) {
+            boolean success = stopADByMetadata();
+            ASPlayerLog.i("%s disableADMix stopADByMetadata result: %s",
+                    getTag(), success ? "success" : "failed");
+            if (!success) {
+                mNeedToConfigureSubTrack = true;
+                ASPlayerLog.i("%s disableADMix enable reconfiguring sub track", getTag());
+            }
+        }
     }
 
     private void changeSubTrack() {
@@ -378,60 +389,66 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
             return;
         }
 
-        if (mEnableADMix.booleanValue()) {
-            startADByMetadata();
-        } else {
-            stopADByMetadata();
+        if (mEnableADMix.booleanValue() && mSubTrackAudioParams != null) {
+            boolean success = startADByMetadata();
+            ASPlayerLog.i("%s changeSubTrack startADByMetadata result: %s",
+                    getTag(), success ? "success" : "failed");
+            if (success) {
+                mNeedToConfigureSubTrack = false;
+            }
+        } else if (!mEnableADMix.booleanValue()) {
+            boolean success = stopADByMetadata();
+            ASPlayerLog.i("%s changeSubTrack stopADByMetadata result: %s",
+                    getTag(), success ? "success" : "failed");
+            if (success) {
+                mNeedToConfigureSubTrack = false;
+            }
         }
     }
 
-    private void startADByMetadata() {
-        if (mSubTrackAudioParams == null) {
-            ASPlayerLog.i("%s sub track audio param is null", getTag());
-            return;
+    private boolean startADByMetadata() {
+        if (mAudioCodecRenderer == null || !(mAudioCodecRenderer instanceof AudioCodecRendererV3)) {
+            return false;
+        } else if (mSubTrackAudioParams == null) {
+            ASPlayerLog.i("%s startADMixByMetadata failed, no AD params", getTag());
+            return false;
         }
 
-        if (mAudioCodecRenderer == null) {
-            return;
+        final int filterId = mSubTrackAudioParams.getTrackFilterId();
+        final int encodingType = AudioUtils.getEncoding(mSubTrackAudioParams);
+        ASPlayerLog.i("%s startADMixByMetadata, filterId: %d", getTag(), filterId);
+        if (!prepareMetadata(mTunerMetadataSub, filterId, encodingType)) {
+            return false;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Metadata.TunerMetadata metadata = mTunerMetadataSub.clone();
+            ((AudioCodecRendererV3) mAudioCodecRenderer).writeMetadata(metadata);
+            return true;
         }
 
-        if (mAudioCodecRenderer instanceof AudioCodecRendererV3) {
-            final int filterId = mSubTrackAudioParams.getTrackFilterId();
-            final int encodingType = AudioUtils.getEncoding(mSubTrackAudioParams);
-            ASPlayerLog.i("%s startADMixByMetadata, filterId: %d", getTag(), filterId);
-            if (!prepareMetadata(mTunerMetadataSub, filterId, encodingType)) {
-                return;
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                Metadata.TunerMetadata metadata = mTunerMetadataSub.clone();
-                ((AudioCodecRendererV3) mAudioCodecRenderer).writeMetadata(metadata);
-            }
-
-            mNeedToConfigureSubTrack = false;
-        }
+        return false;
     }
 
-    private void stopADByMetadata() {
-        if (mAudioCodecRenderer == null) {
-            return;
+    private boolean stopADByMetadata() {
+        if (mAudioCodecRenderer == null || !(mAudioCodecRenderer instanceof AudioCodecRendererV3)) {
+            return false;
         }
 
-        if (mAudioCodecRenderer instanceof AudioCodecRendererV3) {
-            final int lastADFilterId = mSubTrackAudioParams != null
-                    ? mSubTrackAudioParams.getTrackFilterId() : 0;
-            ASPlayerLog.i("%s stopADMixByMetadata, last AD filterId: %d", getTag(), lastADFilterId);
+        final int lastADFilterId = mSubTrackAudioParams != null
+                ? mSubTrackAudioParams.getTrackFilterId() : 0;
+        ASPlayerLog.i("%s stopADMixByMetadata, last AD filterId: %d", getTag(), lastADFilterId);
 
-            final int fakeFilterId = 0; // set to invalid filter id. (not -1, 0 instead)
-            if (!prepareMetadata(mTunerMetadataSub, fakeFilterId, AudioFormat.ENCODING_DEFAULT)) {
-                return;
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                Metadata.TunerMetadata metadata = mTunerMetadataSub.clone();
-                ((AudioCodecRendererV3) mAudioCodecRenderer).writeMetadata(metadata);
-            }
-
-            mNeedToConfigureSubTrack = false;
+        final int fakeFilterId = 0; // set to invalid filter id. (not -1, 0 instead)
+        if (!prepareMetadata(mTunerMetadataSub, fakeFilterId, AudioFormat.ENCODING_DEFAULT)) {
+            return false;
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Metadata.TunerMetadata metadata = mTunerMetadataSub.clone();
+            ((AudioCodecRendererV3) mAudioCodecRenderer).writeMetadata(metadata);
+            return true;
+        }
+
+        return false;
     }
 
     private boolean prepareMetadata(Metadata.TunerMetadata tunerMetadata, int filterId, int encodingType) {

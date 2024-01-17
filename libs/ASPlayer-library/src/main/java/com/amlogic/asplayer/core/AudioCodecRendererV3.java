@@ -111,6 +111,11 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
 //            mMetadata.removeIf(item -> item.getClass().equals(metadata.getClass()));
             mMetadata.add(metadata);
         }
+
+        // wake up write thread
+        synchronized (mLock) {
+            mLock.notify();
+        }
     }
 
     @Override

@@ -9,6 +9,7 @@
 package com.amlogic.asplayer.core;
 
 import static com.amlogic.asplayer.core.Constant.UNKNOWN_AUDIO_PRESENTATION_ID;
+import static android.media.MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayback;
 
 import android.media.AudioFormat;
 import android.media.AudioTrack;
@@ -42,8 +43,6 @@ abstract class AudioOutputPathBase extends MediaOutputPath {
     protected boolean mMute = false;
 
     protected boolean mNeedToConfigureSubTrack = false;
-
-    protected boolean mHasAudioFormatChanged = false;
 
     protected boolean mChangedWorkMode = false;
     protected boolean mChangePIPMode = false;
@@ -146,11 +145,8 @@ abstract class AudioOutputPathBase extends MediaOutputPath {
     }
 
     void setAudioParams(AudioParams audioParams) {
-        if (mAudioParams != null) {
-            mHasAudioFormatChanged = hasAudioFormatChanged(mAudioParams, audioParams);
-        }
-
         mAudioParams = audioParams;
+        mHasAudio = mAudioParams != null;
     }
 
     boolean hasAudioFormat() {
@@ -170,7 +166,6 @@ abstract class AudioOutputPathBase extends MediaOutputPath {
     }
 
     void switchAudioTrack(AudioParams audioParams) {
-        setAudioParams(audioParams);
     }
 
     boolean setDualMonoMode(int dualMonoMode) {
@@ -188,6 +183,20 @@ abstract class AudioOutputPathBase extends MediaOutputPath {
         }
 
         return AudioTrack.DUAL_MONO_MODE_OFF;
+    }
+
+    protected static boolean checkSecurePlayback(AudioParams audioParams) {
+        if (audioParams == null) {
+            return false;
+        }
+
+        boolean secure = audioParams.isScrambled();
+        if (!secure && audioParams.getMediaFormat() != null) {
+            MediaFormat mediaFormat = audioParams.getMediaFormat();
+            secure = mediaFormat.containsFeature(FEATURE_SecurePlayback) &&
+                    mediaFormat.getFeatureEnabled(FEATURE_SecurePlayback);
+        }
+        return secure;
     }
 
     boolean isPlaying() {
@@ -398,8 +407,11 @@ abstract class AudioOutputPathBase extends MediaOutputPath {
         super.reset();
 
         mAudioParams = null;
-        mHasAudioFormatChanged = false;
         mDualMonoMode = null;
+
+        mNeedToConfigureSubTrack = false;
+        mChangedWorkMode = false;
+        mChangePIPMode = false;
     }
 
     void resetForSeek() {
@@ -447,6 +459,5 @@ abstract class AudioOutputPathBase extends MediaOutputPath {
 
         mAudioParams = null;
         mDualMonoMode = null;
-        mHasAudioFormatChanged = false;
     }
 }
