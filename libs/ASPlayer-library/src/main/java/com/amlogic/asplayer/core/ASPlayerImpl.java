@@ -60,8 +60,7 @@ import static com.amlogic.asplayer.core.Constant.UNKNOWN_AUDIO_PROGRAM_ID;
 import static com.amlogic.asplayer.core.TsPlaybackConfig.PLAYBACK_BUFFER_SIZE;
 import static com.amlogic.asplayer.core.TsPlaybackConfig.TS_PACKET_SIZE;
 
-public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListener,
-        AudioOutputPathBase.AudioFormatListener {
+public class ASPlayerImpl implements IASPlayer, AudioOutputPathBase.AudioFormatListener {
 
     private static final boolean DEBUG = false;
 
@@ -76,6 +75,8 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     private VideoOutputPath mVideoOutputPath;
     private AudioOutputPathBase mAudioOutputPath;
 
+    private VideoFormatListenerAdapter mVideoFormatListener;
+
     private RendererScheduler mRendererScheduler;
     private TsPlayback mTsPlayback;
 
@@ -87,21 +88,7 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     private HandlerThread mEventThread;
     private CopyOnWriteArraySet<TsPlaybackListener> mPendingPlaybackListeners;
 
-    private static class VideoInfo {
-        private int mWidth;
-        private int mHeight;
-        private int mAspectRatio;
-        private int mFrameRate;
-
-        private VideoInfo(int width, int height, int aspectRatio) {
-            mWidth = width;
-            mHeight = height;
-            mAspectRatio = aspectRatio;
-            mFrameRate = 0;
-        }
-    }
-
-    private VideoInfo mVideoInfo;
+    private VideoFormatState mVideoFormatState;
 
     private final int mId;
     private int mSyncInstanceId = INVALID_SYNC_INSTANCE_ID;
@@ -124,6 +111,8 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         mAudioOutputPath = new AudioOutputPathV3(mId);
 
         mPendingPlaybackListeners = new CopyOnWriteArraySet<>();
+
+        mVideoFormatListener = new VideoFormatListenerAdapter();
     }
 
     @Override
@@ -175,6 +164,8 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         mRendererScheduler = new RendererScheduler(mId, mContext, this, mConfig,
                 mVideoOutputPath, mAudioOutputPath, mEventNotifier);
 
+        mVideoFormatState = new VideoFormatState(mEventNotifier);
+
         if (needTsPlayback()) {
             if (mTuner == null) {
                 ASPlayerLog.e("%s prepare failed, Dvr playback but tuner is null", getTag());
@@ -190,54 +181,13 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     }
 
     private void handlePrepare() {
-        mRendererScheduler.setVideoFormatListener(this);
+        mRendererScheduler.setVideoFormatListener(mVideoFormatListener);
         mRendererScheduler.setAudioFormatListener(this);
         mRendererScheduler.prepare(mPlayerHandler);
     }
 
     private boolean isAlive() {
         return mPlayerHandler != null && mPlayerThread != null && mPlayerThread.isAlive();
-    }
-
-    @Override
-    public void onVideoSizeInfoChanged(int width, int height, int pixelAspectRatio) {
-        if (mVideoInfo == null) {
-            mVideoInfo = new VideoInfo(width, height, pixelAspectRatio);
-            tryNotifyVideoFormatChanged();
-        } else if (mVideoInfo != null &&
-                (width != mVideoInfo.mWidth || height != mVideoInfo.mHeight ||
-                        pixelAspectRatio != mVideoInfo.mAspectRatio)) {
-            mVideoInfo = new VideoInfo(width, height, pixelAspectRatio);
-            tryNotifyVideoFormatChanged();
-        }
-    }
-
-    @Override
-    public void onAfdInfoChanged(byte activeFormat) {
-
-    }
-
-    @Override
-    public void onFrameRateChanged(int frameRate) {
-        MediaFormat format = MediaFormat.createVideoFormat("", 0, 0);
-        format.setInteger(MediaFormat.KEY_FRAME_RATE, (int) frameRate);
-        if (mVideoInfo != null && frameRate != mVideoInfo.mFrameRate) {
-            mVideoInfo.mFrameRate = (int)frameRate;
-            tryNotifyVideoFormatChanged();
-        }
-    }
-
-    private void tryNotifyVideoFormatChanged() {
-        if (mVideoInfo != null && mVideoInfo.mWidth > 0 && mVideoInfo.mHeight > 0
-            && mVideoInfo.mAspectRatio > 0 && mVideoInfo.mFrameRate > 0) {
-            MediaFormat mediaFormat = new MediaFormat();
-            mediaFormat.setInteger(VideoFormat.KEY_WIDTH, mVideoInfo.mWidth);
-            mediaFormat.setInteger(VideoFormat.KEY_HEIGHT, mVideoInfo.mHeight);
-            mediaFormat.setInteger(VideoFormat.KEY_FRAME_RATE, mVideoInfo.mFrameRate);
-            mediaFormat.setInteger(VideoFormat.KEY_ASPECT_RATIO, mVideoInfo.mAspectRatio);
-
-            mEventNotifier.notifyVideoFormatChange(mediaFormat);
-        }
     }
 
     @Override
@@ -294,6 +244,13 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         mSyncInstanceId = INVALID_SYNC_INSTANCE_ID;
 
         mPendingPlaybackListeners.clear();
+
+        if (mVideoFormatState != null) {
+            mVideoFormatState.release();
+            mVideoFormatState = null;
+        }
+
+        mVideoFormatListener = null;
 
         if (mEventNotifier != null) {
             mEventNotifier.release();
@@ -821,6 +778,9 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         if (isAlive()) {
             ConditionVariable lock = new ConditionVariable();
             mPlayerHandler.post(() -> {
+                if (mVideoFormatState != null) {
+                    mVideoFormatState.reset();
+                }
                 handleStart();
                 mRendererScheduler.startVideoDecoding();
                 lock.open();
@@ -902,6 +862,9 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
             mPlayerHandler.post(() -> {
                 if (mRendererScheduler != null) {
                     mRendererScheduler.stopVideoDecoding();
+                }
+                if (mVideoFormatState != null) {
+                    mVideoFormatState.reset();
                 }
                 lock.open();
             });
@@ -1558,6 +1521,37 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
     public Pts getFirstPts(int streamType) {
         if (DEBUG) ASPlayerLog.d("%s getFirstPts start", getTag());
         return null;
+    }
+
+    private class VideoFormatListenerAdapter implements VideoOutputPath.VideoFormatListener {
+
+        @Override
+        public void onVideoSizeInfoChanged(int width, int height, int pixelAspectRatio) {
+            if (mVideoFormatState != null) {
+                mVideoFormatState.onVideoSizeInfoChanged(width, height, pixelAspectRatio);
+            }
+        }
+
+        @Override
+        public void onAfdInfoChanged(byte activeFormat) {
+            if (mVideoFormatState != null) {
+                mVideoFormatState.onAfdInfoChanged(activeFormat);
+            }
+        }
+
+        @Override
+        public void onFrameRateChanged(int frameRate) {
+            if (mVideoFormatState != null) {
+                mVideoFormatState.onFrameRateChanged(frameRate);
+            }
+        }
+
+        @Override
+        public void onVFType(int vfType) {
+            if (mVideoFormatState != null) {
+                mVideoFormatState.onVFType(vfType);
+            }
+        }
     }
 
     private String getTag() {

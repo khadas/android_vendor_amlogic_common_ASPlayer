@@ -34,6 +34,7 @@ class VideoOutputPath extends MediaOutputPath {
         void onVideoSizeInfoChanged(int width, int height, int pixelAspectRatio);
         void onAfdInfoChanged(byte activeFormat);
         void onFrameRateChanged(int frameRate);
+        void onVFType(int vfType);
     }
 
     private class MediaCodecStarter implements Runnable {
@@ -475,11 +476,11 @@ class VideoOutputPath extends MediaOutputPath {
             mVideoHeight = height;
             needNotify = true;
         }
-        if (pixelAspectRatio > 0 && Math.abs(pixelAspectRatio - mPixelAspectRatio) > 0.001) {
+        if (pixelAspectRatio > 0 && pixelAspectRatio != mPixelAspectRatio) {
             mPixelAspectRatio = pixelAspectRatio;
             needNotify = true;
         }
-        if (mVideoHeight <= 0 || mVideoWidth <= 0 || mPixelAspectRatio <= 0) {
+        if (mVideoWidth <= 0 || mVideoHeight <= 0 || mPixelAspectRatio <= 0) {
             needNotify = false;
         }
         if (needNotify && mVideoFormatListener != null) {
@@ -493,7 +494,7 @@ class VideoOutputPath extends MediaOutputPath {
     }
 
     protected void updateVideoAspectRatioInfo(int pixelAspectRatio) {
-        updateVideoSizeInfo(0, 0, pixelAspectRatio);
+        updateVideoSizeInfo(mVideoWidth, mVideoHeight, pixelAspectRatio);
     }
 
     protected void updateVideoFrameRateInfo(int frameRate) {
@@ -522,6 +523,10 @@ class VideoOutputPath extends MediaOutputPath {
         if (mVFType == null || vfType != mVFType.intValue()) {
             mVFType = new Integer(vfType);
             ASPlayerLog.i("%s vf_type: %d", getTag(), vfType);
+
+            if (mVideoFormatListener != null) {
+                mVideoFormatListener.onVFType(vfType);
+            }
         }
     }
 
