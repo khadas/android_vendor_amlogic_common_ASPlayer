@@ -41,12 +41,7 @@ public interface IASPlayer {
     /**
      * Get ASPlayer interface major version.
      */
-    int getMajorVersion();
-
-    /**
-     * Get ASPlayer interface minor version.
-     */
-    int getMinorVersion();
+    Version getVersion();
 
     /**
      * Get the instance number of specified ASPlayer
@@ -117,22 +112,6 @@ public interface IASPlayer {
      * @return
      */
     int setPIPMode(int mode);
-
-    /**
-     * Get the playing time of ASPlayer instance.
-     *
-     * @return Playing time.
-     */
-    long getCurrentTime();
-
-    /**
-     * Get the pts of ASPlayer instance.
-     *
-     * @see StreamType
-     *
-     * @param streamType stream type
-     */
-    long getPts(int streamType);
 
     /**
      * Set the tsync mode for ASPlayer instance.
@@ -512,33 +491,11 @@ public interface IASPlayer {
     String getParameterString(String key);
 
     /**
-     * Set subtitle pid for ASPlayer instance.
-     *
-     * @param pid
-     */
-    int setSubtitlePid(int pid);
-
-    /**
-     * get State for ASPlayer instance
-     */
-    State getState();
-
-    /**
-     * Start subtitle for ASPlayer instance
-     */
-    int startSubtitle();
-
-    /**
-     * Stop subtitle for ASPlayer instance
-     */
-    int stopSubtitle();
-
-    /**
      * Get the first pts of ASPlayer instance.
      *
      * @see StreamType
      *
      * @param streamType stream type
      */
-    long getFirstPts(int streamType);
+    Pts getFirstPts(int streamType);
 }

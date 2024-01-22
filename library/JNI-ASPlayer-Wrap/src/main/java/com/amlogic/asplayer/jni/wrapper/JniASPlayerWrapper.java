@@ -20,9 +20,10 @@ import com.amlogic.asplayer.api.InitParams;
 import com.amlogic.asplayer.api.InputBuffer;
 import com.amlogic.asplayer.api.InputFrameBuffer;
 import com.amlogic.asplayer.api.IASPlayer;
-import com.amlogic.asplayer.api.State;
+import com.amlogic.asplayer.api.Pts;
 import com.amlogic.asplayer.api.TsPlaybackListener;
 import com.amlogic.asplayer.api.ASPlayer;
+import com.amlogic.asplayer.api.Version;
 import com.amlogic.asplayer.api.VideoParams;
 
 import java.util.ArrayList;
@@ -112,13 +113,8 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
-    public int getMajorVersion() {
-        return 0;
-    }
-
-    @Override
-    public int getMinorVersion() {
-        return 0;
+    public Version getVersion() {
+        return null;
     }
 
     @Override
@@ -174,16 +170,6 @@ public class JniASPlayerWrapper implements IASPlayer {
     @Override
     public int setPIPMode(int mode) {
         return native_setPIPMode(mode);
-    }
-
-    @Override
-    public long getCurrentTime() {
-        return 0;
-    }
-
-    @Override
-    public long getPts(int streamType) {
-        return 0;
     }
 
     @Override
@@ -466,29 +452,8 @@ public class JniASPlayerWrapper implements IASPlayer {
         return parameters != null ? parameters.getString(key) : null;
     }
 
-    @Override
-    public int setSubtitlePid(int pid) {
-        return 0;
-    }
-
-    @Override
-    public State getState() {
+    public Pts getFirstPts(int streamType) {
         return null;
-    }
-
-    @Override
-    public int startSubtitle() {
-        return 0;
-    }
-
-    @Override
-    public int stopSubtitle() {
-        return 0;
-    }
-
-    @Override
-    public long getFirstPts(int streamType) {
-        return 0;
     }
 
     private static native final void native_init();

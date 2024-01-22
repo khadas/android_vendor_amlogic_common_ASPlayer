@@ -36,6 +36,7 @@ import com.amlogic.asplayer.api.EventMask;
 import com.amlogic.asplayer.api.IASPlayer;
 import com.amlogic.asplayer.api.InitParams;
 import com.amlogic.asplayer.api.InputSourceType;
+import com.amlogic.asplayer.api.StreamType;
 import com.amlogic.asplayer.api.TsPlaybackListener;
 import com.amlogic.asplayer.api.VideoParams;
 import com.amlogic.asplayer.api.VideoTrickMode;
@@ -807,9 +808,9 @@ public class TvPlayer {
         } else if (event instanceof TsPlaybackListener.DecodeFirstAudioFrameEvent) {
             TvLog.i("TvPlayer-%d DecodeFirstAudioFrameEvent", mId);
         } else if (event instanceof TsPlaybackListener.PtsEvent) {
-            // TsPlaybackListener.PtsEvent ev = (TsPlaybackListener.PtsEvent) event;
-            // TvLog.d("TvPlayer-%d PtsEvent, stream: %s, pts: %d, rendertime: %d",
-            //         mId, StreamType.toString(ev.mStreamType), ev.mPts, ev.mRenderTime);
+            TsPlaybackListener.PtsEvent ev = (TsPlaybackListener.PtsEvent) event;
+            TvLog.d("TvPlayer-%d PtsEvent, stream: %s, pts: %d, rendertime: %d",
+                    mId, StreamType.toString(ev.getStreamType()), ev.getPts(), ev.getRenderTime());
         }
 
         if (mTsPlaybackListener != null) {
@@ -822,9 +823,6 @@ public class TvPlayer {
     }
 
     public long getPositionMs() {
-        if (mASPlayer != null) {
-            return mASPlayer.getCurrentTime();
-        }
         return 0;
     }
 

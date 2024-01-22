@@ -160,6 +160,18 @@ public interface TsPlaybackListener {
         public String getEventName() {
             return "PtsEvent";
         }
+
+        public int getStreamType() {
+            return mStreamType;
+        }
+
+        public long getPts() {
+            return mPts;
+        }
+
+        public long getRenderTime() {
+            return mRenderTime;
+        }
     }
 
     class PlaybackInfoEvent extends PlaybackEvent {

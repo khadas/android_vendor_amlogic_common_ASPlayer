@@ -165,7 +165,7 @@ public class LocalTvPlayerActivity extends Activity implements TsPlaybackListene
         } else if (event instanceof PtsEvent) {
             PtsEvent ev = (PtsEvent) event;
             TvLog.d("PtsEvent stream: %s, pts: %d, rendertime: %d",
-                    StreamType.toString(ev.mStreamType), ev.mPts, ev.mRenderTime);
+                    StreamType.toString(ev.getStreamType()), ev.getPts(), ev.getRenderTime());
         }
     }
 

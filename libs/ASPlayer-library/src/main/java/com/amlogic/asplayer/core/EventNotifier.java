@@ -194,9 +194,9 @@ class EventNotifier {
     private void logPlaybackEvent(TsPlaybackListener.PlaybackEvent event, Object param) {
         if (LOG_NOTIFICATIONS) {
             if (param != null) {
-                ASPlayerLog.d("%s notifyEvent: %s(%s)", getTag(), event.getEventName(), param);
+                ASPlayerLog.d("%s: %s(%s)", getTag(), event.getEventName(), param);
             } else {
-                ASPlayerLog.d("%s notifyEvent: %s", getTag(), event.getEventName());
+                ASPlayerLog.d("%s: %s", getTag(), event.getEventName());
             }
         }
     }
