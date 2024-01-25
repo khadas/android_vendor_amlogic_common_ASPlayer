@@ -434,9 +434,12 @@ public class ASPlayerImpl implements IASPlayer, VideoOutputPath.VideoFormatListe
         if (mPlayerHandler != null && mTsPlayback != null) {
             ConditionVariable lock = new ConditionVariable();
             mPlayerHandler.post(() -> {
-                mTsPlayback.stop();
-                mTsPlayback.flush();
-                mTsPlayback.start();
+                TsPlayback tsPlayback = mTsPlayback;
+                if (tsPlayback != null) {
+                    tsPlayback.stop();
+                    tsPlayback.flush();
+                    tsPlayback.start();
+                }
                 lock.open();
                 ASPlayerLog.i("%s flushDvr success", getTag());
             });
