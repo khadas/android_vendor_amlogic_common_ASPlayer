@@ -4,6 +4,7 @@ import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
 import android.media.MediaFormat;
+import android.text.TextUtils;
 import android.util.Log;
 
 
@@ -73,12 +74,16 @@ public class MediaCodecUtils {
         if (mCodecInfos.containsKey(mimeType))
             return;
 
+        ASPlayerLog.i("ensureMediaCodecInfosLoaded mimeType: %s", mimeType);
+
         MediaCodecList mediaCodecList = new MediaCodecList(MediaCodecList.ALL_CODECS);
         MediaCodecInfo[] mediaCodecInfos = mediaCodecList.getCodecInfos();
         ArrayList<MediaCodecInfo> codecInfosForMimeType = new ArrayList<>();
         for (MediaCodecInfo codecInfo : mediaCodecInfos) {
             if (codecInfo.isEncoder())
                 continue;
+
+            ASPlayerLog.i("codec name: %s, is vendor: %b", codecInfo.getName(), codecInfo.isVendor());
 
             String[] types = codecInfo.getSupportedTypes();
             for (String type : types) {
@@ -120,11 +125,11 @@ public class MediaCodecUtils {
         MediaCodecInfo bestCandidate = null;
         for (MediaCodecInfo codecInfo : mediaCodecInfos) {
             if (DEBUG) {
-                Log.v(TAG, "codec name: " + codecInfo.getName());
-                Log.v(TAG, "codec isVendor: " + codecInfo.isVendor());
-                Log.v(TAG, "codec isHardwareAccelerated: " + codecInfo.isHardwareAccelerated());
-                Log.v(TAG, "codec isCodecTunneled: " + isCodecTunneled(codecInfo, mimeType));
-                Log.v(TAG, "codec isCodecSecure: " + isCodecSecure(codecInfo, mimeType));
+                Log.d(TAG, "codec name: " + codecInfo.getName());
+                Log.d(TAG, "codec isVendor: " + codecInfo.isVendor());
+                Log.d(TAG, "codec isHardwareAccelerated: " + codecInfo.isHardwareAccelerated());
+                Log.d(TAG, "codec isCodecTunneled: " + isCodecTunneled(codecInfo, mimeType));
+                Log.d(TAG, "codec isCodecSecure: " + isCodecSecure(codecInfo, mimeType));
             }
 
             if (bestCandidate != null) {
@@ -170,4 +175,98 @@ public class MediaCodecUtils {
         return mIsTunneledPlaybackSupported;
     }
 
+    static MediaCodec findDolbyVisionMediaCodec(int codecType, boolean mustBeTunneled, boolean securePlaybackRequested) throws IOException {
+        String mimeType = MediaFormat.MIMETYPE_VIDEO_DOLBY_VISION;
+        ensureMediaCodecInfosLoaded(mimeType);
+
+        ArrayList<MediaCodecInfo> mediaCodecInfos = mCodecInfos.get(mimeType);
+        if (mediaCodecInfos == null || mediaCodecInfos.isEmpty()) {
+            ASPlayerLog.i("Dolby Vision failed to get MediaCodecList");
+            return null;
+        }
+
+        String codecNameKey = "";
+        if (codecType == DolbyVisionUtils.CODEC_TYPE_HEVC) {
+            codecNameKey = DolbyVisionUtils.CODEC_NAME_HEVC;
+        } else if (codecType == DolbyVisionUtils.CODEC_TYPE_AVC) {
+            codecNameKey = DolbyVisionUtils.CODEC_NAME_AVC;
+        } else if (codecType == DolbyVisionUtils.CODEC_TYPE_AV1) {
+            codecNameKey = DolbyVisionUtils.CODEC_NAME_AV1;
+        } else {
+            ASPlayerLog.i("Dolby Vision unknown codecType: %d", codecType);
+        }
+
+        if (TextUtils.isEmpty(codecNameKey)) {
+            return null;
+        }
+
+        ArrayList<MediaCodecInfo> dvCodecInfos = new ArrayList<>();
+        if (!TextUtils.isEmpty(codecNameKey)) {
+            for (MediaCodecInfo codecInfo : mediaCodecInfos) {
+                if (DEBUG) {
+                    Log.v(TAG, "codec name: " + codecInfo.getName());
+                    Log.v(TAG, "codec isVendor: " + codecInfo.isVendor());
+                    Log.v(TAG, "codec isHardwareAccelerated: " + codecInfo.isHardwareAccelerated());
+                    Log.v(TAG, "codec isCodecTunneled: " + isCodecTunneled(codecInfo, mimeType));
+                    Log.v(TAG, "codec isCodecSecure: " + isCodecSecure(codecInfo, mimeType));
+                }
+
+                String codecName = codecInfo.getName();
+                if (codecName.contains("decoder") && codecName.contains(codecNameKey)) {
+                    dvCodecInfos.add(codecInfo);
+                }
+            }
+        }
+
+        // priority
+        // 1. secure
+        // 2. soc vendor
+        // 3. tunneled as requested
+        MediaCodecInfo bestCandidate = null;
+        for (MediaCodecInfo codecInfo : dvCodecInfos) {
+            if (DEBUG) {
+                Log.v(TAG, "codec name: " + codecInfo.getName());
+                Log.v(TAG, "codec isVendor: " + codecInfo.isVendor());
+                Log.v(TAG, "codec isHardwareAccelerated: " + codecInfo.isHardwareAccelerated());
+                Log.v(TAG, "codec isCodecTunneled: " + isCodecTunneled(codecInfo, mimeType));
+                Log.v(TAG, "codec isCodecSecure: " + isCodecSecure(codecInfo, mimeType));
+            }
+
+            if (bestCandidate != null) {
+                if (securePlaybackRequested && !isCodecSecure(codecInfo, mimeType)) {
+                    continue;
+                }
+                if (!codecInfo.isVendor() && bestCandidate.isVendor()) {
+                    continue;
+                }
+                if (!codecInfo.isHardwareAccelerated() && bestCandidate.isHardwareAccelerated()) {
+                    continue;
+                }
+                if (isCodecTunneled(bestCandidate, mimeType) == mustBeTunneled &&
+                        isCodecTunneled(codecInfo, mimeType) != mustBeTunneled) {
+                    continue;
+                }
+                if (!securePlaybackRequested && isCodecSecure(codecInfo, mimeType) && !isCodecSecure(bestCandidate, mimeType)) {
+                    continue;
+                }
+                if (isSamePriority(codecInfo, bestCandidate, mimeType)) {
+                    continue;
+                }
+            }
+            bestCandidate = codecInfo;
+            if (DEBUG) {
+                Log.v(TAG, "set as candidate");
+            }
+        }
+
+        if (bestCandidate == null) {
+            return null;
+        }
+
+        if (DEBUG) {
+            Log.v(TAG, "found codec name: " + bestCandidate.getName());
+        }
+
+        return MediaCodec.createByCodecName(bestCandidate.getName());
+    }
 }

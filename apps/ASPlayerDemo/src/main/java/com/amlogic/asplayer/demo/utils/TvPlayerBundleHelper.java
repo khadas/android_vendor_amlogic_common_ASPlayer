@@ -9,6 +9,7 @@
 package com.amlogic.asplayer.demo.utils;
 
 import android.os.Bundle;
+import android.text.TextUtils;
 
 import com.amlogic.asplayer.demo.Constant;
 import com.amlogic.asplayer.demo.widget.ProgramInputSettingView;
@@ -32,10 +33,16 @@ public class TvPlayerBundleHelper {
             bundle.putString(Constant.EXTRA_VIDEO_STREAM_TYPE, programInfo.mVideoStreamType);
             bundle.putString(Constant.EXTRA_AUDIO_STREAM_TYPE, programInfo.mAudioStreamType);
 
-            String videoMimeType = TunerHelper.getMimeTypeFromVideoStreamType(programInfo.mVideoStreamType);
+            String videoMimeType = programInfo.mVideoMimeType;
+            if (TextUtils.isEmpty(videoMimeType)) {
+                videoMimeType = TunerHelper.getMimeTypeFromVideoStreamType(programInfo.mVideoStreamType);
+            }
             bundle.putString(Constant.EXTRA_VIDEO_MIME_TYPE, videoMimeType);
 
-            String audioMimeType = TunerHelper.getMimeTypeFromAudioStreamType(programInfo.mAudioStreamType);
+            String audioMimeType = programInfo.mAudioMimeType;
+            if (TextUtils.isEmpty(audioMimeType)) {
+                audioMimeType = TunerHelper.getMimeTypeFromAudioStreamType(programInfo.mAudioStreamType);
+            }
             bundle.putString(Constant.EXTRA_AUDIO_MIME_TYPE, audioMimeType);
         }
 

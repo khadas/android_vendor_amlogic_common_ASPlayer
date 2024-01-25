@@ -334,6 +334,9 @@ class VideoOutputPathV3 extends VideoOutputPath {
         }
 
         String mimeType = videoParams.getMimeType();
+        int width = videoParams.getWidth();
+        int height = videoParams.getHeight();
+
         mSecurePlayback = videoParams.isScrambled();
         if (!mSecurePlayback) {
             MediaFormat mediaFormat = videoParams.getMediaFormat();
@@ -352,19 +355,44 @@ class VideoOutputPathV3 extends VideoOutputPath {
         // set mimeType to video/mpeg2 here
         if (!videoParams.getHasVideo() && mimeType.equalsIgnoreCase("video/unknown")) {
             mimeType = MediaFormat.MIMETYPE_VIDEO_MPEG2;
+            if (width < 0) {
+                width = 1280;
+            }
+            if (height < 0) {
+                height = 720;
+            }
         }
 
-        ASPlayerLog.i("%s mSecurePlayback: %b", getTag(), mSecurePlayback);
+        ASPlayerLog.i("%s mimeType: %s, mSecurePlayback: %b", getTag(), mimeType, mSecurePlayback);
 
         mFirstFrameDisplayed = false;
 
         MediaCodec mediaCodec = null;
+        MediaFormat format = MediaFormat.createVideoFormat(mimeType, width, height);
         boolean configured = false;
+
         try {
             if (mMediaCodec != null) {
                 mediaCodec = mMediaCodec;
             } else {
-                mediaCodec = MediaCodecUtils.findMediaCodec(mimeType, mTunneledPlayback, mSecurePlayback);
+                if (DolbyVisionUtils.isDolbyVisionMimeType(mimeType)) {
+                    int codecType = DolbyVisionUtils.getCodecType(mimeType);
+                    ASPlayerLog.i("%s DolbyVision codecType: %d", getTag(), codecType);
+                    mediaCodec = MediaCodecUtils.findDolbyVisionMediaCodec(codecType,
+                            mTunneledPlayback, mSecurePlayback);
+
+                    if (mediaCodec != null) {
+                        ASPlayerLog.i("%s find MediaCodec for DolbyVision, codec: %s", getTag(), mediaCodec);
+                    } else {
+                        mediaCodec = MediaCodecUtils.findMediaCodec(
+                                MediaFormat.MIMETYPE_VIDEO_DOLBY_VISION, mTunneledPlayback, mSecurePlayback);
+                        ASPlayerLog.i("%s find MediaCodec for mimeType DolbyVision, codec: %s",
+                                getTag(), mediaCodec);
+                    }
+                    DolbyVisionUtils.setDolbyVisionMimeType(codecType, format);
+                } else {
+                    mediaCodec = MediaCodecUtils.findMediaCodec(mimeType, mTunneledPlayback, mSecurePlayback);
+                }
             }
 
             if (mediaCodec == null) {
@@ -372,13 +400,8 @@ class VideoOutputPathV3 extends VideoOutputPath {
                 return false;
             }
 
-            MediaFormat format = new MediaFormat();
-
             if (mTunneledPlayback) {
                 ASPlayerLog.i("%s mTunneledPlayback", getTag());
-                // make a copy
-                format = MediaFormat.createVideoFormat(mimeType, videoParams.getWidth(), videoParams.getHeight());
-
                 onSetVideoFormat(format);
 
                 // set transition parameters
