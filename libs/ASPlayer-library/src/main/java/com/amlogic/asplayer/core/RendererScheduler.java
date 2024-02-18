@@ -216,15 +216,8 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     private void selectRendererTask() {
         ASPlayerLog.i("%s speed: %f, hasVideo: %b, hasAudio: %b", getTag(), mSpeed, mHasVideo, mHasAudio);
 
-        boolean isNormalPlaySpeed = MathUtils.equals(mSpeed, 1, SPEED_DIFF_THRESHOLD);
-        boolean isPauseSpeed = MathUtils.equals(mSpeed, 0, SPEED_DIFF_THRESHOLD);
-
         Renderer selectedSpeedTask;
-        if (isPauseSpeed) {
-            selectedSpeedTask = mPlaybackTask;
-        } else if (isNormalPlaySpeed) {
-            selectedSpeedTask = mPlaybackTask;
-        } else if (!mHasVideo) {
+        if (!mHasVideo) {
             selectedSpeedTask = mNoVideoSpeedTask;
         } else {
             int trickMode = mVideoOutputPath.getTrickMode();
