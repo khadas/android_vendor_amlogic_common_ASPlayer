@@ -7,6 +7,7 @@ import (
     "fmt"
     "strings"
     "strconv"
+    "regexp"
 )
 
 func jniasplayerSharelibAndGitInfoDefaults(ctx android.LoadHookContext) {
@@ -28,7 +29,7 @@ func jniasplayerSharelibAndGitInfoDefaults(ctx android.LoadHookContext) {
 
 func execCommand(cmd string, message string) ([]byte, error) {
     cmdOut, cmdErr := exec.Command("/bin/bash", "-c", cmd).CombinedOutput()
-    if cmdErr != nil {
+    if (cmdErr != nil) {
         fmt.Printf("ASPlayer %s failed %s\n", message, cmdErr)
     }
     return cmdOut, cmdErr
@@ -44,113 +45,142 @@ func setversion(ctx android.BaseContext) ([]string) {
     versionFile := sourceDir + "/version/VERSION"
     // fmt.Println("JNI-ASPlayer versionFile: ", versionFile)
 
+    networkUnreachableReg := regexp.MustCompile("(.*)Network is unreachable")
+
     majorVersionCmd := "sed -n 's/Major_V=\\(.*\\)/\\1/p' " + versionFile
     majorVersionout, _ := execCommand(majorVersionCmd, "get major version")
     majorVersion := strings.ReplaceAll(string(majorVersionout), "\n", "")
+    majorVersion = networkUnreachableReg.ReplaceAllString(majorVersion, "")
     fmt.Printf("JNI-ASPlayer majorVersion: %s\n", majorVersion)
 
     subVersionCmd := "sed -n 's/Minor_V=\\(.*\\)/\\1/p' " + versionFile
     subVersionout, _ := execCommand(subVersionCmd, "get sub version")
     subVersion := strings.ReplaceAll(string(subVersionout), "\n", "")
+    subVersion = networkUnreachableReg.ReplaceAllString(subVersion, "")
     fmt.Printf("JNI-ASPlayer subVersion: %s\n", subVersion)
 
     baseChangeIdCmd := "grep \"^BaseChangeId\" " + versionFile + " | awk -F [=] '{print $2}' | cut -c1-6"
     baseChangeIdout, _ := execCommand(baseChangeIdCmd, "get base change id")
-
-    commitNumsCmd := "cd " + sourceDir + " && git log | grep \"Change-Id: \" | grep -n " + strings.Replace(string(baseChangeIdout),"\n","",-1) + " | awk -F \":\" '{printf \"%d\", $1-1}'"
-    commitNumsout, _ := execCommand(commitNumsCmd, "get git commit count")
-
-    gitCommitIdCmd := "cd "+ sourceDir + " && git rev-parse --short HEAD"
-    gitCommitIdout, _ := execCommand(gitCommitIdCmd, "get git commit id")
-
-    gitUncommitFileNumcmd := "cd " + sourceDir + " && git diff | grep +++ -c"
-    gitUncommitFileNumout, _ := execCommand(gitUncommitFileNumcmd, "get git uncommit file num")
-
-    gitLastChangCmd := "cd " + sourceDir + " && git log | grep Date -m 1 | awk '$1=$1'"
-    gitLastChangout, _ := execCommand(gitLastChangCmd, "get last changed")
+    baseChangeId := strings.ReplaceAll(string(baseChangeIdout), "\n", "")
 
     buildTimeout, _ := execCommand("date", "get build time")
-
-    gitBranchNameCmd := "cd " + sourceDir + " && git branch -a | sed -n '/'*'/p'| awk '$1=$1'"
-    gitBranchNameout, _ := execCommand(gitBranchNameCmd, "get git branch name")
+    buildTime := strings.ReplaceAll(string(buildTimeout), "\n", "")
 
     //hostNameout, hostNameerr := exec.Command("/bin/bash", "-c", "hostname").CombinedOutput()
     //if hostNameerr != nil {
     //    fmt.Printf("hostNameerr %s\n", hostNameerr)
     //}
 
-    gitComitPdCmd := "cd " + sourceDir + " && git log | grep PD# -m 1 | awk '$1=$1'"
-    gitComitPdout, _ := execCommand(gitComitPdCmd, "get pd id")
-
-    gitComitChandIdCmd := "cd " + sourceDir + " && git log | grep Change-Id -m 1 | awk '$1=$1'"
-    gitComitChandIdout, _ := execCommand(gitComitChandIdCmd, "get commit change id")
-
     //gitVersion := string(gitVersionout)
-    commitNums := strings.ReplaceAll(string(commitNumsout), "\n", "")
-    gitUncommitFileNum := strings.ReplaceAll(string(gitUncommitFileNumout), "\n", "")
-    gitLastChang := strings.ReplaceAll(string(gitLastChangout), "\n", "")
-    buildTime := strings.ReplaceAll(string(buildTimeout), "\n", "")
     buildName := strings.ReplaceAll(string(ctx.Config().Getenv("LOGNAME")), "\n", "")
-    gitBranchName := strings.ReplaceAll(string(gitBranchNameout), "\n", "")
-    gitCommitId := strings.ReplaceAll(string(gitCommitIdout), "\n", "")
     //buildMode := string(ctx.Config().Getenv("TARGET_BUILD_VARIANT"))
     //hostName := string(hostNameout)
-    gitComitPd := strings.ReplaceAll(string(gitComitPdout), "\n", "")
-    gitComitChandId := strings.ReplaceAll(string(gitComitChandIdout), "\n", "")
+
+    commitNumsCmd := "cd " + sourceDir + " && git log | grep \"Change-Id: \" | grep -n " + baseChangeId + " | awk -F \":\" '{printf \"%d\", $1-1}'"
+    commitNumsout, commitNumsErr := execCommand(commitNumsCmd, "get git commit count")
+    commitNums := ""
+    if (commitNumsErr == nil) {
+        commitNums = strings.ReplaceAll(string(commitNumsout), "\n", "")
+        commitNums = networkUnreachableReg.ReplaceAllString(commitNums, "")
+    }
+
+    gitCommitIdCmd := "cd "+ sourceDir + " && git rev-parse --short HEAD"
+    gitCommitIdout, gitCommitIdErr := execCommand(gitCommitIdCmd, "get git commit id")
+    gitCommitId := ""
+    if (gitCommitIdErr == nil) {
+        gitCommitId = strings.ReplaceAll(string(gitCommitIdout), "\n", "")
+        gitCommitId = networkUnreachableReg.ReplaceAllString(gitCommitId, "")
+        fmt.Printf("JNI-ASPlayer gitCommitId: %s\n", gitCommitId)
+    }
 
     asplayerVersion := fmt.Sprintf("V%s.%s.%s-g%s", majorVersion, subVersion, commitNums, gitCommitId)
 
-    ver1 := "-DHAVE_VERSION_INFO"
-    fmt.Printf("JNI-ASPlayer %s\n", ver1)
-    cppflags = append(cppflags, ver1)
+    hasVersionMacro := "-DHAVE_VERSION_INFO"
+    fmt.Printf("JNI-ASPlayer %s\n", hasVersionMacro)
+    cppflags = append(cppflags, hasVersionMacro)
 
     //ver2 := "-DGIT_VERSION=" + "\"" + gitVersion + "\""
     //fmt.Println(string(ver2))
     //cppflags = append(cppflags, ver2)
 
-    ver3 := "-DBRANCH_NAME=" + "\"" + gitBranchName + "\""
-    fmt.Printf("JNI-ASPlayer %s\n", ver3)
-    cppflags = append(cppflags, ver3)
+    buildTimeMacro := "-DBUILD_TIME=" + "\"" + buildTime + "\""
+    fmt.Printf("JNI-ASPlayer %s\n", buildTimeMacro)
+    cppflags = append(cppflags, buildTimeMacro)
 
-    ver4 := "-DLAST_CHANGED=" + "\"" + gitLastChang + "\""
-    fmt.Printf("JNI-ASPlayer %s\n", ver4)
-    cppflags = append(cppflags, ver4)
+    buildNameMacro := "-DBUILD_NAME=" + "\"" + buildName + "\""
+    fmt.Printf("JNI-ASPlayer %s\n", buildNameMacro)
+    cppflags = append(cppflags, buildNameMacro)
 
-    ver5 := "-DBUILD_TIME=" + "\"" + buildTime + "\""
-    fmt.Printf("JNI-ASPlayer %s\n", ver5)
-    cppflags = append(cppflags, ver5)
+    platformSdkVersionMacro := "-DANDROID_PLATFORM_SDK_VERSION=" + sdkVersion
+    fmt.Printf("JNI-ASPlayer %s\n", platformSdkVersionMacro)
+    cppflags = append(cppflags, platformSdkVersionMacro)
 
-    ver6 := "-DBUILD_NAME=" + "\"" + buildName + "\""
-    fmt.Printf("JNI-ASPlayer %s\n", ver6)
-    cppflags = append(cppflags, ver6)
+    majorVersionMacro := "-DMAJORV=" + majorVersion
+    fmt.Printf("JNI-ASPlayer %s\n", majorVersionMacro)
+    cppflags = append(cppflags, majorVersionMacro)
 
-    ver7 := "-DGIT_UNCOMMIT_FILE_NUM=" + "\"" + gitUncommitFileNum + "\""
-    fmt.Printf("JNI-ASPlayer %s\n", ver7)
-    cppflags = append(cppflags, ver7)
+    subVersionMacro := "-DMINORV=" + subVersion
+    fmt.Printf("JNI-ASPlayer %s\n", subVersionMacro)
+    cppflags = append(cppflags, subVersionMacro)
 
-    ver8 := "-DCOMMIT_PD=" + "\"" + gitComitPd + "\""
-    fmt.Printf("JNI-ASPlayer %s\n", ver8)
-    cppflags = append(cppflags, ver8)
+    versionNameMacro := "-DASPLAYER_VERSION=" + "\"" + string(asplayerVersion) + "\""
+    fmt.Printf("JNI-ASPlayer %s\n", versionNameMacro)
+    cppflags = append(cppflags, versionNameMacro)
 
-    ver9 := "-DCOMMIT_CHANGEID=" + "\"" + gitComitChandId + "\""
-    fmt.Printf("JNI-ASPlayer %s\n", ver9)
-    cppflags = append(cppflags, ver9)
+    gitBranchNameCmd := "cd " + sourceDir + " && git branch -a | sed -n '/'*'/p'| awk '$1=$1'"
+    gitBranchNameout, gitBranchNameErr := execCommand(gitBranchNameCmd, "get git branch name")
+    if (gitBranchNameErr == nil) {
+        gitBranchName := strings.ReplaceAll(string(gitBranchNameout), "\n", "")
+        gitBranchName = networkUnreachableReg.ReplaceAllString(gitBranchName, "")
 
-    ver10 := "-DANDROID_PLATFORM_SDK_VERSION=" + sdkVersion
-    fmt.Printf("JNI-ASPlayer %s\n", ver10)
-    cppflags = append(cppflags, ver10)
+        branchNameMacro := "-DBRANCH_NAME=" + "\"" + gitBranchName + "\""
+        fmt.Printf("JNI-ASPlayer %s\n", branchNameMacro)
+        cppflags = append(cppflags, branchNameMacro)
+    }
 
-    ver11 := "-DMAJORV=" + string(majorVersion)
-    fmt.Printf("JNI-ASPlayer %s\n", ver11)
-    cppflags = append(cppflags, ver11)
+    gitLastChangeCmd := "cd " + sourceDir + " && git log | grep Date -m 1 | awk '$1=$1'"
+    gitLastChangeout, gitLastChangeErr := execCommand(gitLastChangeCmd, "get last changed")
+    if (gitLastChangeErr == nil) {
+        gitLastChange := strings.ReplaceAll(string(gitLastChangeout), "\n", "")
+        gitLastChange = networkUnreachableReg.ReplaceAllString(gitLastChange, "")
 
-    ver12 := "-DMINORV=" +  string(subVersion)
-    fmt.Printf("JNI-ASPlayer %s\n", ver12)
-    cppflags = append(cppflags, ver12)
+        lastChangeMacro := "-DLAST_CHANGED=" + "\"" + gitLastChange + "\""
+        fmt.Printf("JNI-ASPlayer %s\n", lastChangeMacro)
+        cppflags = append(cppflags, lastChangeMacro)
+    }
 
-    ver13 := "-DASPLAYER_VERSION=" + "\"" + string(asplayerVersion) + "\""
-    fmt.Printf("JNI-ASPlayer %s\n", ver13)
-    cppflags = append(cppflags, ver13)
+    gitUncommitFileNumcmd := "cd " + sourceDir + " && git diff | grep +++ -c"
+    gitUncommitFileNumout, gitUncommitFileNumErr := execCommand(gitUncommitFileNumcmd, "get git uncommit file num")
+    if (gitUncommitFileNumErr == nil) {
+        gitUncommitFileNum := strings.ReplaceAll(string(gitUncommitFileNumout), "\n", "")
+        gitUncommitFileNum = networkUnreachableReg.ReplaceAllString(gitUncommitFileNum, "")
+
+        uncommitFileNumMacro := "-DGIT_UNCOMMIT_FILE_NUM=" + "\"" + gitUncommitFileNum + "\""
+        fmt.Printf("JNI-ASPlayer %s\n", uncommitFileNumMacro)
+        cppflags = append(cppflags, uncommitFileNumMacro)
+    }
+
+    gitCommitPdCmd := "cd " + sourceDir + " && git log | grep PD# -m 1 | awk '$1=$1'"
+    gitCommitPdout, gitCommitPdErr := execCommand(gitCommitPdCmd, "get pd id")
+    if (gitCommitPdErr == nil) {
+        gitCommitPd := strings.ReplaceAll(string(gitCommitPdout), "\n", "")
+        gitCommitPd = networkUnreachableReg.ReplaceAllString(gitCommitPd, "")
+
+        commitPdMacro := "-DCOMMIT_PD=" + "\"" + gitCommitPd + "\""
+        fmt.Printf("JNI-ASPlayer %s\n", commitPdMacro)
+        cppflags = append(cppflags, commitPdMacro)
+    }
+
+    gitCommitChangeIdCmd := "cd " + sourceDir + " && git log | grep Change-Id -m 1 | awk '$1=$1'"
+    gitCommitChangeIdout, gitCommitChangeIdErr := execCommand(gitCommitChangeIdCmd, "get commit change id")
+    if (gitCommitChangeIdErr == nil) {
+        gitCommitChangeId := strings.ReplaceAll(string(gitCommitChangeIdout), "\n", "")
+        gitCommitChangeId = networkUnreachableReg.ReplaceAllString(gitCommitChangeId, "")
+
+        changeIdMacro := "-DCOMMIT_CHANGEID=" + "\"" + gitCommitChangeId + "\""
+        fmt.Printf("JNI-ASPlayer %s\n", changeIdMacro)
+        cppflags = append(cppflags, changeIdMacro)
+    }
 
     return cppflags
 }
