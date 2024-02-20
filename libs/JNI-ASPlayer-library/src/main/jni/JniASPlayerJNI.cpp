@@ -14,6 +14,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <memory>
+#include "config.h"
 #include "log.h"
 #include "NativeHelper.h"
 #include "JniMediaFormat.h"
