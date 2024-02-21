@@ -39,6 +39,7 @@ import com.amlogic.asplayer.api.Version;
 import com.amlogic.asplayer.api.VideoFormat;
 import com.amlogic.asplayer.api.VideoParams;
 import com.amlogic.asplayer.api.IASPlayer;
+import com.amlogic.asplayer.api.VideoTrickMode;
 import com.amlogic.asplayer.api.WorkMode;
 import com.amlogic.asplayer.api.audio.SpdifProtectionMode;
 import com.amlogic.asplayer.core.utils.Utils;
@@ -518,10 +519,6 @@ public class ASPlayerImpl implements IASPlayer, AudioOutputPathBase.AudioFormatL
         mRendererScheduler.setSpeed(scale);
     }
 
-    private void handleStopFast() {
-        mRendererScheduler.setSpeed(1.0f);
-    }
-
     @Override
     public int stopFast() {
         if (DEBUG) ASPlayerLog.d("%s stopFast start", getTag());
@@ -534,6 +531,11 @@ public class ASPlayerImpl implements IASPlayer, AudioOutputPathBase.AudioFormatL
             ASPlayerLog.w("%s stopFast called, but playerHandler is null", getTag());
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
+    }
+
+    private void handleStopFast() {
+        mRendererScheduler.setTrickMode(VideoTrickMode.NONE);
+        mRendererScheduler.setSpeed(1.0f);
     }
 
     @Override

@@ -99,6 +99,10 @@ abstract class AudioOutputPathBase extends MediaOutputPath {
         setAudioVolume(mGain);
     }
 
+    boolean isMute() {
+        return mMute;
+    }
+
     void setVolume(float volume) {
         if (volume >= 0 && volume <= 1.0) {
             mGain = volume;
