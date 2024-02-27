@@ -25,6 +25,7 @@ add_library( # Sets the name of the library.
         ${JNI_DIR}/JniASPlayerJNI.cpp
         ${JNI_DIR}/NativeHelper.cpp
         ${JNI_DIR}/JniPlaybackListener.cpp
+        ${JNI_DIR}/native-lib.cpp
         ${JNI_DIR}/JniBundle.cpp
         ${JNI_DIR}/JniMediaFormat.cpp)
 

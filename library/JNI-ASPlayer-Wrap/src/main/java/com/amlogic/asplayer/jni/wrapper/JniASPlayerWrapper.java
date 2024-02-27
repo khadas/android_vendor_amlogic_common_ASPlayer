@@ -54,7 +54,7 @@ public class JniASPlayerWrapper implements IASPlayer {
             System.loadLibrary("jniasplayer-wrapper");
 
             native_init();
-            Log.d(TAG, "loadAppSo() Loaded app jnitaplayer-wrapper success");
+            Log.d(TAG, "loadAppSo() Loaded app jniasplayer-wrapper success");
         } catch (UnsatisfiedLinkError error) {
             Log.e(TAG, "loadAppSo() failed to load jniasplayer-wrapper native lib, error: "
                     + (error != null ? error.getMessage() : ""), error);
