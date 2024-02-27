@@ -564,13 +564,13 @@ public class AudioUtils {
                 tag, keys, resultStr);
 
         if (TextUtils.isEmpty(resultStr)) {
-            ASPlayerLog.e("% getParametersFromAudioManager failed, result is empty", tag);
+            ASPlayerLog.e("%s getParametersFromAudioManager failed, result is empty", tag);
             return null;
         }
 
         String[] kvs = resultStr.split(";");
         if (kvs == null) {
-            ASPlayerLog.e("% getParametersFromAudioManager failed, no parameters returned", tag);
+            ASPlayerLog.e("%s getParametersFromAudioManager failed, no parameters returned", tag);
             return null;
         }
 

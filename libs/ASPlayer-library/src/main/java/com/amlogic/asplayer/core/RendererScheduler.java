@@ -154,8 +154,12 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
                 (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
         if (audioManager != null) {
             int audioSessionId = audioManager.generateAudioSessionId();
-            mVideoOutputPath.setAudioSessionId(audioSessionId);
-            mAudioOutputPath.setAudioSessionId(audioSessionId);
+            if (audioSessionId >= 0) {
+                mVideoOutputPath.setAudioSessionId(audioSessionId);
+                mAudioOutputPath.setAudioSessionId(audioSessionId);
+            } else {
+                ASPlayerLog.e("%s failed to generateAudioSessionId, error: %d", getTag(), audioSessionId);
+            }
         }
 
         mPlaybackTask.prepare(mContext, handler);

@@ -392,6 +392,8 @@ class VideoOutputPath extends MediaOutputPath {
         }
         if (mAudioSessionId != Constant.INVALID_AUDIO_SESSION_ID) {
             format.setInteger(MediaFormat.KEY_AUDIO_SESSION_ID, mAudioSessionId);
+        } else {
+            ASPlayerLog.e("%s onSetVideoFormat no audioSessionId", getTag());
         }
 
         // activate secure playback if needed
