@@ -11,7 +11,7 @@
     android:orientation="horizontal">
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:orientation="vertical"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -25,7 +25,8 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/dvbt_live_setting_label" />
+                android:text="@string/dvbt_live_setting_label"
+                android:textSize="10dp"/>
 
             <View
                 android:layout_width="0dp"
@@ -62,13 +63,13 @@
         <com.amlogic.asplayer.demo.widget.ProgramInputSettingView
             android:id="@+id/program_setting_view"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp" />
+            android:layout_height="wrap_content"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/pip_settings_label" />
+            android:text="@string/pip_settings_label"
+            android:textSize="10dp"/>
 
         <com.amlogic.asplayer.demo.widget.ProgramInputSettingView
             android:id="@+id/pip_program_setting_view"
@@ -81,7 +82,7 @@
             android:layout_height="wrap_content"
             android:padding="8dp"
             android:text="@string/fullscreen_play_video"
-            android:textSize="12dp" />
+            android:textSize="12dp"/>
 
     </LinearLayout>
 

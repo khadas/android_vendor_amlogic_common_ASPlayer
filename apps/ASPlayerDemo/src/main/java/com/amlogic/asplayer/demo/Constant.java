@@ -22,7 +22,9 @@ public class Constant {
     public static final String EXTRA_AUDIO_PID = "audio.pid";
     public static final String EXTRA_AUDIO_MIME_TYPE = "audio.mime.type";
     public static final String EXTRA_AUDIO_STREAM_TYPE = "audio.stream.type";
-
+    public static final String EXTRA_CAS_SYSTEM_ID = "cas.id";
+    public static final String EXTRA_CAS_ECM_PID = "ecm.pid";
+    public static final String EXTRA_CAS_SCRAMBLING_MODE = "scrambling.mode";
     public static final String EXTRA_FRONTEND_BUNDLE = "frontend.bundle";
     public static final String EXTRA_FRONTEND_FREQUENCY = "frequency";
 
@@ -41,4 +43,8 @@ public class Constant {
     public static final String DEFAULT_AUDIO_STREAM_TYPE = "AUDIO_STREAM_TYPE_MPEG1";
     public static final String DEFAULT_TS_PATH = "/data/local/tmp/BBC_MUX_UH_DVBT.ts";
     public static final int DEFAULT_DVBT_FREQUENCY = 490;
+
+    public static final int DEFAULT_CAS_SYSTEM_ID = 0x4AD4;
+    public static final int DEFAULT_CAS_ECM_PID = 0;
+    public static final int DEFAULT_CAS_SCRAMBLING_MODE = 0;
 }

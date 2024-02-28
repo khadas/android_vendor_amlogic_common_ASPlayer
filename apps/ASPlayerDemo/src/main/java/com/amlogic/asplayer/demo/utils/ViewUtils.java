@@ -21,13 +21,24 @@ public class ViewUtils {
         return str;
     }
 
-    public static int getInputNumber(EditText editText, int defaultValue) {
+    public static int getInputOrHintNumber(EditText editText, int defaultValue) {
         int number = defaultValue;
         try {
             String str = editText.getText().toString().trim();
             if (TextUtils.isEmpty(str)) {
                 str = editText.getHint().toString().trim();
             }
+            number = Integer.parseInt(str);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return number;
+    }
+
+    public static int getInputNumber(EditText editText, int defaultValue) {
+        int number = defaultValue;
+        try {
+            String str = editText.getText().toString().trim();
             number = Integer.parseInt(str);
         } catch (Exception e) {
             e.printStackTrace();

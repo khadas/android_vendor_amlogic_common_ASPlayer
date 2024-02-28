@@ -24,6 +24,10 @@ public class TvPlayerBundleHelper {
         bundle.putInt(Constant.EXTRA_VIDEO_PID, programInfo.mVideoPid);
         bundle.putInt(Constant.EXTRA_AUDIO_PID, programInfo.mAudioPid);
 
+        bundle.putInt(Constant.EXTRA_CAS_SYSTEM_ID, programInfo.mCasSystemId);
+        bundle.putInt(Constant.EXTRA_CAS_ECM_PID, programInfo.mCasEcmPid);
+        bundle.putInt(Constant.EXTRA_CAS_SCRAMBLING_MODE, programInfo.mCasScramblingMode);
+
         if (programInfo.mTunerHalVersion == Constant.TUNER_HAL_VERSION_1_0) {
             bundle.putString(Constant.EXTRA_VIDEO_MIME_TYPE, programInfo.mVideoMimeType);
             bundle.putString(Constant.EXTRA_AUDIO_MIME_TYPE, programInfo.mAudioMimeType);
@@ -34,10 +38,13 @@ public class TvPlayerBundleHelper {
             bundle.putString(Constant.EXTRA_AUDIO_STREAM_TYPE, programInfo.mAudioStreamType);
 
             String videoMimeType = programInfo.mVideoMimeType;
-            if (TextUtils.isEmpty(videoMimeType)) {
+           if (TextUtils.equals("video/dolby-vision-hevc", videoMimeType)
+               || TextUtils.equals("video/dolby-vision-avc", videoMimeType)) {
+                bundle.putString(Constant.EXTRA_VIDEO_MIME_TYPE, videoMimeType);
+            } else {
                 videoMimeType = TunerHelper.getMimeTypeFromVideoStreamType(programInfo.mVideoStreamType);
+                bundle.putString(Constant.EXTRA_VIDEO_MIME_TYPE, videoMimeType);
             }
-            bundle.putString(Constant.EXTRA_VIDEO_MIME_TYPE, videoMimeType);
 
             String audioMimeType = programInfo.mAudioMimeType;
             if (TextUtils.isEmpty(audioMimeType)) {

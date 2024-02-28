@@ -15,6 +15,12 @@ prebuilt_etc {
     filename_from_src: true,
 }
 
+java_import {
+    name: "jcas-builder-library",
+    jars: ["aosp_libs/jcas-builder-library.jar"],
+    sdk_version: "system_current",
+}
+
 android_app {
     name: "ASPlayerDemo",
 
@@ -48,6 +54,7 @@ android_app {
         "androidx.annotation_annotation",
         "androidx-constraintlayout_constraintlayout",
         "droidlogic.jniasplayer.wrapper",
+        "jcas-builder-library",
     ],
 
     libs: [

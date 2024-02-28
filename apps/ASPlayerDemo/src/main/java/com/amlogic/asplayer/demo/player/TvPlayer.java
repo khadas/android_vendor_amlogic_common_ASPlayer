@@ -46,11 +46,17 @@ import com.amlogic.asplayer.demo.utils.TunerHelper;
 import com.amlogic.asplayer.demo.utils.TvLog;
 import com.amlogic.asplayer.jni.wrapper.JniASPlayerWrapper;
 
+import com.amlogic.asplayer.demo.utils.JCasAdapter;
+import com.amlogic.asplayer.demo.utils.CasSessionInfo;
+import com.droidlogic.jcas.CasConnection;
+import com.droidlogic.jcas.CasSession;
+import com.droidlogic.jcas.CasEvent;
+
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-public class TvPlayer {
+public class TvPlayer implements CasConnection.CasEventListener {
 
     private static final String TAG = TvPlayer.class.getSimpleName();
 
@@ -58,6 +64,15 @@ public class TvPlayer {
 
     protected Context mContext;
     protected Tuner mTuner;
+
+    // for cas
+    private JCasAdapter mJCasAdapter;
+    private boolean mIsCasPlayback;
+    private String mTvInputSessionId;
+    private int mTvInputUseCase;
+    private int[] mScrambledEsPids;
+    private String mCasConnectionId;
+    private byte[] mCasSessionId;
 
     protected HandlerThread mPlayerThread;
     protected Handler mPlayerHandler;
@@ -89,8 +104,9 @@ public class TvPlayer {
         mId = sId.getAndIncrement();
 
         mContext = context;
-        int tvInputUseCase = getTunerTvInputUseCase();
-        mTuner = new Tuner(context, null, tvInputUseCase);
+        mTvInputSessionId = Integer.toString(mId);
+        mTvInputUseCase = getTunerTvInputUseCase();
+        mTuner = new Tuner(context, null, mTvInputUseCase);
 
         initASPlayer(looper);
     }
@@ -193,6 +209,20 @@ public class TvPlayer {
 
         mTunerHalVersion = bundle.getInt(Constant.EXTRA_TUNER_HAL_VERSION, Constant.TUNER_HAL_VERSION_1_0);
 
+        int casId = bundle.getInt(Constant.EXTRA_CAS_SYSTEM_ID, -1);
+        int caPid = bundle.getInt(Constant.EXTRA_CAS_ECM_PID, -1);
+        int scramblingMode = bundle.getInt(Constant.EXTRA_CAS_SCRAMBLING_MODE, 0);
+        mIsCasPlayback = casId > 0 && caPid > 0 ? true : false;
+
+        if (mIsCasPlayback) {
+            mJCasAdapter = new JCasAdapter(mContext, casId, mTvInputSessionId, mTvInputUseCase, mTuner);
+            mJCasAdapter.AM_CasManagerInit();
+            if (!mJCasAdapter.AM_IsSystemIdSupported(casId)) {
+                TvLog.e("Player-%d start failed, casId is not supported!", mId);
+                return;
+            }
+        }
+
         if (mASPlayer != null) {
             mVideoTrackInfo = getVideoTrackInfoFromBundle(bundle);
 
@@ -212,7 +242,8 @@ public class TvPlayer {
             VideoParams.Builder videoParamsBuilder = new VideoParams.Builder(videoMimeType, width, height)
                     .setPid(mVideoTrackInfo.pid)
                     .setTrackFilterId(mVideoFilter.getId())
-                    .setAvSyncHwId(mTuner.getAvSyncHwId(mVideoFilter));
+                    .setAvSyncHwId(mTuner.getAvSyncHwId(mVideoFilter))
+                    .setScrambled(mIsCasPlayback);
             VideoParams videoParams = videoParamsBuilder.build();
             TvLog.i("videofilterId: %d", mVideoFilter.getId());
             TvLog.i("videoAvSyncHwId: %d", mTuner.getAvSyncHwId(mVideoFilter));
@@ -240,6 +271,24 @@ public class TvPlayer {
             mASPlayer.startAudioDecoding();
         } else {
             TvLog.e("Player-%d handleStart failed, asplayer is null", mId);
+        }
+
+        if (mIsCasPlayback && mJCasAdapter != null) {
+            mScrambledEsPids = new int[2];
+            mScrambledEsPids[0] = mVideoTrackInfo.pid;
+            //mScrambledEsPids[1] = mAudioTrackInfo.pid;
+            CasSessionInfo info = new CasSessionInfo.Builder()
+                    .setEcmPid(caPid)
+                    .setSessionUsage(0)
+                    .setScramblingMode(scramblingMode)
+                    .setIsProgramLevel(false)
+                    .setPrivateData(CasSessionInfo.GOOGLE_TEST_PRIVATE_DATA)
+                    .setScrambledEsPids(mScrambledEsPids)
+                    .build();
+
+            mCasConnectionId = mJCasAdapter.AM_CreateCasPlugin(this, mPlayerHandler, mASPlayer.getInstanceNo());
+            mCasSessionId = mJCasAdapter.AM_OpenCasSession(mCasConnectionId, info);
+            mJCasAdapter.AM_StartDescrambling(mCasConnectionId, mCasSessionId, mScrambledEsPids);
         }
     }
 
@@ -496,6 +545,12 @@ public class TvPlayer {
     private void handleStop() {
         handleStopVideoDecoding();
         handleStopAudioDecoding();
+
+        if (mIsCasPlayback && mJCasAdapter != null) {
+            mJCasAdapter.AM_CloseCasSession(mCasConnectionId, mCasSessionId);
+            mJCasAdapter.AM_StopDescrambling(mCasConnectionId, mCasSessionId, mScrambledEsPids);
+            mJCasAdapter.AM_DestroyCasPlugin(mCasConnectionId, this);
+        }
 
         cancelTuning();
     }
@@ -872,5 +927,19 @@ public class TvPlayer {
             }
             mTuner = null;
         }
+
+        if (mJCasAdapter != null)
+            mJCasAdapter.AM_CasManagerTerm();
     }
+
+    @Override
+    public void onCasEvent(CasConnection casConnection, CasEvent casEvent) {
+        TvLog.d("Player-%d receive cas event type: %d", mId, casEvent.getEventType());
+    }
+
+    @Override
+    public void onCasSessionEvent(CasConnection casConnection, CasSession session, CasEvent casEvent) {
+        TvLog.d("Player-%d receive cas session event type: %d", mId, casEvent.getEventType());
+    }
+
 }

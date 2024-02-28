@@ -70,6 +70,8 @@ dependencies {
     implementation project(":JNI-ASPlayer-Wrap")
     implementation project(":ASPlayer-library")
 
+    implementation files('libs/jcas-builder-library.jar')
+
     implementation rootProject.ext.dep.appcompat
     implementation rootProject.ext.dep.material
     implementation rootProject.ext.dep.constraintlayout

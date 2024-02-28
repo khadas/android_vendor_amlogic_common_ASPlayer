@@ -20,6 +20,11 @@
     <string name="audio_mime_type_label">Audio MimeType:</string>
     <string name="audio_stream_type_label">Audio Stream Type:</string>
 
+    <string name="cas_parameters_label">Cas Parameters</string>
+    <string name="cas_system_id">Ca System ID:</string>
+    <string name="cas_ecm_pid">Ecm PID:</string>
+    <string name="cas_scrambling_mode">Scrambling Mode:</string>
+
     <string name="tips_check_input">Please check input parameters</string>
 
     <string name="dvbt_live_setting_label">DVB-T Live Setting</string>

@@ -61,7 +61,7 @@ public class LiveTvPlayerSettingActivity extends Activity {
     }
 
     private void gotoVideoPlayActivity() {
-        int frequency = ViewUtils.getInputNumber(mEditFrequency, 0);
+        int frequency = ViewUtils.getInputOrHintNumber(mEditFrequency, 0);
 
         if (frequency <= 0) {
             Toast.makeText(this, R.string.tips_no_frequency, Toast.LENGTH_SHORT).show();
