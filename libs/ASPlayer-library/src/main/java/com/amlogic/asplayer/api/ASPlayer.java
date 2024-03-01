@@ -917,6 +917,10 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int setParameters(Bundle parameters) {
+        if (mPlayer == null) {
+            return ErrorCode.ERROR_INVALID_OPERATION;
+        }
+
         return mPlayer.setParameters(parameters);
     }
 
@@ -929,6 +933,10 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public Bundle getParameters(String[] keys) {
+        if (mPlayer == null) {
+            return null;
+        }
+
         return mPlayer.getParameters(keys);
     }
 
@@ -941,6 +949,10 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public Object getParameter(String key) {
+        if (mPlayer == null) {
+            return null;
+        }
+
         return mPlayer.getParameter(key);
     }
 
@@ -955,6 +967,10 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public boolean getParameterBoolean(String key, boolean fallback) {
+        if (mPlayer == null) {
+            return fallback;
+        }
+
         return mPlayer.getParameterBoolean(key, fallback);
     }
 
@@ -969,6 +985,10 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public double getParameterDouble(String key, double fallback) {
+        if (mPlayer == null) {
+            return fallback;
+        }
+
         return mPlayer.getParameterDouble(key, fallback);
     }
 
@@ -983,6 +1003,10 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public int getParameterInt(String key, int fallback) {
+        if (mPlayer == null) {
+            return fallback;
+        }
+
         return mPlayer.getParameterInt(key, fallback);
     }
 
@@ -997,6 +1021,10 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public long getParameterLong(String key, long fallback) {
+        if (mPlayer == null) {
+            return fallback;
+        }
+
         return mPlayer.getParameterLong(key, fallback);
     }
 
@@ -1011,6 +1039,10 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public float getParameterFloat(String key, float fallback) {
+        if (mPlayer == null) {
+            return fallback;
+        }
+
         return mPlayer.getParameterFloat(key, fallback);
     }
 
@@ -1024,6 +1056,10 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public String getParameterString(String key) {
+        if (mPlayer == null) {
+            return null;
+        }
+
         return mPlayer.getParameterString(key);
     }
 

@@ -94,7 +94,7 @@ static inline bool makeClassGlobalRef(jclass *globalRef, JNIEnv *env, const char
         env->DeleteLocalRef(localCls);
         return true;
     } else {
-        ALOGI("[%s/%d] failed to find class \"%s\"", __FUNCTION__, __LINE__, className);
+        AP_LOGE("failed to find class \"%s\"", className);
         *globalRef = nullptr;
         return false;
     }

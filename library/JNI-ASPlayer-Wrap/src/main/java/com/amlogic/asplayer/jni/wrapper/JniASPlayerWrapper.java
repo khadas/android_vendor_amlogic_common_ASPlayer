@@ -452,6 +452,7 @@ public class JniASPlayerWrapper implements IASPlayer {
         return parameters != null ? parameters.getString(key) : null;
     }
 
+    @Override
     public Pts getFirstPts(int streamType) {
         return null;
     }

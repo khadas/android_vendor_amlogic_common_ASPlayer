@@ -39,9 +39,6 @@ public:
 
     static JNIEnv* getOrAttachJNIEnvironment();
 
-    // returns true if an exception is set (and dumps it out to the Log)
-    static bool hasException(JNIEnv *env);
-
     static bool createJniASPlayer(JNIEnv *env, jni_asplayer_init_params *params, void *tuner, jobject *outJniASPlayer);
     static bool createInitParams(JNIEnv *env, jni_asplayer_init_params *params, jobject *outJInitParams);
     static bool createVideoParams(JNIEnv *env, jni_asplayer_video_params *params, jobject *outJVideoParams);
@@ -174,15 +171,13 @@ public:
 private:
     int setJavaASPlayerHandle(JNIEnv *env, jobject javaPlayer);
 
+    /* audio */
     jni_asplayer_result setAudioPresentationId(jni_asplayer_audio_presentation *audioPresentation);
     jni_asplayer_result getAudioPresentationId(jni_asplayer_audio_presentation *audioPresentation);
-
     jni_asplayer_result setAudioLanguage(jni_asplayer_audio_lang *lang);
-
     jni_asplayer_result setAudioSpdifProtectionMode(int32_t mode);
 
     jni_asplayer_result setBundleParameters(JNIEnv *env, JniBundle *bundle);
-
     jni_asplayer_result setParameters(JNIEnv *env, jobject bundleObj);
 
 private:

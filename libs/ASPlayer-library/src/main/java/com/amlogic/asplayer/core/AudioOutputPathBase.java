@@ -8,8 +8,8 @@
  */
 package com.amlogic.asplayer.core;
 
-import static com.amlogic.asplayer.core.Constant.UNKNOWN_AUDIO_PRESENTATION_ID;
 import static android.media.MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayback;
+import static com.amlogic.asplayer.core.Constant.UNKNOWN_AUDIO_PRESENTATION_ID;
 
 import android.media.AudioFormat;
 import android.media.AudioTrack;

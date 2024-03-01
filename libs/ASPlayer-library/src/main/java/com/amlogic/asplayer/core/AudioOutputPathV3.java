@@ -1,7 +1,5 @@
 package com.amlogic.asplayer.core;
 
-import static android.media.MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayback;
-
 import static com.amlogic.asplayer.core.Constant.INVALID_FILTER_ID;
 
 import android.media.AudioFormat;

@@ -10,6 +10,9 @@ package com.amlogic.asplayer.api;
 
 import java.util.Objects;
 
+/**
+ * Audio Language
+ */
 public class AudioLang {
 
     private int mFirstLang;
