@@ -31,7 +31,7 @@ typedef enum {
     JNI_ASPLAYER_EVENT_TYPE_RENDER_FIRST_FRAME_VIDEO, //The video decoder render the first frame
     JNI_ASPLAYER_EVENT_TYPE_RENDER_FIRST_FRAME_AUDIO, //The audio decoder render the first frame
     JNI_ASPLAYER_EVENT_TYPE_AV_SYNC_DONE,       //Av sync done
-    JNI_ASPLAYER_EVENT_TYPE_VIDEO_DECODER_INIT_COMPLETED,       // The video decoder init completed
+    JNI_ASPLAYER_EVENT_TYPE_DECODER_INIT_COMPLETED,     // The decoder init completed - video/audio
     JNI_ASPLAYER_EVENT_TYPE_DECODER_DATA_LOSS,          // Decoder data loss
     JNI_ASPLAYER_EVENT_TYPE_DECODER_DATA_RESUME         // Decoder data resume
 } jni_asplayer_event_type;
@@ -318,6 +318,7 @@ typedef struct {
     uint32_t frame_height;
     uint32_t frame_rate;
     uint32_t frame_aspectratio;
+    int32_t vf_type;
 } jni_asplayer_video_format_t;
 
 typedef struct {
@@ -368,6 +369,8 @@ typedef struct {
         void* bufptr;
         /*If Audio/Video overflow/underflow count the num*/
         av_flow_t av_flow_cnt;
+        /*Stream type of event*/
+        jni_asplayer_stream_type stream_type;
     } event;
 }jni_asplayer_event;
 

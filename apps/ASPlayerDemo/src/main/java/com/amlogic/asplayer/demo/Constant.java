@@ -39,6 +39,6 @@ public class Constant {
     public static final String DEFAULT_AUDIO_MIMETYPE = "audio/mpeg";
     public static final String DEFAULT_VIDEO_STREAM_TYPE = "VIDEO_STREAM_TYPE_MPEG2";
     public static final String DEFAULT_AUDIO_STREAM_TYPE = "AUDIO_STREAM_TYPE_MPEG1";
-    public static final String DEFAULT_TS_PATH = "/data/video/BBC_MUX_UH_DVBT.ts";
+    public static final String DEFAULT_TS_PATH = "/data/local/tmp/BBC_MUX_UH_DVBT.ts";
     public static final int DEFAULT_DVBT_FREQUENCY = 490;
 }

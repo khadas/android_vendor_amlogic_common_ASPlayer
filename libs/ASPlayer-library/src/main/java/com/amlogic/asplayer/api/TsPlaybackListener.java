@@ -73,15 +73,27 @@ public interface TsPlaybackListener {
      * the media.
      */
     public static abstract class FirstFrameEvent extends PlaybackEvent {
-        protected final long mPositionMs;
+        protected final int mStreamType;
+        protected final long mPts;
+        protected final long mRenderTime;
 
-        public FirstFrameEvent(int eventType, long positionMs) {
+        public FirstFrameEvent(int eventType, int streamType, long pts, long renderTime) {
             super(eventType);
-            mPositionMs = positionMs;
+            mStreamType = streamType;
+            mPts = pts;
+            mRenderTime = renderTime;
         }
 
-        public long getPositionMs() {
-            return mPositionMs;
+        public int getStreamType() {
+            return mStreamType;
+        }
+
+        public long getPts() {
+            return mPts;
+        }
+
+        public long getRenderTime() {
+            return mRenderTime;
         }
     }
 
@@ -89,8 +101,8 @@ public interface TsPlaybackListener {
      * The player has displayed a first video frame
      */
     public static class VideoFirstFrameEvent extends FirstFrameEvent {
-        public VideoFirstFrameEvent(long positionMs) {
-            super(EventType.EVENT_TYPE_RENDER_FIRST_FRAME_VIDEO, positionMs);
+        public VideoFirstFrameEvent(long pts, long renderTime) {
+            super(EventType.EVENT_TYPE_RENDER_FIRST_FRAME_VIDEO, StreamType.VIDEO, pts, renderTime);
         }
 
         @Override
@@ -103,8 +115,8 @@ public interface TsPlaybackListener {
      * The player has displayed a first audio frame
      */
     public static class AudioFirstFrameEvent extends FirstFrameEvent {
-        public AudioFirstFrameEvent(long positionMs) {
-            super(EventType.EVENT_TYPE_RENDER_FIRST_FRAME_AUDIO, positionMs);
+        public AudioFirstFrameEvent(long pts, long renderTime) {
+            super(EventType.EVENT_TYPE_RENDER_FIRST_FRAME_AUDIO, StreamType.AUDIO, pts, renderTime);
         }
 
         @Override
@@ -117,8 +129,8 @@ public interface TsPlaybackListener {
      * The player has decoded a first video frame
      */
     public static class DecodeFirstVideoFrameEvent extends FirstFrameEvent {
-        public DecodeFirstVideoFrameEvent(long positionMs) {
-            super(EventType.EVENT_TYPE_DECODE_FIRST_FRAME_VIDEO, positionMs);
+        public DecodeFirstVideoFrameEvent(long pts) {
+            super(EventType.EVENT_TYPE_DECODE_FIRST_FRAME_VIDEO, StreamType.VIDEO, pts, 0);
         }
 
         @Override
@@ -131,8 +143,8 @@ public interface TsPlaybackListener {
      * The player has decoded a first audio frame
      */
     public static class DecodeFirstAudioFrameEvent extends FirstFrameEvent {
-        public DecodeFirstAudioFrameEvent(long positionMs) {
-            super(EventType.EVENT_TYPE_DECODE_FIRST_FRAME_AUDIO, positionMs);
+        public DecodeFirstAudioFrameEvent(long pts) {
+            super(EventType.EVENT_TYPE_DECODE_FIRST_FRAME_AUDIO, StreamType.AUDIO, pts, 0);
         }
 
         @Override
@@ -175,24 +187,30 @@ public interface TsPlaybackListener {
     }
 
     class PlaybackInfoEvent extends PlaybackEvent {
+        protected final int mStreamType;
 
-        public PlaybackInfoEvent(int eventType) {
+        public PlaybackInfoEvent(int eventType, int streamType) {
             super(eventType);
+            this.mStreamType = streamType;
         }
 
         @Override
         public String getEventName() {
             return "PlaybackInfoEvent";
         }
+
+        public int getStreamType() {
+            return mStreamType;
+        }
     }
 
     /**
      * Video decoder init completed event
      */
-    public static class VideoDecoderInitCompletedEvent extends PlaybackInfoEvent {
+    class VideoDecoderInitCompletedEvent extends PlaybackInfoEvent {
 
         public VideoDecoderInitCompletedEvent() {
-            super(EventType.EVENT_TYPE_VIDEO_DECODER_INIT_COMPLETED);
+            super(EventType.EVENT_TYPE_DECODER_INIT_COMPLETED, StreamType.VIDEO);
         }
 
         @Override
@@ -205,8 +223,9 @@ public interface TsPlaybackListener {
      * Decoder data Loss event
      */
     class DecoderDataLossEvent extends PlaybackInfoEvent {
-        public DecoderDataLossEvent() {
-            super(EventType.EVENT_TYPE_DECODER_DATA_LOSS);
+
+        public DecoderDataLossEvent(int streamType) {
+            super(EventType.EVENT_TYPE_DECODER_DATA_LOSS, streamType);
         }
 
         @Override
@@ -219,8 +238,9 @@ public interface TsPlaybackListener {
      * Decoder data resume event
      */
     class DecoderDataResumeEvent extends PlaybackInfoEvent {
-        public DecoderDataResumeEvent() {
-            super(EventType.EVENT_TYPE_DECODER_DATA_RESUME);
+
+        public DecoderDataResumeEvent(int streamType) {
+            super(EventType.EVENT_TYPE_DECODER_DATA_RESUME, streamType);
         }
 
         @Override

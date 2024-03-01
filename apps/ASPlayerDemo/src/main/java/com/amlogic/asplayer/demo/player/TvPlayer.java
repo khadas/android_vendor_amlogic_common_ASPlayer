@@ -798,19 +798,21 @@ public class TvPlayer {
         } else if (event instanceof TsPlaybackListener.VideoFirstFrameEvent) {
             TvLog.i("TvPlayer-%d VideoFirstFrameEvent", mId);
             TsPlaybackListener.VideoFirstFrameEvent ev = (TsPlaybackListener.VideoFirstFrameEvent)event;
-            notifyFrame(ev.getPositionMs(), true);
+            notifyFrame(ev.getRenderTime(), true);
         } else if (event instanceof TsPlaybackListener.AudioFirstFrameEvent) {
             TvLog.i("TvPlayer-%d AudioFirstFrameEvent", mId);
             TsPlaybackListener.AudioFirstFrameEvent ev = (TsPlaybackListener.AudioFirstFrameEvent) event;
-            notifyFrame(ev.getPositionMs(), false);
+            notifyFrame(ev.getRenderTime(), false);
         } else if (event instanceof TsPlaybackListener.DecodeFirstVideoFrameEvent) {
             TvLog.i("TvPlayer-%d DecodeFirstVideoFrameEvent", mId);
         } else if (event instanceof TsPlaybackListener.DecodeFirstAudioFrameEvent) {
             TvLog.i("TvPlayer-%d DecodeFirstAudioFrameEvent", mId);
         } else if (event instanceof TsPlaybackListener.PtsEvent) {
             TsPlaybackListener.PtsEvent ev = (TsPlaybackListener.PtsEvent) event;
-            TvLog.d("TvPlayer-%d PtsEvent, stream: %s, pts: %d, rendertime: %d",
-                    mId, StreamType.toString(ev.getStreamType()), ev.getPts(), ev.getRenderTime());
+            if (false) {
+                TvLog.d("TvPlayer-%d PtsEvent, stream: %s, pts: %d, rendertime: %d",
+                        mId, StreamType.toString(ev.getStreamType()), ev.getPts(), ev.getRenderTime());
+            }
         }
 
         if (mTsPlaybackListener != null) {

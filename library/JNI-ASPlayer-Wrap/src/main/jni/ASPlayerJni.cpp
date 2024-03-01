@@ -78,7 +78,9 @@ struct audio_format_change_event_t {
 };
 
 struct first_frame_event_t {
+    jfieldID streamType;
     jfieldID pts;
+    jfieldID renderTime;
 };
 
 struct video_first_frame_event_t {
@@ -294,15 +296,19 @@ bool ASPlayerJni::initJni(JNIEnv *env) {
     // FirstFrameEvent
     if (makeClassGlobalRef(&gFirstFrameEventCls, env,
             "com/amlogic/asplayer/api/TsPlaybackListener$FirstFrameEvent")) {
+        gFirstFrameEventCtx.streamType = env->GetFieldID(
+                gFirstFrameEventCls, "mStreamType", "I");
         gFirstFrameEventCtx.pts = env->GetFieldID(
-                gFirstFrameEventCls, "mPositionMs", "J");
+                gFirstFrameEventCls, "mPts", "J");
+        gFirstFrameEventCtx.renderTime = env->GetFieldID(
+                gFirstFrameEventCls, "mRenderTime", "J");
     }
 
     // VideoFirstFrameEvent
     if (makeClassGlobalRef(&gVideoFirstFrameEventCls, env,
             "com/amlogic/asplayer/api/TsPlaybackListener$VideoFirstFrameEvent")) {
         gVideoFirstFrameEventCtx.constructor = env->GetMethodID(
-                gVideoFirstFrameEventCls, "<init>", "(J)V");
+                gVideoFirstFrameEventCls, "<init>", "(JJ)V");
         gVideoFirstFrameEventCtx.base = gFirstFrameEventCtx;
     }
 
@@ -310,7 +316,7 @@ bool ASPlayerJni::initJni(JNIEnv *env) {
     if (makeClassGlobalRef(&gAudioFirstFrameEventCls, env,
             "com/amlogic/asplayer/api/TsPlaybackListener$AudioFirstFrameEvent")) {
         gAudioFirstFrameEventCtx.constructor = env->GetMethodID(
-                gAudioFirstFrameEventCls, "<init>", "(J)V");
+                gAudioFirstFrameEventCls, "<init>", "(JJ)V");
         gAudioFirstFrameEventCtx.base = gFirstFrameEventCtx;
     }
 
@@ -343,7 +349,7 @@ bool ASPlayerJni::initJni(JNIEnv *env) {
     if (makeClassGlobalRef(&gPlaybackInfoEventCls, env,
                            "com/amlogic/asplayer/api/TsPlaybackListener$PlaybackInfoEvent")) {
         gPlaybackInfoEventCtx.constructor = env->GetMethodID(
-                gPlaybackInfoEventCls, "<init>", "(I)V");
+                gPlaybackInfoEventCls, "<init>", "(II)V");
     }
 
     // init PlaybackListener
@@ -578,7 +584,8 @@ bool ASPlayerJni::createPtsEvent(JNIEnv *env, jni_asplayer_event *event, jobject
     jlong pts = event->event.pts.pts;
     jlong renderTime = event->event.pts.renderTime;
 
-    jobject ptsEvent = env->NewObject(gPtsEventCls, gPtsEventCtx.constructor, streamType, pts, renderTime);
+    jobject ptsEvent = env->NewObject(gPtsEventCls, gPtsEventCtx.constructor,
+                                      streamType, pts, renderTime);
     *jEvent = ptsEvent;
 
     return true;
@@ -656,10 +663,10 @@ bool ASPlayerJni::createVideoFirstFrameEvent(
     }
 
     jlong pts = event->event.pts.pts;
-    jdouble speed = 0;
+    jlong renderTime = event->event.pts.renderTime;
 
     jobject videoFirstFrameEvent = env->NewObject(gVideoFirstFrameEventCls,
-            gVideoFirstFrameEventCtx.constructor, pts, speed);
+            gVideoFirstFrameEventCtx.constructor, pts, renderTime);
     *jEvent = videoFirstFrameEvent;
     return true;
 }
@@ -671,10 +678,10 @@ bool ASPlayerJni::createAudioFirstFrameEvent(
     }
 
     jlong pts = event->event.pts.pts;
-    jdouble speed = 0;
+    jlong renderTime = event->event.pts.renderTime;
 
     jobject audioFirstFrameEvent = env->NewObject(gAudioFirstFrameEventCls,
-            gAudioFirstFrameEventCtx.constructor, pts, speed);
+            gAudioFirstFrameEventCtx.constructor, pts, renderTime);
     *jEvent = audioFirstFrameEvent;
     return true;
 }
@@ -686,10 +693,9 @@ bool ASPlayerJni::createDecodeFirstVideoFrameEvent(
     }
 
     jlong pts = event->event.pts.pts;
-    jdouble speed = 0;
 
     jobject decodeFirstVideoFrameEvent = env->NewObject(gDecodeFirstVideoFrameEventCls,
-            gDecodeFirstVideoFrameEventCtx.constructor, pts, speed);
+            gDecodeFirstVideoFrameEventCtx.constructor, pts);
     *jEvent = decodeFirstVideoFrameEvent;
     return true;
 }
@@ -701,10 +707,9 @@ bool ASPlayerJni::createDecodeFirstAudioFrameEvent(
     }
 
     jlong pts = event->event.pts.pts;
-    jdouble speed = 0;
 
     jobject decodeFirstAudioFrameEvent = env->NewObject(gDecodeFirstAudioFrameEventCls,
-            gDecodeFirstAudioFrameEventCtx.constructor, pts, speed);
+            gDecodeFirstAudioFrameEventCtx.constructor, pts);
     *jEvent = decodeFirstAudioFrameEvent;
     return true;
 }
@@ -776,7 +781,8 @@ bool ASPlayerJni::createPlaybackInfoEvent(JNIEnv *env, jni_asplayer_event *event
 
     jobject playbackInfoEvent = env->NewObject(gPlaybackInfoEventCls,
                                                gPlaybackInfoEventCtx.constructor,
-                                               event->type);
+                                               event->type,
+                                               event->event.stream_type);
     *jEvent = playbackInfoEvent;
 
     return true;

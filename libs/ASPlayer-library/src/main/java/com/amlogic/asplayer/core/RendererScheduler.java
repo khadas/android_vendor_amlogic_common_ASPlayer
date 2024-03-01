@@ -18,6 +18,7 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.amlogic.asplayer.api.IASPlayer;
+import com.amlogic.asplayer.api.StreamType;
 import com.amlogic.asplayer.api.VideoTrickMode;
 import com.amlogic.asplayer.core.VideoPassthroughParameters.VideoOnlyPlayControl;
 import com.amlogic.asplayer.core.utils.MathUtils;
@@ -566,7 +567,7 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     private void onVideoFrame(long presentationTimeUs, long renderTime) {
         if (!mFirstVideoFrameDisplayed) {
             ASPlayerLog.i("%s first video frame", getTag());
-            mEventNotifier.notifyRenderFirstVideoFrame(renderTime);
+            mEventNotifier.notifyRenderFirstVideoFrame(presentationTimeUs, renderTime);
             mFirstVideoFrameDisplayed = true;
         }
 
@@ -578,7 +579,7 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     private void onAudioFrame(long presentationTimeUs, long renderTime) {
         if (!mFirstAudioFrameDisplayed) {
             ASPlayerLog.i("%s first audio frame", getTag());
-            mEventNotifier.notifyRenderFirstAudioFrame(renderTime);
+            mEventNotifier.notifyRenderFirstAudioFrame(presentationTimeUs, renderTime);
             mFirstAudioFrameDisplayed = true;
         }
 
@@ -601,14 +602,14 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     @Override
     public void onDecoderDataLoss(MediaOutputPath outputPath) {
         if (mVideoOutputPath != null && outputPath == mVideoOutputPath) {
-            mEventNotifier.notifyDecoderDataLoss();
+            mEventNotifier.notifyDecoderDataLoss(StreamType.VIDEO);
         }
     }
 
     @Override
     public void onDecoderDataResume(MediaOutputPath outputPath) {
         if (mVideoOutputPath != null && outputPath == mVideoOutputPath) {
-            mEventNotifier.notifyDecoderDataResume();
+            mEventNotifier.notifyDecoderDataResume(StreamType.VIDEO);
         }
     }
 

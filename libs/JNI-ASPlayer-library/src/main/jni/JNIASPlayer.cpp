@@ -422,7 +422,9 @@ jni_asplayer_result  JniASPlayer_writeData(jni_asplayer_handle handle,
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
     jni_asplayer_result ret = player->writeData(buf, timeout_ms);
-    LOG_FUNCTION_INT_END(ret);
+    if (ret <= 0) {
+        AP_LOGE("failed, err: %d.", ret);
+    }
     return ret;
 }
 

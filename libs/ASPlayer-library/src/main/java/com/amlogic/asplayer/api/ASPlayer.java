@@ -392,7 +392,7 @@ public class ASPlayer implements IASPlayer {
      */
     @Override
     public void setVideoParams(VideoParams params) throws NullPointerException, IllegalArgumentException, IllegalStateException {
-        if (DEBUG) ASPlayerLog.d("%s setVideoParams start, params: %s", getTag(), params);
+        ASPlayerLog.d("%s setVideoParams start, params: %s", getTag(), params);
         if (mPlayer == null) {
             throw new IllegalStateException("player has been released?");
         }
