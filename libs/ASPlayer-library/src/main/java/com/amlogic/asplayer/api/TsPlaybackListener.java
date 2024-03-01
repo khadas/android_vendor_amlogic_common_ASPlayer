@@ -220,6 +220,21 @@ public interface TsPlaybackListener {
     }
 
     /**
+     * Audio decoder init completed event
+     */
+    class AudioDecoderInitCompletedEvent extends PlaybackInfoEvent {
+
+        public AudioDecoderInitCompletedEvent() {
+            super(EventType.EVENT_TYPE_DECODER_INIT_COMPLETED, StreamType.AUDIO);
+        }
+
+        @Override
+        public String getEventName() {
+            return "AudioDecoderInitCompletedEvent";
+        }
+    }
+
+    /**
      * Decoder data Loss event
      */
     class DecoderDataLossEvent extends PlaybackInfoEvent {

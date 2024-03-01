@@ -31,6 +31,8 @@ public class JniTsPlaybackListenerWrapper implements TsPlaybackListener {
                 case EventType.EVENT_TYPE_DECODER_INIT_COMPLETED:
                     if (streamType == StreamType.VIDEO) {
                         ev = new VideoDecoderInitCompletedEvent();
+                    } else if (streamType == StreamType.AUDIO) {
+                        ev = new AudioDecoderInitCompletedEvent();
                     } else {
                         ev = (PlaybackInfoEvent) event;
                     }

@@ -14,6 +14,7 @@ import com.amlogic.asplayer.api.PlaybackControl.VideoMute;
 import com.amlogic.asplayer.api.VideoParams;
 import com.amlogic.asplayer.api.VideoTrickMode;
 import com.amlogic.asplayer.api.WorkMode;
+import com.amlogic.asplayer.core.utils.DataLossChecker;
 import com.amlogic.asplayer.core.utils.StringUtils;
 
 import java.nio.ByteBuffer;
@@ -137,10 +138,8 @@ class VideoOutputPathV3 extends VideoOutputPath {
     private int mPlaybackMode;
     private long mLastRenderedTimeUs;
 
-    private CheckDataLossRunnable mCheckDataLossRunnable;
-    private long mLastFrameTimestampMillisecond = -1;
-    private boolean mDataLossReported = false;
-    private long mLastDataLossReportTimestamp = 0;
+    private DataLossChecker mDataLossChecker;
+    private VideoDataLossListener mDataLossListener;
 
     private int mTrackFilterId = INVALID_FILTER_ID;
     private int mAvSyncHwId = INVALID_AV_SYNC_ID;
@@ -190,23 +189,22 @@ class VideoOutputPathV3 extends VideoOutputPath {
             }
 
             final long renderTime = nanoTime / 1000;
-            if (DEBUG) {
-                ASPlayerLog.i("%s onFrameRendered pts: %d, 0x%x, renderTime: %d, 0x%x",
-                        getTag(), presentationTimeUs, presentationTimeUs, renderTime, renderTime);
-            }
             if (!mFirstFrameDisplayed) {
-                ASPlayerLog.i("%s [KPI-FCC] onFrameRendered pts: %d, nanoTime: %d",
-                        getTag(), presentationTimeUs, nanoTime);
+                ASPlayerLog.i("%s [KPI-FCC] onFrameRendered pts: %d, 0x%x, pts90: %d, nanoTime: %d, 0x%x",
+                        getTag(), presentationTimeUs, presentationTimeUs, presentationTimeUs * 90 / 1000,
+                        nanoTime, nanoTime);
+            }
+            if (DEBUG) {
+                ASPlayerLog.i("%s onFrameRendered pts: %d, 0x%x, pts90: %d, renderTime: %d, 0x%x",
+                        getTag(), presentationTimeUs, presentationTimeUs, presentationTimeUs * 90 / 1000,
+                        renderTime, renderTime);
             }
             notifyFrameDisplayed(presentationTimeUs, renderTime);
             mLastRenderedTimeUs = presentationTimeUs;
-            mLastFrameTimestampMillisecond = System.nanoTime() / 1000000;
             mFirstFrameDisplayed = true;
 
-            if (mDataLossReported) {
-                ASPlayerLog.i("%s decoder data resume", getTag());
-                notifyDecoderDataResume();
-                mDataLossReported = false;
+            if (mDataLossChecker != null) {
+                mDataLossChecker.onFrameArrived(renderTime);
             }
         }
 
@@ -496,15 +494,11 @@ class VideoOutputPathV3 extends VideoOutputPath {
 
     @Override
     public void reset() {
-        super.reset();
-
         stopCheckDataLoss();
 
-        mLastRenderedTimeUs = 0;
-        mLastFrameTimestampMillisecond = -1;
+        super.reset();
 
-        mDataLossReported = false;
-        mLastDataLossReportTimestamp = -1;
+        mLastRenderedTimeUs = 0;
 
         mSolidScreenColor = null;
     }
@@ -822,54 +816,6 @@ class VideoOutputPathV3 extends VideoOutputPath {
         super.setWorkMode(workMode);
     }
 
-    private class CheckDataLossRunnable implements Runnable {
-        @Override
-        public void run() {
-            if (mMediaCodec == null || !mMediaCodecStarted) {
-                return;
-            }
-
-            boolean isDataLoss = false;
-
-            long currentTime = System.nanoTime() / 1000000;
-            if (mLastFrameTimestampMillisecond == -1) {
-                // no frame rendered
-                ASPlayerLog.i("%s check data loss, no last pts", getTag());
-                long mediaCodecStartTime =
-                        mMediaCodecStartTimeMillisecond >= 0 ? mMediaCodecStartTimeMillisecond : 0;
-                long delayTime = currentTime - mediaCodecStartTime;
-                if (delayTime >= DATA_LOSS_DURATION_MILLISECOND) {
-                    isDataLoss = true;
-                }
-            } else if (mLastFrameTimestampMillisecond > 0
-                && currentTime >= (mLastFrameTimestampMillisecond + DATA_LOSS_DURATION_MILLISECOND)) {
-                ASPlayerLog.i("%s check data loss, pts gap: %d", getTag(), currentTime - mLastFrameTimestampMillisecond);
-                isDataLoss = true;
-            }
-
-            if (isDataLoss) {
-                ASPlayerLog.i("%s check data loss, data loss found", getTag());
-                boolean reportDataLoss = !mDataLossReported;
-                if (currentTime >= (mLastDataLossReportTimestamp + DATA_LOSS_DURATION_MILLISECOND)) {
-                    reportDataLoss = true;
-                }
-
-                if (reportDataLoss) {
-                    notifyDecoderDataLoss();
-                    mDataLossReported = true;
-                    mLastDataLossReportTimestamp = currentTime;
-                }
-            }
-
-            if (mHandler != null) {
-                if (mHandler.hasCallbacks(this)) {
-                    mHandler.removeCallbacks(this);
-                }
-                mHandler.postDelayed(this, CHECK_DATA_LOSS_PERIOD);
-            }
-        }
-    }
-
     @Override
     protected void onMediaCodecStarted() {
         super.onMediaCodecStarted();
@@ -878,25 +824,27 @@ class VideoOutputPathV3 extends VideoOutputPath {
     }
 
     private void startCheckDataLoss() {
-        if (mHandler == null) {
+        if (mHandler == null || mAudioOnly) {
             return;
         }
 
-        if (mCheckDataLossRunnable != null) {
-            mHandler.removeCallbacks(mCheckDataLossRunnable);
-        } else {
-            mCheckDataLossRunnable = new CheckDataLossRunnable();
+        if (mDataLossChecker != null) {
+            stopCheckDataLoss();
         }
-        mHandler.postDelayed(mCheckDataLossRunnable, CHECK_DATA_LOSS_PERIOD);
+
+        mDataLossListener = new VideoDataLossListener();
+        mDataLossChecker = new DataLossChecker(mHandler);
+        mDataLossChecker.start(mDataLossListener, getTag(),
+                CHECK_DATA_LOSS_PERIOD, DATA_LOSS_DURATION_MILLISECOND);
     }
 
     private void stopCheckDataLoss() {
-        if (mCheckDataLossRunnable != null) {
-            if (mHandler != null) {
-                mHandler.removeCallbacks(mCheckDataLossRunnable);
-            }
-            mCheckDataLossRunnable = null;
+        if (mDataLossChecker != null) {
+            mDataLossChecker.stop();
+            mDataLossChecker.release();
+            mDataLossChecker = null;
         }
+        mDataLossListener = null;
     }
 
     @Override
@@ -909,5 +857,18 @@ class VideoOutputPathV3 extends VideoOutputPath {
     @Override
     protected void onMediaCodecReleased() {
         super.onMediaCodecReleased();
+    }
+
+    private class VideoDataLossListener implements DataLossChecker.DataLossListener {
+
+        @Override
+        public void onDataLossFound() {
+            notifyDecoderDataLoss();
+        }
+
+        @Override
+        public void onDataResumeFound() {
+            notifyDecoderDataResume();
+        }
     }
 }

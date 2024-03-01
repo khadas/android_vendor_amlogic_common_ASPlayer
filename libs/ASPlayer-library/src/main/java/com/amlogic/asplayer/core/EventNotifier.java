@@ -16,6 +16,7 @@ import static com.amlogic.asplayer.api.TsPlaybackListener.DecodeFirstVideoFrameE
 import static com.amlogic.asplayer.api.TsPlaybackListener.VideoFirstFrameEvent;
 import static com.amlogic.asplayer.api.TsPlaybackListener.VideoFormatChangeEvent;
 import static com.amlogic.asplayer.api.TsPlaybackListener.PtsEvent;
+import static com.amlogic.asplayer.api.TsPlaybackListener.AudioDecoderInitCompletedEvent;
 import static com.amlogic.asplayer.api.TsPlaybackListener.VideoDecoderInitCompletedEvent;
 import static com.amlogic.asplayer.api.TsPlaybackListener.DecoderDataLossEvent;
 import static com.amlogic.asplayer.api.TsPlaybackListener.DecoderDataResumeEvent;
@@ -115,6 +116,10 @@ class EventNotifier {
 
     void notifyVideoDecoderInitCompleted() {
         postEvent(EventType.EVENT_TYPE_DECODER_INIT_COMPLETED, new VideoDecoderInitCompletedEvent());
+    }
+
+    void notifyAudioDecoderInitCompleted() {
+        postEvent(EventType.EVENT_TYPE_DECODER_INIT_COMPLETED, new AudioDecoderInitCompletedEvent());
     }
 
     void notifyDecoderDataLoss(int streamType) {

@@ -443,11 +443,7 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
         ASPlayerLog.i("%s resumeVideoDecoding start", getTag());
         mTargetVideoState = AVState.START;
         mFirstVideoFrameDisplayed = false;
-        stopRendererTask();
-        if (mCurrentSpeedTask != null) {
-            mCurrentSpeedTask.startVideo();
-        }
-        startRendererTaskIfNeed();
+        startVideoRenderIfNeed();
 
         if (mConfig.getPlaybackMode() == ASPlayerConfig.PLAYBACK_MODE_PASSTHROUGH) {
             if (hasAudio()) {
@@ -508,11 +504,7 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
         ASPlayerLog.i("%s resumeAudioDecoding start", getTag());
         mTargetAudioState = AVState.START;
         mFirstAudioFrameDisplayed = false;
-        stopRendererTask();
-        if (mCurrentSpeedTask != null) {
-            mCurrentSpeedTask.startAudio();
-        }
-        startRendererTaskIfNeed();
+        startAudioRenderIfNeed();
         mAudioOutputPath.resume();
     }
 
@@ -592,6 +584,8 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     public void onDecoderInitCompleted(MediaOutputPath outputPath) {
         if (mVideoOutputPath != null && outputPath == mVideoOutputPath) {
             mEventNotifier.notifyVideoDecoderInitCompleted();
+        } else if (mAudioOutputPath != null && outputPath == mAudioOutputPath) {
+            mEventNotifier.notifyAudioDecoderInitCompleted();
         }
     }
 
@@ -603,6 +597,8 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     public void onDecoderDataLoss(MediaOutputPath outputPath) {
         if (mVideoOutputPath != null && outputPath == mVideoOutputPath) {
             mEventNotifier.notifyDecoderDataLoss(StreamType.VIDEO);
+        } else if (mAudioOutputPath != null && outputPath == mAudioOutputPath) {
+            mEventNotifier.notifyDecoderDataLoss(StreamType.AUDIO);
         }
     }
 
@@ -610,6 +606,8 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     public void onDecoderDataResume(MediaOutputPath outputPath) {
         if (mVideoOutputPath != null && outputPath == mVideoOutputPath) {
             mEventNotifier.notifyDecoderDataResume(StreamType.VIDEO);
+        } else if (mAudioOutputPath != null && outputPath == mAudioOutputPath) {
+            mEventNotifier.notifyDecoderDataResume(StreamType.AUDIO);
         }
     }
 

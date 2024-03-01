@@ -14,10 +14,14 @@ import com.amlogic.asplayer.api.ErrorCode;
 import com.amlogic.asplayer.api.PIPMode;
 import com.amlogic.asplayer.api.WorkMode;
 import com.amlogic.asplayer.core.encapsulation.Metadata;
+import com.amlogic.asplayer.core.utils.DataLossChecker;
 
 
 class AudioOutputPathV3 extends AudioOutputPathBase {
     private static final boolean DEBUG = true;
+
+    private static final int CHECK_DATA_LOSS_PERIOD = 100; // 100 millisecond
+    private static final int DATA_LOSS_DURATION_MILLISECOND = 2 * 1000; // 2 second
 
     private Metadata.TunerMetadata mTunerMetadataMain;
     private Metadata.TunerMetadata mTunerMetadataSub;
@@ -25,6 +29,9 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
     protected boolean mSecurePlayback = false;
 
     private AudioParams mSubTrackAudioParams;
+
+    private DataLossChecker mDataLossChecker;
+    private AudioDataLossListener mDataLossListener;
 
     AudioOutputPathV3(int id) {
         super(id);
@@ -138,6 +145,9 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
             public void onRender(long presentationTimeUs, long renderTime) {
 //                ASPlayerLog.i("%s onRender", getTag());
                 notifyFrameDisplayed(presentationTimeUs, renderTime);
+                if (mDataLossChecker != null) {
+                    mDataLossChecker.onFrameArrived(renderTime);
+                }
                 mTimestampKeeper.removeTimestamp(presentationTimeUs);
             }
 
@@ -190,6 +200,8 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
 
         setInitAudioParams();
 
+        notifyDecoderInitCompleted();
+
         ASPlayerLog.i("%s start audio render", getTag());
         audioCodecRenderer.start();
 
@@ -213,6 +225,8 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
             mChangedWorkMode = false;
             mChangePIPMode = false;
         }
+
+        startCheckDataLoss();
 
         return success;
     }
@@ -256,6 +270,8 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
 
         ASPlayerLog.i("%s setTrackWithTunerMetaData filterId: %d", getTag(), audioParams.getTrackFilterId());
 
+        stopCheckDataLoss();
+
         boolean success = changeMainTrack(audioParams);
         ASPlayerLog.i("%s changeMainTrack result: %s", getTag(), success ? "success" : "failed");
         mAudioParams = audioParams;
@@ -264,6 +280,8 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
 
         if (!success) {
             setConfigured(false);
+        } else {
+            startCheckDataLoss();
         }
     }
 
@@ -304,6 +322,8 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
 
     @Override
     public void reset() {
+        stopCheckDataLoss();
+
         super.reset();
 
         mSubTrackAudioParams = null;
@@ -512,6 +532,44 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
             setConfigured(false);
         } else {
             ASPlayerLog.d("%s setPIPMode not release audio render", getTag());
+        }
+    }
+
+    private void startCheckDataLoss() {
+        if (mHandler == null || !mHasAudio) {
+            return;
+        }
+
+        if (mDataLossChecker != null) {
+            stopCheckDataLoss();
+            mDataLossChecker = null;
+        }
+
+        mDataLossListener = new AudioDataLossListener();
+        mDataLossChecker = new DataLossChecker(mHandler);
+        mDataLossChecker.start(mDataLossListener, getTag(),
+                CHECK_DATA_LOSS_PERIOD, DATA_LOSS_DURATION_MILLISECOND);
+    }
+
+    private void stopCheckDataLoss() {
+        if (mDataLossChecker != null) {
+            mDataLossChecker.stop();
+            mDataLossChecker.release();
+            mDataLossChecker = null;
+        }
+        mDataLossListener = null;
+    }
+
+    private class AudioDataLossListener implements DataLossChecker.DataLossListener {
+
+        @Override
+        public void onDataLossFound() {
+            notifyDecoderDataLoss();
+        }
+
+        @Override
+        public void onDataResumeFound() {
+            notifyDecoderDataResume();
         }
     }
 }
