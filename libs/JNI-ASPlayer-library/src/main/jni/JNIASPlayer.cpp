@@ -449,22 +449,18 @@ jni_asplayer_result  JniASPlayer_setSurface(jni_asplayer_handle handle, void* pS
 /**
  *@brief:        Set audio output mute to specified JniASPlayer instance .
  *@param:        handle         JniASPlayer handle.
- *@param:        analog_mute    If analog mute or unmute .
- *@param:        digital_mute   If digital mute or unmute .
+ *@param:        mute    mute or not.
  *@return:       The JniASPlayer result.
  */
-jni_asplayer_result  JniASPlayer_setAudioMute(jni_asplayer_handle handle,
-                                              bool_t analog_mute,
-                                              bool_t digital_mute) {
+jni_asplayer_result  JniASPlayer_setAudioMute(jni_asplayer_handle handle, bool_t mute) {
     LOG_FUNCTION_ENTER();
     if (handle == 0) {
         return JNI_ASPLAYER_ERROR_INVALID_PARAMS;
     }
 
     JniASPlayer *player = reinterpret_cast<JniASPlayer*>(handle);
-    bool aMute = analog_mute ? true : false;
-    bool dMute = digital_mute ? true : false;
-    jni_asplayer_result ret = player->setAudioMute(aMute, dMute);
+    bool mute_ = mute ? true : false;
+    jni_asplayer_result ret = player->setAudioMute(mute_);
     LOG_FUNCTION_INT_END(ret);
     return ret;
 }

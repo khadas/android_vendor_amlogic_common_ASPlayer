@@ -680,7 +680,7 @@ public class TvPlayer {
 
     public void muteAudio() {
         if (mASPlayer != null) {
-            mASPlayer.setAudioMute(true, true);
+            mASPlayer.setAudioMute(true);
         } else {
             TvLog.d("Player-%d muteAudio failed, asplayer is null", mId);
         }
@@ -688,7 +688,7 @@ public class TvPlayer {
 
     public void unMuteAudio() {
         if (mASPlayer != null) {
-            mASPlayer.setAudioMute(false, false);
+            mASPlayer.setAudioMute(false);
         } else {
             TvLog.d("Player-%d unMuteAudio failed, asplayer is null", mId);
         }

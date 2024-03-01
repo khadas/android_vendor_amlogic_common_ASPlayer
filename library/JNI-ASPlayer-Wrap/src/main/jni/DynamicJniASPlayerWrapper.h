@@ -54,7 +54,7 @@ typedef jni_asplayer_result (*JniASPlayer_setAudioVolume_FUNC)(jni_asplayer_hand
 typedef jni_asplayer_result (*JniASPlayer_getAudioVolume_FUNC)(jni_asplayer_handle, int32_t *);
 typedef jni_asplayer_result (*JniASPlayer_setAudioDualMonoMode_FUNC)(jni_asplayer_handle, jni_asplayer_audio_dual_mono_mode);
 typedef jni_asplayer_result (*JniASPlayer_getAudioDualMonoMode_FUNC)(jni_asplayer_handle, jni_asplayer_audio_dual_mono_mode *);
-typedef jni_asplayer_result (*JniASPlayer_setAudioMute_FUNC)(jni_asplayer_handle, bool_t, bool_t);
+typedef jni_asplayer_result (*JniASPlayer_setAudioMute_FUNC)(jni_asplayer_handle, bool_t);
 typedef jni_asplayer_result (*JniASPlayer_getAudioMute_FUNC)(jni_asplayer_handle Hadl, bool_t *, bool_t *);
 typedef jni_asplayer_result (*JniASPlayer_setAudioParams_FUNC)(jni_asplayer_handle, jni_asplayer_audio_params *);
 typedef jni_asplayer_result (*JniASPlayer_switchAudioTrack_FUNC)(jni_asplayer_handle, jni_asplayer_audio_params *);
@@ -117,7 +117,7 @@ public:
     jni_asplayer_result flushDvr();
     jni_asplayer_result writeData(jni_asplayer_input_buffer *buf, uint64_t timeout_ms);
     jni_asplayer_result setSurface(void *surface);
-    jni_asplayer_result setAudioMute(bool analogMute, bool digitMute);
+    jni_asplayer_result setAudioMute(bool mute);
     jni_asplayer_result setAudioVolume(int volume);
     jni_asplayer_result getAudioVolume(int *volume);
     jni_asplayer_result startFast(float scale);

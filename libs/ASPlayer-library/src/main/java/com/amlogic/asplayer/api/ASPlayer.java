@@ -690,35 +690,28 @@ public class ASPlayer implements IASPlayer {
     /**
      * Set audio output mute to ASPlayer instance.
      *
-     * @param analogMute If analog mute or unmute
-     * @param digitalMute If digital mute or unmute
+     * @param mute mute or not
      */
     @Override
-    public int setAudioMute(boolean analogMute, boolean digitalMute) {
-        ASPlayerLog.d("%s setAudioMute start, mute: %b, %b", getTag(), analogMute, digitalMute);
+    public int setAudioMute(boolean mute) {
+        ASPlayerLog.d("%s setAudioMute start, mute: %b", getTag(), mute);
         if (mPlayer == null) {
             return ErrorCode.ERROR_INVALID_OPERATION;
         }
 
-        return mPlayer.setAudioMute(analogMute, digitalMute);
+        return mPlayer.setAudioMute(mute);
     }
 
     /**
      * Get audio output mute status from ASPlayer instance
      */
     @Override
-    public int getAudioAnalogMute() {
-        if (DEBUG) ASPlayerLog.d("%s getAudioAnalogMute start", getTag());
-        throw new RuntimeException("Not Implementation");
-    }
+    public boolean getAudioMute() {
+        if (mPlayer == null) {
+            return false;
+        }
 
-    /**
-     * Get audio output mute status from ASPlayer instance
-     */
-    @Override
-    public int getAudioDigitMute() {
-        if (DEBUG) ASPlayerLog.d("%s getAudioDigitMute start", getTag());
-        throw new RuntimeException("Not Implementation");
+        return mPlayer.getAudioMute();
     }
 
     /**

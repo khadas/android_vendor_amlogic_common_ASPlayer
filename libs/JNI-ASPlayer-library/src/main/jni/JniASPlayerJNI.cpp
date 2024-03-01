@@ -668,7 +668,7 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
                 env, gASPlayerCls,
                 "setSurface", "(Landroid/view/Surface;)I");
         gASPlayerCtx.setAudioMuteMID = NativeHelper::GetMethodID(
-                env, gASPlayerCls, "setAudioMute", "(ZZ)I");
+                env, gASPlayerCls, "setAudioMute", "(Z)I");
         gASPlayerCtx.setAudioVolumeMID = NativeHelper::GetMethodID(
                 env, gASPlayerCls, "setAudioVolume", "(I)I");
         gASPlayerCtx.getAudioVolumeMID = NativeHelper::GetMethodID(
@@ -1486,18 +1486,16 @@ jni_asplayer_result JniASPlayer::setSurface(void *surface) {
     return static_cast<jni_asplayer_result>(result);
 }
 
-jni_asplayer_result JniASPlayer::setAudioMute(bool analogMute, bool digitMute) {
+jni_asplayer_result JniASPlayer::setAudioMute(bool mute) {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
         LOG_GET_JNIENV_FAILED(__FUNCTION__);
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
-    AP_LOGI("setAudioMute analogMute: %s, digitMute: %s",
-            analogMute ? "true" : "false",
-            digitMute ? "true" : "false");
+    AP_LOGI("setAudioMute mute: %s", mute ? "true" : "false");
 
-    int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setAudioMuteMID, (jboolean)analogMute, (jboolean)digitMute);
+    int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setAudioMuteMID, (jboolean)mute);
     LOG_FUNCTION_INT_END(result);
     return static_cast<jni_asplayer_result>(result);
 }

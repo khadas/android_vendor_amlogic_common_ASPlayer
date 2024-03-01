@@ -108,7 +108,7 @@ public:
 
     jni_asplayer_result setSurface(void *surface);
 
-    jni_asplayer_result setAudioMute(bool analogMute, bool digitMute);
+    jni_asplayer_result setAudioMute(bool mute);
 
     jni_asplayer_result setAudioVolume(int32_t volume);
 

@@ -739,25 +739,19 @@ jni_asplayer_result  JniASPlayer_getAudioDualMonoMode(jni_asplayer_handle handle
 /**
  *@brief:        Set audio output mute to specified JniASPlayer instance .
  *@param:        handle         JniASPlayer handle.
- *@param:        analog_mute    If analog mute or unmute .
- *@param:        digital_mute   If digital mute or unmute .
+ *@param:        mute    mute or not.
  *@return:       The JniASPlayer result.
  */
-jni_asplayer_result  JniASPlayer_setAudioMute(jni_asplayer_handle handle,
-                                              bool_t analog_mute,
-                                              bool_t digital_mute);
+jni_asplayer_result  JniASPlayer_setAudioMute(jni_asplayer_handle handle, bool_t mute);
 
 /**
  *@brief:        Get audio output mute status from specified
                  JniASPlayer instance .
  *@param:        handle            JniASPlayer handle.
- *@param:        *analog_unmute    If analog mute or unmute .
- *@param:        *digital_unmute   If digital mute or unmute .
+ *@param:        *mute             mute or not.
  *@return:       The JniASPlayer result.
  */
-jni_asplayer_result  JniASPlayer_getAudioMute(jni_asplayer_handle handle,
-                                              bool_t *analog_unmute,
-                                              bool_t *digital_unmute);
+jni_asplayer_result  JniASPlayer_getAudioMute(jni_asplayer_handle handle, bool_t *mute);
 
 /**
  *@brief:        Set audio params need by demuxer and audio decoder

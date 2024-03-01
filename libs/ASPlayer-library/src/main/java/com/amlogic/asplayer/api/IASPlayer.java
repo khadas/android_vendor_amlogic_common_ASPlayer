@@ -294,20 +294,14 @@ public interface IASPlayer {
     /**
      * Set audio output mute to ASPlayer instance.
      *
-     * @param analogMute If analog mute or unmute
-     * @param digitalMute If digital mute or unmute
+     * @param mute mute or not
      */
-    int setAudioMute(boolean analogMute, boolean digitalMute);
+    int setAudioMute(boolean mute);
 
     /**
      * Get audio output mute status from ASPlayer instance
      */
-    int getAudioAnalogMute();
-
-    /**
-     * Get audio output mute status from ASPlayer instance
-     */
-    int getAudioDigitMute();
+    boolean getAudioMute();
 
     /**
      * Set audio params need by demuxer and audio decoder to ASPlayer instance.

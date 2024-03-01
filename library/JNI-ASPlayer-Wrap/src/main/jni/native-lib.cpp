@@ -222,8 +222,8 @@ native_set_surface(JNIEnv* env, jobject thiz, jobject jSurface) {
 }
 
 static jint
-native_set_audio_mute(JNIEnv* env, jobject thiz, jboolean jAnalogMute, jboolean jDigitMute) {
-    jni_asplayer_result result = asplayer_set_audio_mute(env, thiz, jAnalogMute, jDigitMute);
+native_set_audio_mute(JNIEnv* env, jobject thiz, jboolean jMute) {
+    jni_asplayer_result result = asplayer_set_audio_mute(env, thiz, jMute);
 
     return result;
 }
@@ -455,7 +455,7 @@ static JNINativeMethod methods[] = {
         {"native_flushDvr", "()I", (void*)native_flush_dvr },
         {"native_writeData", "(Lcom/amlogic/asplayer/api/InputBuffer;J)I", (void*)native_write_data },
         {"native_setSurface", "(Landroid/view/Surface;)I", (void*)native_set_surface },
-        {"native_setAudioMute", "(ZZ)I", (void*)native_set_audio_mute },
+        {"native_setAudioMute", "(Z)I", (void*)native_set_audio_mute },
         {"native_setAudioVolume", "(I)I", (void*)native_set_audio_volume },
         {"native_getAudioVolume", "()I", (void*)native_get_audio_volume },
         {"native_startFast", "(F)I", (void*)native_start_fast },

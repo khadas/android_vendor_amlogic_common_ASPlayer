@@ -88,8 +88,7 @@ jni_asplayer_result
 asplayer_set_surface(JNIEnv *env, jobject jniASPlayerWrapperObj, jobject jSurface);
 
 jni_asplayer_result
-asplayer_set_audio_mute(JNIEnv *env, jobject jniASPlayerWrapperObj, jboolean jAnalogMute,
-                        jboolean jDigitMute);
+asplayer_set_audio_mute(JNIEnv *env, jobject jniASPlayerWrapperObj, jboolean jMute);
 
 jni_asplayer_result
 asplayer_set_audio_volume(JNIEnv *env, jobject jniASPlayerWrapperObj, jint volume);

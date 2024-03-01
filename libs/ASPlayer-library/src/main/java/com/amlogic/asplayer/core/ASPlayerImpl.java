@@ -939,11 +939,11 @@ public class ASPlayerImpl implements IASPlayer, AudioOutputPathBase.AudioFormatL
     }
 
     @Override
-    public int setAudioMute(boolean analogMute, boolean digitalMute) {
+    public int setAudioMute(boolean mute) {
         if (isAlive()) {
             mPlayerHandler.post(() -> {
                 if (mAudioOutputPath != null) {
-                    mAudioOutputPath.setMuted(digitalMute);
+                    mAudioOutputPath.setMuted(mute);
                 }
             });
             return ErrorCode.SUCCESS;
@@ -954,13 +954,11 @@ public class ASPlayerImpl implements IASPlayer, AudioOutputPathBase.AudioFormatL
     }
 
     @Override
-    public int getAudioAnalogMute() {
-        return 0;
-    }
-
-    @Override
-    public int getAudioDigitMute() {
-        return 0;
+    public boolean getAudioMute() {
+        if (mAudioOutputPath != null) {
+            return mAudioOutputPath.isMute();
+        }
+        return false;
     }
 
     @Override

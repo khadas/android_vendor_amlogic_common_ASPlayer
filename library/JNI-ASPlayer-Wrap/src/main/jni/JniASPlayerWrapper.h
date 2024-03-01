@@ -51,7 +51,7 @@ public:
     jni_asplayer_result flushDvr();
     jni_asplayer_result writeData(jni_asplayer_input_buffer *buf, uint64_t timeout_ms);
     jni_asplayer_result setSurface(void *surface);
-    jni_asplayer_result setAudioMute(bool analogMute, bool digitMute);
+    jni_asplayer_result setAudioMute(bool mute);
     jni_asplayer_result setAudioVolume(int volume);
     jni_asplayer_result getAudioVolume(int *volume);
     jni_asplayer_result startFast(float scale);

@@ -870,7 +870,7 @@ jni_asplayer_result DynamicJniASPlayerWrapper::setSurface(void *surface) {
     return ret;
 }
 
-jni_asplayer_result DynamicJniASPlayerWrapper::setAudioMute(bool analogMute, bool digitMute) {
+jni_asplayer_result DynamicJniASPlayerWrapper::setAudioMute(bool mute) {
     LOG_FUNCTION_ENTER();
     jni_asplayer_handle handle = mHandle;
     if (handle == 0) {
@@ -885,9 +885,8 @@ jni_asplayer_result DynamicJniASPlayerWrapper::setAudioMute(bool analogMute, boo
         return ret;
     }
 
-    bool_t aMute = analogMute ? 1 : 0;
-    bool_t dMute = digitMute ? 1 : 0;
-    jni_asplayer_result ret = ASPlayer_setAudioMute(handle, aMute, dMute);
+    bool_t mute_ = mute ? 1 : 0;
+    jni_asplayer_result ret = ASPlayer_setAudioMute(handle, mute_);
     if (ret != JNI_ASPLAYER_OK) {
         LOG_PLAYER_OP_FAILED(ret);
     }

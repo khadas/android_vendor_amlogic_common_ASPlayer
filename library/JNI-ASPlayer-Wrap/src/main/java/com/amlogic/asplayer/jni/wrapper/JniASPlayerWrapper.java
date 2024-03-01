@@ -295,18 +295,13 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
-    public int setAudioMute(boolean analogMute, boolean digitalMute) {
-        return native_setAudioMute(analogMute, digitalMute);
+    public int setAudioMute(boolean mute) {
+        return native_setAudioMute(mute);
     }
 
     @Override
-    public int getAudioAnalogMute() {
-        return 0;
-    }
-
-    @Override
-    public int getAudioDigitMute() {
-        return 0;
+    public boolean getAudioMute() {
+        return false;
     }
 
     @Override
@@ -480,7 +475,7 @@ public class JniASPlayerWrapper implements IASPlayer {
     private native int native_flushDvr();
     private native int native_writeData(InputBuffer buffer, long timeoutMillSecond);
     private native int native_setSurface(Surface surface);
-    private native int native_setAudioMute(boolean analogMute, boolean digitMute);
+    private native int native_setAudioMute(boolean mute);
     private native int native_setAudioVolume(int volume);
     private native int native_getAudioVolume();
     private native int native_startFast(float speed);
