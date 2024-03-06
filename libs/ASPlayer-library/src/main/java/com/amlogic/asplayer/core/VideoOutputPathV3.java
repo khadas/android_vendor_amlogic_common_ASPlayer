@@ -411,7 +411,8 @@ class VideoOutputPathV3 extends VideoOutputPath {
                     // need configure and start mediacodec for set surface color
                     // set fake filter id
                     format.setInteger(KEY_VIDEO_FILTER_ID, -1);
-                    ASPlayerLog.i("%s configure video filter id: -1", getTag());
+                    format.setInteger(KEY_AV_SYNC_HW_ID, -1);
+                    ASPlayerLog.i("%s configure video filter id: -1, avSync id: -1", getTag());
                 } else {
                     ASPlayerLog.i("%s configure video filter id: 0x%016x, avSyncHwId: 0x%x",
                             getTag(), mTrackFilterId, mAvSyncHwId);
