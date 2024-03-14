@@ -262,7 +262,14 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
             mAudioTrack = builder.build();
             ASPlayerLog.i("%s create AudioTrack success: %s", getTag(), mAudioTrack);
 
-            prepareAudioTrack();
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                int startThresholdInFrames = mAudioTrack.getStartThresholdInFrames();
+                ASPlayerLog.i("%s AudioTrack startThresholdInFrames: %d", getTag(), startThresholdInFrames);
+                mAudioTrack.setStartThresholdInFrames(AUDIO_BUFFER_SIZE);
+                ASPlayerLog.i("%s AudioTrack setStartThresholdInFrames: %d", getTag(), AUDIO_BUFFER_SIZE);
+            }
+
+            prepareAudioTrack(workMode, pipMode);
 
             ASPlayerLog.i("%s configure AudioTrack, workMode: %d, pipMode: %d", getTag(), workMode, pipMode);
 
@@ -328,11 +335,13 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
         }
     }
 
-    private void prepareAudioTrack() {
-        long timeout = SystemClock.elapsedRealtime() + AUDIO_TRACK_PREPARE_TIMEOUT;
-        while (true) {
-            if (SystemClock.elapsedRealtime() >= timeout || !write()) {
-                break;
+    private void prepareAudioTrack(int workMode, int pipMode) {
+        if (workMode == WorkMode.NORMAL && pipMode == PIPMode.NORMAL) {
+            long timeout = SystemClock.elapsedRealtime() + AUDIO_TRACK_PREPARE_TIMEOUT;
+            while (true) {
+                if (SystemClock.elapsedRealtime() >= timeout || !write()) {
+                    break;
+                }
             }
         }
     }
@@ -678,6 +687,7 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     }
 
     private boolean switchPipMode(int pipMode) {
+        ASPlayerLog.i("%s switchPipMode, pipMode: %d, lastPiMode: %d", getTag(), pipMode, mLastPIPMode);
         if (pipMode == mLastPIPMode) {
             return true;
         } else if (mAudioTrack == null) {

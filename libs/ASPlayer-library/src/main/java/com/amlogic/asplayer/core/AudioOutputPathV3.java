@@ -486,12 +486,10 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
 
     @Override
     public void setWorkMode(int workMode) {
-        ASPlayerLog.d("%s setWorkMode, workMode: %d", getTag(), workMode);
+        ASPlayerLog.d("%s setWorkMode, workMode: %d, lastWorkMode: %d", getTag(), workMode, mLastWorkMode);
         if (workMode == mLastWorkMode) {
             return;
         }
-
-        int lastWorkMode = mLastWorkMode;
 
         super.setWorkMode(workMode);
 
@@ -499,40 +497,39 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
             handleConfigurationError(null);
         }
 
+        if (mAudioCodecRenderer != null) {
+            boolean success = mAudioCodecRenderer.setWorkMode(workMode);
+            if (success) {
+                mLastWorkMode = workMode;
+                ASPlayerLog.d("%s setWorkMode, workMode: %d, success", getTag(), workMode);
+                return;
+            }
+        }
+
         mChangedWorkMode = true;
         setConfigured(false);
-
-        if (lastWorkMode == WorkMode.NORMAL && workMode == WorkMode.CACHING_ONLY) {
-            ASPlayerLog.d("%s setWorkMode release audio render", getTag());
-            releaseAudioRenderer();
-
-            setConfigured(false);
-        } else {
-            ASPlayerLog.d("%s setWorkMode not release audio render", getTag());
-        }
     }
 
     @Override
     public void setPIPMode(int pipMode) {
-        ASPlayerLog.d("%s setPIPMode, pipMode: %d", getTag(), pipMode);
+        ASPlayerLog.d("%s setPIPMode, pipMode: %d, lastPIPMode: %d", getTag(), pipMode, mLastPIPMode);
         if (pipMode == mLastPIPMode) {
             return;
         }
 
-        int lastPipMode = mLastPIPMode;
-
         super.setPIPMode(pipMode);
+
+        if (mAudioCodecRenderer != null) {
+            boolean success = mAudioCodecRenderer.setPIPMode(pipMode);
+            if (success) {
+                mLastPIPMode = pipMode;
+                ASPlayerLog.d("%s setPIPMode, pipMode: %d success", getTag(), pipMode);
+                return;
+            }
+        }
 
         mChangePIPMode = true;
         setConfigured(false);
-
-        if (lastPipMode == PIPMode.NORMAL && pipMode == PIPMode.PIP) {
-            ASPlayerLog.d("%s setPIPMode release audio render", getTag());
-            releaseAudioRenderer();
-            setConfigured(false);
-        } else {
-            ASPlayerLog.d("%s setPIPMode not release audio render", getTag());
-        }
     }
 
     private void startCheckDataLoss() {
