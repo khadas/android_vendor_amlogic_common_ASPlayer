@@ -1,7 +1,5 @@
 package com.amlogic.asplayer.core;
 
-import static android.media.MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayback;
-
 import static com.amlogic.asplayer.core.Constant.INVALID_FILTER_ID;
 
 import android.media.AudioFormat;
@@ -16,10 +14,14 @@ import com.amlogic.asplayer.api.ErrorCode;
 import com.amlogic.asplayer.api.PIPMode;
 import com.amlogic.asplayer.api.WorkMode;
 import com.amlogic.asplayer.core.encapsulation.Metadata;
+import com.amlogic.asplayer.core.utils.DataLossChecker;
 
 
 class AudioOutputPathV3 extends AudioOutputPathBase {
     private static final boolean DEBUG = true;
+
+    private static final int CHECK_DATA_LOSS_PERIOD = 100; // 100 millisecond
+    private static final int DATA_LOSS_DURATION_MILLISECOND = 2 * 1000; // 2 second
 
     private Metadata.TunerMetadata mTunerMetadataMain;
     private Metadata.TunerMetadata mTunerMetadataSub;
@@ -27,6 +29,9 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
     protected boolean mSecurePlayback = false;
 
     private AudioParams mSubTrackAudioParams;
+
+    private DataLossChecker mDataLossChecker;
+    private AudioDataLossListener mDataLossListener;
 
     AudioOutputPathV3(int id) {
         super(id);
@@ -53,8 +58,6 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
 
     @Override
     void switchAudioTrack(AudioParams audioParams) {
-        super.switchAudioTrack(audioParams);
-
         if (audioParams != null && audioParams.getTrackFilterId() != INVALID_FILTER_ID) {
             setTrackWithTunerMetaData(audioParams);
         }
@@ -142,6 +145,9 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
             public void onRender(long presentationTimeUs, long renderTime) {
 //                ASPlayerLog.i("%s onRender", getTag());
                 notifyFrameDisplayed(presentationTimeUs, renderTime);
+                if (mDataLossChecker != null) {
+                    mDataLossChecker.onFrameArrived(renderTime);
+                }
                 mTimestampKeeper.removeTimestamp(presentationTimeUs);
             }
 
@@ -151,14 +157,11 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
             }
         });
 
-        ASPlayerLog.i("%s source:%s, tunneled:%b", getTag(), mimeType, mTunneledPlayback);
-
         // check secure playback or not
-        mSecurePlayback = mAudioParams.isScrambled();
-        if (!mSecurePlayback && format != null) {
-            mSecurePlayback = format.containsFeature(FEATURE_SecurePlayback) &&
-                    format.getFeatureEnabled(FEATURE_SecurePlayback);
-        }
+        mSecurePlayback = checkSecurePlayback(mAudioParams);
+
+        ASPlayerLog.i("%s source: %s, tunneled: %b, secure: %b",
+                getTag(), mimeType, mTunneledPlayback, mSecurePlayback);
 
         audioCodecRenderer.setAudioSessionId(mAudioSessionId);
         audioCodecRenderer.setTunneledPlayback(mTunneledPlayback);
@@ -197,6 +200,8 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
 
         setInitAudioParams();
 
+        notifyDecoderInitCompleted();
+
         ASPlayerLog.i("%s start audio render", getTag());
         audioCodecRenderer.start();
 
@@ -220,6 +225,8 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
             mChangedWorkMode = false;
             mChangePIPMode = false;
         }
+
+        startCheckDataLoss();
 
         return success;
     }
@@ -262,9 +269,19 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
         }
 
         ASPlayerLog.i("%s setTrackWithTunerMetaData filterId: %d", getTag(), audioParams.getTrackFilterId());
+
+        stopCheckDataLoss();
+
         boolean success = changeMainTrack(audioParams);
-        if (success) {
-            mAudioParams = audioParams;
+        ASPlayerLog.i("%s changeMainTrack result: %s", getTag(), success ? "success" : "failed");
+        mAudioParams = audioParams;
+        mSecurePlayback = checkSecurePlayback(mAudioParams);
+        mHasAudio = true;
+
+        if (!success) {
+            setConfigured(false);
+        } else {
+            startCheckDataLoss();
         }
     }
 
@@ -305,7 +322,11 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
 
     @Override
     public void reset() {
+        stopCheckDataLoss();
+
         super.reset();
+
+        mSubTrackAudioParams = null;
 
         releaseAudioRenderer();
     }
@@ -344,14 +365,14 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
                 return false;
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                ASPlayerLog.i("%s changeMainTrack start writeMetadata", getTag());
                 Metadata.TunerMetadata metadata = mTunerMetadataMain.clone();
                 ((AudioCodecRendererV3) mAudioCodecRenderer).writeMetadata(metadata);
             }
 
-            mNeedToConfigureSubTrack = mSubTrackAudioParams != null;
+            return true;
         }
-        return true;
+
+        return false;
     }
 
     @Override
@@ -366,8 +387,16 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
     void disableADMix() {
         ASPlayerLog.i("%s disableADMix start", getTag());
         super.disableADMix();
-        mNeedToConfigureSubTrack = true;
-        ASPlayerLog.i("%s disableADMix enable reconfiguring sub track", getTag());
+
+        if (mAudioCodecRenderer != null) {
+            boolean success = stopADByMetadata();
+            ASPlayerLog.i("%s disableADMix stopADByMetadata result: %s",
+                    getTag(), success ? "success" : "failed");
+            if (!success) {
+                mNeedToConfigureSubTrack = true;
+                ASPlayerLog.i("%s disableADMix enable reconfiguring sub track", getTag());
+            }
+        }
     }
 
     private void changeSubTrack() {
@@ -378,60 +407,66 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
             return;
         }
 
-        if (mEnableADMix.booleanValue()) {
-            startADByMetadata();
-        } else {
-            stopADByMetadata();
+        if (mEnableADMix.booleanValue() && mSubTrackAudioParams != null) {
+            boolean success = startADByMetadata();
+            ASPlayerLog.i("%s changeSubTrack startADByMetadata result: %s",
+                    getTag(), success ? "success" : "failed");
+            if (success) {
+                mNeedToConfigureSubTrack = false;
+            }
+        } else if (!mEnableADMix.booleanValue()) {
+            boolean success = stopADByMetadata();
+            ASPlayerLog.i("%s changeSubTrack stopADByMetadata result: %s",
+                    getTag(), success ? "success" : "failed");
+            if (success) {
+                mNeedToConfigureSubTrack = false;
+            }
         }
     }
 
-    private void startADByMetadata() {
-        if (mSubTrackAudioParams == null) {
-            ASPlayerLog.i("%s sub track audio param is null", getTag());
-            return;
+    private boolean startADByMetadata() {
+        if (mAudioCodecRenderer == null || !(mAudioCodecRenderer instanceof AudioCodecRendererV3)) {
+            return false;
+        } else if (mSubTrackAudioParams == null) {
+            ASPlayerLog.i("%s startADMixByMetadata failed, no AD params", getTag());
+            return false;
         }
 
-        if (mAudioCodecRenderer == null) {
-            return;
+        final int filterId = mSubTrackAudioParams.getTrackFilterId();
+        final int encodingType = AudioUtils.getEncoding(mSubTrackAudioParams);
+        ASPlayerLog.i("%s startADMixByMetadata, filterId: %d", getTag(), filterId);
+        if (!prepareMetadata(mTunerMetadataSub, filterId, encodingType)) {
+            return false;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Metadata.TunerMetadata metadata = mTunerMetadataSub.clone();
+            ((AudioCodecRendererV3) mAudioCodecRenderer).writeMetadata(metadata);
+            return true;
         }
 
-        if (mAudioCodecRenderer instanceof AudioCodecRendererV3) {
-            final int filterId = mSubTrackAudioParams.getTrackFilterId();
-            final int encodingType = AudioUtils.getEncoding(mSubTrackAudioParams);
-            ASPlayerLog.i("%s startADMixByMetadata, filterId: %d", getTag(), filterId);
-            if (!prepareMetadata(mTunerMetadataSub, filterId, encodingType)) {
-                return;
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                Metadata.TunerMetadata metadata = mTunerMetadataSub.clone();
-                ((AudioCodecRendererV3) mAudioCodecRenderer).writeMetadata(metadata);
-            }
-
-            mNeedToConfigureSubTrack = false;
-        }
+        return false;
     }
 
-    private void stopADByMetadata() {
-        if (mAudioCodecRenderer == null) {
-            return;
+    private boolean stopADByMetadata() {
+        if (mAudioCodecRenderer == null || !(mAudioCodecRenderer instanceof AudioCodecRendererV3)) {
+            return false;
         }
 
-        if (mAudioCodecRenderer instanceof AudioCodecRendererV3) {
-            final int lastADFilterId = mSubTrackAudioParams != null
-                    ? mSubTrackAudioParams.getTrackFilterId() : 0;
-            ASPlayerLog.i("%s stopADMixByMetadata, last AD filterId: %d", getTag(), lastADFilterId);
+        final int lastADFilterId = mSubTrackAudioParams != null
+                ? mSubTrackAudioParams.getTrackFilterId() : 0;
+        ASPlayerLog.i("%s stopADMixByMetadata, last AD filterId: %d", getTag(), lastADFilterId);
 
-            final int fakeFilterId = 0; // set to invalid filter id. (not -1, 0 instead)
-            if (!prepareMetadata(mTunerMetadataSub, fakeFilterId, AudioFormat.ENCODING_DEFAULT)) {
-                return;
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                Metadata.TunerMetadata metadata = mTunerMetadataSub.clone();
-                ((AudioCodecRendererV3) mAudioCodecRenderer).writeMetadata(metadata);
-            }
-
-            mNeedToConfigureSubTrack = false;
+        final int fakeFilterId = 0; // set to invalid filter id. (not -1, 0 instead)
+        if (!prepareMetadata(mTunerMetadataSub, fakeFilterId, AudioFormat.ENCODING_DEFAULT)) {
+            return false;
         }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Metadata.TunerMetadata metadata = mTunerMetadataSub.clone();
+            ((AudioCodecRendererV3) mAudioCodecRenderer).writeMetadata(metadata);
+            return true;
+        }
+
+        return false;
     }
 
     private boolean prepareMetadata(Metadata.TunerMetadata tunerMetadata, int filterId, int encodingType) {
@@ -497,6 +532,44 @@ class AudioOutputPathV3 extends AudioOutputPathBase {
             setConfigured(false);
         } else {
             ASPlayerLog.d("%s setPIPMode not release audio render", getTag());
+        }
+    }
+
+    private void startCheckDataLoss() {
+        if (mHandler == null || !mHasAudio) {
+            return;
+        }
+
+        if (mDataLossChecker != null) {
+            stopCheckDataLoss();
+            mDataLossChecker = null;
+        }
+
+        mDataLossListener = new AudioDataLossListener();
+        mDataLossChecker = new DataLossChecker(mHandler);
+        mDataLossChecker.start(mDataLossListener, getTag(),
+                CHECK_DATA_LOSS_PERIOD, DATA_LOSS_DURATION_MILLISECOND);
+    }
+
+    private void stopCheckDataLoss() {
+        if (mDataLossChecker != null) {
+            mDataLossChecker.stop();
+            mDataLossChecker.release();
+            mDataLossChecker = null;
+        }
+        mDataLossListener = null;
+    }
+
+    private class AudioDataLossListener implements DataLossChecker.DataLossListener {
+
+        @Override
+        public void onDataLossFound() {
+            notifyDecoderDataLoss();
+        }
+
+        @Override
+        public void onDataResumeFound() {
+            notifyDecoderDataResume();
         }
     }
 }

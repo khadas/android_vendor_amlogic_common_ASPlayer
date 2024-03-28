@@ -148,7 +148,7 @@ public class LocalTvPlayerActivity extends Activity implements TsPlaybackListene
                     sampleRate, channelCount, channelMask);
         } else if (event instanceof VideoFirstFrameEvent) {
             VideoFirstFrameEvent ev = (VideoFirstFrameEvent) event;
-            TvLog.i("onPlaybackEvent VideoFirstFrameEvent, pts: %d", ev.getPositionMs());
+            TvLog.i("onPlaybackEvent VideoFirstFrameEvent, renderTime: %d", ev.getRenderTime());
 
             int instanceNo = mDvrPlayer.getInstanceNo();
             int syncInstanceNo = mDvrPlayer.getSyncInstanceNo();
@@ -157,15 +157,17 @@ public class LocalTvPlayerActivity extends Activity implements TsPlaybackListene
 
         } else if (event instanceof AudioFirstFrameEvent) {
             AudioFirstFrameEvent ev = (AudioFirstFrameEvent) event;
-            TvLog.i("onPlaybackEvent AudioFirstFrameEvent, pts: %d", ev.getPositionMs());
+            TvLog.i("onPlaybackEvent AudioFirstFrameEvent, renderTime: %d", ev.getRenderTime());
         } else if (event instanceof DecodeFirstVideoFrameEvent) {
 
         } else if (event instanceof DecodeFirstAudioFrameEvent) {
 
         } else if (event instanceof PtsEvent) {
             PtsEvent ev = (PtsEvent) event;
-            TvLog.d("PtsEvent stream: %s, pts: %d, rendertime: %d",
-                    StreamType.toString(ev.mStreamType), ev.mPts, ev.mRenderTime);
+            if (false) {
+                TvLog.d("PtsEvent stream: %s, pts: %d, renderTime: %d",
+                        StreamType.toString(ev.getStreamType()), ev.getPts(), ev.getRenderTime());
+            }
         }
     }
 

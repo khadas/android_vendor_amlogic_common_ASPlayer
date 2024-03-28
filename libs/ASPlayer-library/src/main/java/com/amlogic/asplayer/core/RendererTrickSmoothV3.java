@@ -11,6 +11,7 @@ import static com.amlogic.asplayer.core.VideoOutputPathV3.TRICK_MODE_SMOOTH;
 class RendererTrickSmoothV3 extends Renderer {
 
     private final Bundle mParamsTrickSmooth;
+    private boolean mMute = false;
 
     RendererTrickSmoothV3(int id, RendererScheduler rendererScheduler) {
         super(id, rendererScheduler);
@@ -28,6 +29,7 @@ class RendererTrickSmoothV3 extends Renderer {
         ASPlayerLog.i("%s speed:%f->%f", getTag(), mSpeed, speed);
         super.setSpeed(previousRenderer, speed);
 
+        mMute = mAudioOutputPath.isMute();
         mAudioOutputPath.setMuted(true);
 
         // configure video for smooth trick mode
@@ -50,7 +52,7 @@ class RendererTrickSmoothV3 extends Renderer {
                 mVideoOutputPath.flush();
                 break;
             case RESET_REASON_RENDERER_CHANGED:
-                mAudioOutputPath.setMuted(false);
+                mAudioOutputPath.setMuted(mMute);
                 mVideoOutputPath.setParameters(PARAMS_TRICK_NONE);
                 break;
         }

@@ -17,12 +17,6 @@ import com.amlogic.asplayer.api.VideoParams;
 import com.amlogic.asplayer.api.VideoTrickMode;
 import com.amlogic.asplayer.api.WorkMode;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.nio.ByteBuffer;
-import java.util.ArrayDeque;
-import java.util.Arrays;
-import java.util.Locale;
 
 import static android.media.MediaCodecInfo.CodecCapabilities.FEATURE_SecurePlayback;
 
@@ -34,6 +28,7 @@ class VideoOutputPath extends MediaOutputPath {
         void onVideoSizeInfoChanged(int width, int height, int pixelAspectRatio);
         void onAfdInfoChanged(byte activeFormat);
         void onFrameRateChanged(int frameRate);
+        void onVFType(int vfType);
     }
 
     private class MediaCodecStarter implements Runnable {
@@ -75,19 +70,8 @@ class VideoOutputPath extends MediaOutputPath {
 
     private MediaCodecStarter mMediaCodecStarter;
 
-    // input and output buffers indexes provided by MediaCodec
-    protected final ArrayDeque<Integer> mInputBufferIndexes;
-    protected final ArrayDeque<Integer> mOutputBufferIndexes;
-    protected MediaCodec.BufferInfo[] mOutputBufferInfos;
-
-    // input buffer shared with extractor
-    protected final InputBuffer mInputBuffer;
-
-    //
     protected Surface mSurface;
     protected Surface mDummySurface;
-    private long mFreeRunNextFrameTimestampUs;
-    private boolean mVisible;
 
     protected boolean mFirstFrameDisplayed;
 
@@ -102,9 +86,6 @@ class VideoOutputPath extends MediaOutputPath {
     protected int mFrameRate;
     protected byte mActiveFormat;
     protected Integer mVFType;
-
-    private long mNbDecodedFrames;
-    private int mNbSuspiciousTimestamps;
 
     protected int mTrickMode = VideoTrickMode.NONE;
     protected double mTrickModeSpeed;
@@ -131,14 +112,10 @@ class VideoOutputPath extends MediaOutputPath {
 
     VideoOutputPath(int id) {
         super(id);
-        mInputBufferIndexes = new ArrayDeque<>();
-        mOutputBufferIndexes = new ArrayDeque<>();
-        mOutputBufferInfos = new MediaCodec.BufferInfo[MAX_BUFFER_INFOS];
-        mVisible = true;
-        mInputBuffer = new InputBuffer();
     }
 
     void setAudioSessionId(int sessionId) {
+        ASPlayerLog.i("%s setAudioSessionId: %d", getTag(), sessionId);
         mAudioSessionId = sessionId;
     }
 
@@ -153,8 +130,6 @@ class VideoOutputPath extends MediaOutputPath {
 
         if (surface == null) {
             ASPlayerLog.i("%s setSurface: surface is null, release mediacodec", getTag());
-            mInputBufferIndexes.clear();
-            mOutputBufferIndexes.clear();
             if (mMediaCodec != null) {
                 releaseMediaCodec();
             }
@@ -178,39 +153,6 @@ class VideoOutputPath extends MediaOutputPath {
     void setDummySurface(Surface surface) {
         ASPlayerLog.i("%s setDummySurface: %s", getTag(), surface);
         mDummySurface = surface;
-    }
-
-    void setVisible(boolean visible) {
-        mVisible = visible;
-        if (mSurface != null) {
-            if (visible) {
-                resetSynchro();
-            } else {
-                pushBlankFrame();
-                mInputBufferIndexes.clear();
-                mOutputBufferIndexes.clear();
-                Arrays.fill(mOutputBufferInfos, null);
-                resetSynchro();
-                setConfigured(false);
-            }
-        }
-    }
-
-    void pushBlankFrame() {
-        if (mSurface == null)
-            return;
-        if (mMediaCodec == null)
-            return;
-
-        mMediaCodec.reset();
-        MediaFormat format =
-                MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, 1920, 1080);
-        format.setInteger(MediaFormat.KEY_PUSH_BLANK_BUFFERS_ON_STOP, 1);
-        mMediaCodec.configure(format, mSurface, null, 0);
-        mMediaCodec.start();
-        stopMediaCodec();
-        releaseMediaCodec();
-        ASPlayerLog.i("%s pushBlankFrame, release mediacodec", getTag());
     }
 
     String getCodecName() {
@@ -391,6 +333,8 @@ class VideoOutputPath extends MediaOutputPath {
         }
         if (mAudioSessionId != Constant.INVALID_AUDIO_SESSION_ID) {
             format.setInteger(MediaFormat.KEY_AUDIO_SESSION_ID, mAudioSessionId);
+        } else {
+            ASPlayerLog.e("%s onSetVideoFormat no audioSessionId", getTag());
         }
 
         // activate secure playback if needed
@@ -404,65 +348,6 @@ class VideoOutputPath extends MediaOutputPath {
         if (DEBUG) ASPlayerLog.i("%s push input buffer", getTag());
         if (!isConfigured() && !configure())
             return;
-
-        try {
-            pushInputBufferInitStartTime();
-
-            boolean bufferPushed = false;
-            int pixelAspectRatio = 0;
-            int width = 0;
-            int height = 0;
-            while (!mInputBufferIndexes.isEmpty() &&
-                    !mInputBufferQueue.isEmpty() &&
-                    !pushInputBufferIsTimeout()) {
-
-                // try to fill next input buffer
-                Integer index = mInputBufferIndexes.peek();
-                if (index == null)
-                    break;
-                ByteBuffer buffer = mMediaCodec.getInputBuffer(index);
-                if (buffer == null)
-                    break;
-                mInputBuffer.buffer = buffer;
-                if (!mInputBufferQueue.pop(mInputBuffer))
-                    break;
-
-                // and queue the buffer
-                if (mSecurePlayback) {
-                    mMediaCodec.queueSecureInputBuffer(index, 0, mInputBuffer.cryptoInfo,
-                            mInputBuffer.timestampUs, 0);
-                } else {
-                    mMediaCodec.queueInputBuffer(index, 0, mInputBuffer.buffer.limit(),
-                            mInputBuffer.timestampUs, 0);
-                }
-
-                // filling the buffer is a success, we can remove used index
-                mInputBufferIndexes.pop();
-
-                mTimestampKeeper.pushTimestamp(mInputBuffer.timestampUs);
-                if (mTimestampKeeper.hasDiscontinuity())
-                    break;
-
-                pixelAspectRatio = mInputBuffer.pixelAspectRatio;
-                width = mInputBuffer.width;
-                height = mInputBuffer.height;
-                bufferPushed = true;
-            }
-            updateVideoSizeInfo(width, height, pixelAspectRatio);
-
-            if (bufferPushed)
-                notifyBufferPushed();
-
-            timestampInputBufferQueueFullIfNeeded();
-
-            if (mTimestampKeeper.hasDiscontinuity()) {
-                ASPlayerLog.i("%s mTimestampKeeper.hasDiscontinuity reset mediacodec", getTag());
-                reset();
-            }
-        } catch (Exception e) {
-            ASPlayerLog.w("%s error=%s", getTag(), e.getMessage());
-            setError(e.getMessage());
-        }
     }
 
     protected void updateVideoSizeInfo(int width, int height, int pixelAspectRatio) {
@@ -475,11 +360,11 @@ class VideoOutputPath extends MediaOutputPath {
             mVideoHeight = height;
             needNotify = true;
         }
-        if (pixelAspectRatio > 0 && Math.abs(pixelAspectRatio - mPixelAspectRatio) > 0.001) {
+        if (pixelAspectRatio > 0 && pixelAspectRatio != mPixelAspectRatio) {
             mPixelAspectRatio = pixelAspectRatio;
             needNotify = true;
         }
-        if (mVideoHeight <= 0 || mVideoWidth <= 0 || mPixelAspectRatio <= 0) {
+        if (mVideoWidth <= 0 || mVideoHeight <= 0 || mPixelAspectRatio <= 0) {
             needNotify = false;
         }
         if (needNotify && mVideoFormatListener != null) {
@@ -493,7 +378,7 @@ class VideoOutputPath extends MediaOutputPath {
     }
 
     protected void updateVideoAspectRatioInfo(int pixelAspectRatio) {
-        updateVideoSizeInfo(0, 0, pixelAspectRatio);
+        updateVideoSizeInfo(mVideoWidth, mVideoHeight, pixelAspectRatio);
     }
 
     protected void updateVideoFrameRateInfo(int frameRate) {
@@ -522,6 +407,10 @@ class VideoOutputPath extends MediaOutputPath {
         if (mVFType == null || vfType != mVFType.intValue()) {
             mVFType = new Integer(vfType);
             ASPlayerLog.i("%s vf_type: %d", getTag(), vfType);
+
+            if (mVideoFormatListener != null) {
+                mVideoFormatListener.onVFType(vfType);
+            }
         }
     }
 
@@ -533,10 +422,6 @@ class VideoOutputPath extends MediaOutputPath {
         }
 
         mFirstFrameDisplayed = false;
-
-        mInputBufferIndexes.clear();
-        mOutputBufferIndexes.clear();
-        Arrays.fill(mOutputBufferInfos, null);
 
         mTimestampKeeper.clear();
         if (mInputBufferQueue != null)
@@ -567,10 +452,6 @@ class VideoOutputPath extends MediaOutputPath {
             }
         }
         mMediaCodecStarter = null;
-
-        mInputBufferIndexes.clear();
-        mOutputBufferIndexes.clear();
-        Arrays.fill(mOutputBufferInfos, null);
 
         mVideoWidth = 0;
         mVideoHeight = 0;
@@ -673,113 +554,11 @@ class VideoOutputPath extends MediaOutputPath {
 
     public void setFreeRunMode() {
         super.setFreeRunMode();
-        mFreeRunNextFrameTimestampUs = getMarginUs();
-    }
-
-    private void displayFrame(long presentationTimeUs, long deltaUs) {
-        int index = mOutputBufferIndexes.pop();
-
-        if (mVisible) {
-            // MediaCodec.releaseOutputBuffer(index, true) uses the timestamp associated with
-            // the buffer
-            // The reference clock used by MediaCodec.releaseOutputBuffer is the same as
-            // System.nanotime()
-            // As a consequence, MediaCodec.releaseOutputBuffer(index, true) should not be used,
-            // unless timestamps of input buffers are aligned with System.nanotime()
-            // Source code ref: MediaCodec.cpp, Layer.cpp
-            long timestamp = System.nanoTime();
-            if (mClock.getSpeed() == 1 && isFirstFrameDisplayed())
-                timestamp += MARGIN_FOR_VSYNC_US * 1000 + deltaUs * 1000;
-            mMediaCodec.releaseOutputBuffer(index, timestamp);
-        } else {
-            mMediaCodec.releaseOutputBuffer(index, false);
-        }
-        mTimestampKeeper.removeTimestamp(presentationTimeUs);
-        notifyFrameDisplayed(presentationTimeUs, System.nanoTime() / 1000);
-        mFirstFrameDisplayed = true;
-    }
-
-    private long renderFreeRun() {
-        // compute delta between timestamp and clock
-        long timeUs = mClock.timeUs();
-        long timestampUs = mFreeRunNextFrameTimestampUs;
-        long signedDeltaUs = timestampUs - timeUs;
-
-        if (signedDeltaUs < SYNC_RENDER_WINDOW_US) {
-            displayFrame(mFreeRunNextFrameTimestampUs, 0);
-            mFreeRunNextFrameTimestampUs += 40000;
-        }
-
-        return mFreeRunNextFrameTimestampUs - timeUs;
-    }
-
-    private long renderSynchro() {
-        long timeForNextFrameUs;
-
-        // get output buffer info
-        MediaCodec.BufferInfo bufferInfo = peekOutputBufferInfo();
-        if (bufferInfo == null)
-            return 10000;
-
-        // compute delta between timestamp and clock
-        long timeUs = mClock.timeUs();
-        long timestampUs = bufferInfo.presentationTimeUs;
-        long deltaUs = timestampUs - timeUs;
-
-        // just check if we must render or skip the frame
-        boolean mustConsume = false;
-        boolean mustRender = false;
-        // we don't skip frames if we are close to the clock
-        // - skip frames is like a freeze on screen
-        // - time to skip is almost as fast as to display
-        if (deltaUs < -100000) {
-            ASPlayerLog.i("%s skip frame (delta %d ms, input size %d ms, timestamp %d ms",
-                    getTag(), deltaUs / 1000,
-                    (mInputBufferQueue.getSizeInUs() + mTimestampKeeper.getSizeInUs()) / 1000,
-                    bufferInfo.presentationTimeUs / 1000);
-            mustConsume = true;
-            timeForNextFrameUs = 0;
-        } else if (deltaUs < 10000) {
-            mustRender = true;
-            timeForNextFrameUs = Math.max(0, deltaUs + 40000);
-        } else if (deltaUs > SYNC_MAX_DELTA_IN_FUTURE_US) {
-            setError(String.format(Locale.US, "delta %d too big, must reset", deltaUs));
-            timeForNextFrameUs = 0;
-        } else {
-            timeForNextFrameUs = deltaUs;
-        }
-
-        if (mustRender)
-            displayFrame(bufferInfo.presentationTimeUs, deltaUs);
-        else if (mustConsume)
-            consume(bufferInfo);
-
-        return timeForNextFrameUs;
-    }
-
-    void renderOneFrame() {
-        if (mFirstFrameDisplayed)
-            return;
-        MediaCodec.BufferInfo bufferInfo = peekOutputBufferInfo();
-        if (bufferInfo != null)
-            displayFrame(bufferInfo.presentationTimeUs, 0);
-    }
-
-    private long tryRenderFirstFrame() {
-        if (!hasOutputBuffers())
-            return 5000;
-        MediaCodec.BufferInfo bufferInfo = peekOutputBufferInfo();
-        if (bufferInfo != null)
-            displayFrame(bufferInfo.presentationTimeUs, 0);
-        return 10000;
     }
 
     long render() {
         if (mTunneledPlayback)
             return 10000;
-
-        if (!isFirstFrameDisplayed())
-            return tryRenderFirstFrame();
 
         if (!hasOutputBuffers())
             return 10000;
@@ -791,123 +570,21 @@ class VideoOutputPath extends MediaOutputPath {
         if (mClock.getSpeed() == 0.0)
             return 10000;
 
-        switch (getRenderingMode()) {
-            case RENDER_FREE_RUN:
-                return renderFreeRun();
-            case RENDER_SYNCHRONIZED:
-                return renderSynchro();
-            case RENDER_NONE:
-            default:
-                return 10000;
-        }
+        return 10000;
     }
 
     int getNbOutputBuffers() {
-        return mOutputBufferIndexes.size();
-    }
-
-    private void onMediaCodecInputBufferAvailable(MediaCodec codec, int index) {
-        if (codec != mMediaCodec)
-            return;
-        mInputBufferIndexes.add(index);
-    }
-
-    private void onMediaCodecOutputBufferAvailable(MediaCodec codec, int index, MediaCodec.BufferInfo info) {
-        if (codec != mMediaCodec)
-            return;
-
-        mNbDecodedFrames++;
-
-        // Sometimes info.presentationTimeUs is wrong, it is not set to the value provided in
-        // input buffer.
-        // In that case, we just ignore the buffer, otherwise, it will mess up synchronization
-        // A presentationTimeUs is supposed to be wrong if it is out of the range of input buffer
-        // timestamps. It can happen if
-        // - MediaCodec produces a corrupted timestamp (seen on AMLOGIC only)
-        // - A discontinuity has been found (a stream in loop for instance)
-        if (mTimestampKeeper.isTimestampOutOfRange(info.presentationTimeUs) &&
-                getRenderingMode() == RENDER_SYNCHRONIZED) {
-            if (mNbSuspiciousTimestamps == 0) {
-                ASPlayerLog.i("%s suspicious output buffer %d, timestamp[%d] not found in pes info queue",
-                        getTag(), mNbDecodedFrames, info.presentationTimeUs);
-            }
-            mNbSuspiciousTimestamps++;
-            mMediaCodec.releaseOutputBuffer(index, false);
-            return;
-        }
-        if (mNbSuspiciousTimestamps > 0) {
-            ASPlayerLog.i("%s back to acceptable output buffer %d, timestamp[%d], after %d incorrect buffers",
-                    getTag(), mNbDecodedFrames, info.presentationTimeUs, mNbSuspiciousTimestamps);
-            mNbSuspiciousTimestamps = 0;
-        }
-
-        mOutputBufferInfos[index] = info;
-        mOutputBufferIndexes.addLast(index);
-    }
-
-    private void onMediaCodecOutputFormatChanged(MediaCodec codec, MediaFormat format) {
-        if (codec != mMediaCodec)
-            return;
-
-        ASPlayerLog.i("%s format=%s", getTag(), format);
-        int videoWidth;
-        int videoHeight;
-        if (format.containsKey(KEY_CROP_RIGHT)
-                && format.containsKey(KEY_CROP_LEFT) && format.containsKey(KEY_CROP_BOTTOM)
-                && format.containsKey(KEY_CROP_TOP)) {
-            videoWidth = format.getInteger(KEY_CROP_RIGHT) - format.getInteger(KEY_CROP_LEFT) + 1;
-            videoHeight = format.getInteger(KEY_CROP_BOTTOM) - format.getInteger(KEY_CROP_TOP) + 1;
-            ASPlayerLog.i("%s video size %dx%d", getTag(), videoWidth, videoHeight);
-        } else {
-            ASPlayerLog.i("%s %s-%b, %s-%b, %s-%b, %s-%b",
-                    getTag(), KEY_CROP_RIGHT, format.containsKey(KEY_CROP_RIGHT),
-                    KEY_CROP_LEFT, format.containsKey(KEY_CROP_LEFT),
-                    KEY_CROP_BOTTOM, format.containsKey(KEY_CROP_BOTTOM),
-                    KEY_CROP_TOP, format.containsKey(KEY_CROP_TOP));
-            videoWidth = format.getInteger(MediaFormat.KEY_WIDTH);
-            videoHeight = format.getInteger(MediaFormat.KEY_HEIGHT);
-        }
-        updateVideoSizeInfo(videoWidth, videoHeight, -1);
-    }
-
-    private void onMediaCodecError(MediaCodec codec, MediaCodec.CodecException e) {
-        if (codec != mMediaCodec)
-            return;
-
-        ASPlayerLog.w("%s error=%s", getTag(), e.getMessage());
-        setError(e.getMessage());
-        setConfigurationError(e.toString());
-        setConfigured(false);
-    }
-
-    private void consume(MediaCodec.BufferInfo info) {
-        if (mOutputBufferIndexes.isEmpty())
-            return;
-        int index = mOutputBufferIndexes.pop();
-        mMediaCodec.releaseOutputBuffer(index, false);
-        if (info != null)
-            mTimestampKeeper.removeTimestamp(info.presentationTimeUs);
-    }
-
-    private MediaCodec.BufferInfo peekOutputBufferInfo() {
-        if (mOutputBufferIndexes.isEmpty())
-            return null;
-        int index = mOutputBufferIndexes.peekFirst();
-        return mOutputBufferInfos[index];
+        return 0;
     }
 
     @Override
     boolean hasOutputBuffers() {
-        return (!mOutputBufferIndexes.isEmpty());
+        return false;
     }
 
     @Override
     long getNextOutputTimestamp() {
-        MediaCodec.BufferInfo info = peekOutputBufferInfo();
-        if (info == null)
-            return 0;
-        else
-            return info.presentationTimeUs;
+        return 0;
     }
 
     @Override
@@ -935,36 +612,6 @@ class VideoOutputPath extends MediaOutputPath {
             mMediaCodecStarter = new MediaCodecStarter();
         }
         mHandler.post(mMediaCodecStarter);
-    }
-
-    private void applyAmlBestVideoQualityWorkAround(MediaFormat format) {
-        if (mTrickModeSpeed != 1)
-            return;
-
-        // wk for amlogic, we can change format to force high video quality
-        // high video quality means
-        // - deinterlacing
-        // - must push at least 3 frames to get the first frame
-        // - random delay between audio/video synchronization
-        boolean isBest = true;
-        try {
-            Class<?> klass = Class.forName("android.os.SystemProperties");
-            Method get = klass.getMethod("get", String.class, String.class);
-            Object stringValue = get.invoke(klass, "persist.sys.video.quality", "best");
-            isBest = stringValue.equals("best");
-        } catch (ClassNotFoundException
-                | NoSuchMethodException
-                | InvocationTargetException
-                | IllegalAccessException exception) {
-            ASPlayerLog.w("%s fails to get property persist.sys.video.quality: %s",
-                    getTag(), exception.getMessage());
-        }
-        if (isBest) {
-            format.setInteger(MediaFormat.KEY_MAX_WIDTH, 3840);
-            format.setInteger(MediaFormat.KEY_MAX_HEIGHT, 2160);
-        }
-        ASPlayerLog.i("%s WK AMLOGIC, apply %s video quality",
-                getTag(), isBest ? "best" : "normal");
     }
 
     void setTrickMode(int trickMode) {
@@ -1077,12 +724,7 @@ class VideoOutputPath extends MediaOutputPath {
         ASPlayerLog.i("%s setWorkMode: %d, last mode: %d", getTag(), workMode, mLastWorkMode);
 
         if (workMode == WorkMode.CACHING_ONLY) {
-            mInputBufferIndexes.clear();
-            mOutputBufferIndexes.clear();
-            mFreeRunNextFrameTimestampUs = 0;
             mFirstFrameDisplayed = false;
-            mNbDecodedFrames = 0;
-            mNbSuspiciousTimestamps = 0;
         }
 
         super.setWorkMode(workMode);

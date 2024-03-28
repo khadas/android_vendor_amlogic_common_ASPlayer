@@ -18,6 +18,7 @@ import android.os.SystemClock;
 import android.util.Log;
 
 import com.amlogic.asplayer.api.IASPlayer;
+import com.amlogic.asplayer.api.StreamType;
 import com.amlogic.asplayer.api.VideoTrickMode;
 import com.amlogic.asplayer.core.VideoPassthroughParameters.VideoOnlyPlayControl;
 import com.amlogic.asplayer.core.utils.MathUtils;
@@ -63,6 +64,7 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     private final Renderer mPlaybackTask;
     private final Renderer mSmoothSpeedTask;
     private final Renderer mSpeedBySeekTask;
+    private final Renderer mSpeedByIOnlyTask;
     private final Renderer mNoVideoSpeedTask;
 
     private boolean mFirstVideoFrameDisplayed = false;
@@ -104,11 +106,13 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
             mPlaybackTask = new RendererPlaybackV3(mId, this);
             mSmoothSpeedTask = new RendererTrickSmoothV3(mId, this);
             mSpeedBySeekTask = new RendererTrickBySeekV3(mId, this);
+            mSpeedByIOnlyTask = new RendererTrickIOnlyV3(mId, this);
         } else {
             ASPlayerLog.i("%s playback mode normal mode", getTag());
             mPlaybackTask = new RendererPlayback(mId, this);
             mSmoothSpeedTask = new RendererTrickSmooth(mId, this);
             mSpeedBySeekTask = new RendererTrickBySeek(mId, this);
+            mSpeedByIOnlyTask = new RendererTrickIOnly(mId, this);
         }
 
         mNoVideoSpeedTask = new RendererTrickNoVideo(mId, this);
@@ -154,8 +158,12 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
                 (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
         if (audioManager != null) {
             int audioSessionId = audioManager.generateAudioSessionId();
-            mVideoOutputPath.setAudioSessionId(audioSessionId);
-            mAudioOutputPath.setAudioSessionId(audioSessionId);
+            if (audioSessionId >= 0) {
+                mVideoOutputPath.setAudioSessionId(audioSessionId);
+                mAudioOutputPath.setAudioSessionId(audioSessionId);
+            } else {
+                ASPlayerLog.e("%s failed to generateAudioSessionId, error: %d", getTag(), audioSessionId);
+            }
         }
 
         mPlaybackTask.prepare(mContext, handler);
@@ -216,15 +224,8 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     private void selectRendererTask() {
         ASPlayerLog.i("%s speed: %f, hasVideo: %b, hasAudio: %b", getTag(), mSpeed, mHasVideo, mHasAudio);
 
-        boolean isNormalPlaySpeed = MathUtils.equals(mSpeed, 1, SPEED_DIFF_THRESHOLD);
-        boolean isPauseSpeed = MathUtils.equals(mSpeed, 0, SPEED_DIFF_THRESHOLD);
-
         Renderer selectedSpeedTask;
-        if (isPauseSpeed) {
-            selectedSpeedTask = mPlaybackTask;
-        } else if (isNormalPlaySpeed) {
-            selectedSpeedTask = mPlaybackTask;
-        } else if (!mHasVideo) {
+        if (!mHasVideo) {
             selectedSpeedTask = mNoVideoSpeedTask;
         } else {
             int trickMode = mVideoOutputPath.getTrickMode();
@@ -234,8 +235,10 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
                     selectedSpeedTask = mSmoothSpeedTask;
                     break;
                 case VideoTrickMode.TRICK_MODE_BY_SEEK:
-                case VideoTrickMode.TRICK_MODE_IONLY:
                     selectedSpeedTask = mSpeedBySeekTask;
+                    break;
+                case VideoTrickMode.TRICK_MODE_IONLY:
+                    selectedSpeedTask = mSpeedByIOnlyTask;
                     break;
                 case VideoTrickMode.NONE:
                 default:
@@ -440,11 +443,7 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
         ASPlayerLog.i("%s resumeVideoDecoding start", getTag());
         mTargetVideoState = AVState.START;
         mFirstVideoFrameDisplayed = false;
-        stopRendererTask();
-        if (mCurrentSpeedTask != null) {
-            mCurrentSpeedTask.startVideo();
-        }
-        startRendererTaskIfNeed();
+        startVideoRenderIfNeed();
 
         if (mConfig.getPlaybackMode() == ASPlayerConfig.PLAYBACK_MODE_PASSTHROUGH) {
             if (hasAudio()) {
@@ -505,11 +504,7 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
         ASPlayerLog.i("%s resumeAudioDecoding start", getTag());
         mTargetAudioState = AVState.START;
         mFirstAudioFrameDisplayed = false;
-        stopRendererTask();
-        if (mCurrentSpeedTask != null) {
-            mCurrentSpeedTask.startAudio();
-        }
-        startRendererTaskIfNeed();
+        startAudioRenderIfNeed();
         mAudioOutputPath.resume();
     }
 
@@ -564,7 +559,7 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     private void onVideoFrame(long presentationTimeUs, long renderTime) {
         if (!mFirstVideoFrameDisplayed) {
             ASPlayerLog.i("%s first video frame", getTag());
-            mEventNotifier.notifyRenderFirstVideoFrame(renderTime);
+            mEventNotifier.notifyRenderFirstVideoFrame(presentationTimeUs, renderTime);
             mFirstVideoFrameDisplayed = true;
         }
 
@@ -576,7 +571,7 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     private void onAudioFrame(long presentationTimeUs, long renderTime) {
         if (!mFirstAudioFrameDisplayed) {
             ASPlayerLog.i("%s first audio frame", getTag());
-            mEventNotifier.notifyRenderFirstAudioFrame(renderTime);
+            mEventNotifier.notifyRenderFirstAudioFrame(presentationTimeUs, renderTime);
             mFirstAudioFrameDisplayed = true;
         }
 
@@ -589,6 +584,8 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     public void onDecoderInitCompleted(MediaOutputPath outputPath) {
         if (mVideoOutputPath != null && outputPath == mVideoOutputPath) {
             mEventNotifier.notifyVideoDecoderInitCompleted();
+        } else if (mAudioOutputPath != null && outputPath == mAudioOutputPath) {
+            mEventNotifier.notifyAudioDecoderInitCompleted();
         }
     }
 
@@ -599,14 +596,18 @@ class RendererScheduler implements Runnable, MediaOutputPath.DecoderListener,
     @Override
     public void onDecoderDataLoss(MediaOutputPath outputPath) {
         if (mVideoOutputPath != null && outputPath == mVideoOutputPath) {
-            mEventNotifier.notifyDecoderDataLoss();
+            mEventNotifier.notifyDecoderDataLoss(StreamType.VIDEO);
+        } else if (mAudioOutputPath != null && outputPath == mAudioOutputPath) {
+            mEventNotifier.notifyDecoderDataLoss(StreamType.AUDIO);
         }
     }
 
     @Override
     public void onDecoderDataResume(MediaOutputPath outputPath) {
         if (mVideoOutputPath != null && outputPath == mVideoOutputPath) {
-            mEventNotifier.notifyDecoderDataResume();
+            mEventNotifier.notifyDecoderDataResume(StreamType.VIDEO);
+        } else if (mAudioOutputPath != null && outputPath == mAudioOutputPath) {
+            mEventNotifier.notifyDecoderDataResume(StreamType.AUDIO);
         }
     }
 

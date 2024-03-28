@@ -20,9 +20,10 @@ import com.amlogic.asplayer.api.InitParams;
 import com.amlogic.asplayer.api.InputBuffer;
 import com.amlogic.asplayer.api.InputFrameBuffer;
 import com.amlogic.asplayer.api.IASPlayer;
-import com.amlogic.asplayer.api.State;
+import com.amlogic.asplayer.api.Pts;
 import com.amlogic.asplayer.api.TsPlaybackListener;
 import com.amlogic.asplayer.api.ASPlayer;
+import com.amlogic.asplayer.api.Version;
 import com.amlogic.asplayer.api.VideoParams;
 
 import java.util.ArrayList;
@@ -53,7 +54,7 @@ public class JniASPlayerWrapper implements IASPlayer {
             System.loadLibrary("jniasplayer-wrapper");
 
             native_init();
-            Log.d(TAG, "loadAppSo() Loaded app jnitaplayer-wrapper success");
+            Log.d(TAG, "loadAppSo() Loaded app jniasplayer-wrapper success");
         } catch (UnsatisfiedLinkError error) {
             Log.e(TAG, "loadAppSo() failed to load jniasplayer-wrapper native lib, error: "
                     + (error != null ? error.getMessage() : ""), error);
@@ -112,13 +113,8 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
-    public int getMajorVersion() {
-        return 0;
-    }
-
-    @Override
-    public int getMinorVersion() {
-        return 0;
+    public Version getVersion() {
+        return null;
     }
 
     @Override
@@ -174,16 +170,6 @@ public class JniASPlayerWrapper implements IASPlayer {
     @Override
     public int setPIPMode(int mode) {
         return native_setPIPMode(mode);
-    }
-
-    @Override
-    public long getCurrentTime() {
-        return 0;
-    }
-
-    @Override
-    public long getPts(int streamType) {
-        return 0;
     }
 
     @Override
@@ -309,18 +295,13 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
-    public int setAudioMute(boolean analogMute, boolean digitalMute) {
-        return native_setAudioMute(analogMute, digitalMute);
+    public int setAudioMute(boolean mute) {
+        return native_setAudioMute(mute);
     }
 
     @Override
-    public int getAudioAnalogMute() {
-        return 0;
-    }
-
-    @Override
-    public int getAudioDigitMute() {
-        return 0;
+    public boolean getAudioMute() {
+        return false;
     }
 
     @Override
@@ -467,28 +448,8 @@ public class JniASPlayerWrapper implements IASPlayer {
     }
 
     @Override
-    public int setSubtitlePid(int pid) {
-        return 0;
-    }
-
-    @Override
-    public State getState() {
+    public Pts getFirstPts(int streamType) {
         return null;
-    }
-
-    @Override
-    public int startSubtitle() {
-        return 0;
-    }
-
-    @Override
-    public int stopSubtitle() {
-        return 0;
-    }
-
-    @Override
-    public long getFirstPts(int streamType) {
-        return 0;
     }
 
     private static native final void native_init();
@@ -514,7 +475,7 @@ public class JniASPlayerWrapper implements IASPlayer {
     private native int native_flushDvr();
     private native int native_writeData(InputBuffer buffer, long timeoutMillSecond);
     private native int native_setSurface(Surface surface);
-    private native int native_setAudioMute(boolean analogMute, boolean digitMute);
+    private native int native_setAudioMute(boolean mute);
     private native int native_setAudioVolume(int volume);
     private native int native_getAudioVolume();
     private native int native_startFast(float speed);

@@ -31,13 +31,6 @@ interface AudioCodecRenderer {
     }
 
     /**
-     * Listener that will be notified when audio format changed
-     */
-    interface AudioFormatListener {
-        void onAudioFormat(AudioFormat audioFormat);
-    }
-
-    /**
      * Extra information on output buffers
      */
     class BufferInfo {
@@ -53,13 +46,6 @@ interface AudioCodecRenderer {
      * @param listener
      */
     void setOutputBufferListener(OutputBufferListener listener);
-
-    /**
-     * Set audio format listener
-     *
-     * @param listener
-     */
-    void setAudioFormatListener(AudioFormatListener listener);
 
     /**
      * Sets clock used for rendering synchronization

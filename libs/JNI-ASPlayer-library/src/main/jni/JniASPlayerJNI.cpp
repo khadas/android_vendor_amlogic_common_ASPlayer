@@ -668,7 +668,7 @@ bool JniASPlayerJNI::initASPlayerJNI(JNIEnv *jniEnv) {
                 env, gASPlayerCls,
                 "setSurface", "(Landroid/view/Surface;)I");
         gASPlayerCtx.setAudioMuteMID = NativeHelper::GetMethodID(
-                env, gASPlayerCls, "setAudioMute", "(ZZ)I");
+                env, gASPlayerCls, "setAudioMute", "(Z)I");
         gASPlayerCtx.setAudioVolumeMID = NativeHelper::GetMethodID(
                 env, gASPlayerCls, "setAudioVolume", "(I)I");
         gASPlayerCtx.getAudioVolumeMID = NativeHelper::GetMethodID(
@@ -1088,6 +1088,8 @@ jni_asplayer_result JniASPlayer::prepare() {
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
+    AP_LOGI("prepare");
+
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.prepareMID);
     LOG_FUNCTION_INT_END(result);
     return static_cast<jni_asplayer_result>(result);
@@ -1134,6 +1136,8 @@ jni_asplayer_result JniASPlayer::addPlaybackListener(jobject listener) {
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
+    AP_LOGI("addPlaybackListener");
+
     env->CallVoidMethod(mJavaPlayer, gASPlayerCtx.addPlaybackListenerMID, listener);
     return JNI_ASPLAYER_OK;
 }
@@ -1144,6 +1148,8 @@ jni_asplayer_result JniASPlayer::removePlaybackListener(jobject listener) {
         LOG_GET_JNIENV_FAILED(__FUNCTION__);
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
+
+    AP_LOGI("removePlaybackListener");
 
     env->CallVoidMethod(mJavaPlayer, gASPlayerCtx.removePlaybackListenerMID, listener);
     return JNI_ASPLAYER_OK;
@@ -1156,6 +1162,8 @@ jni_asplayer_result JniASPlayer::startVideoDecoding() {
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
+    AP_LOGI("startVideoDecoding");
+
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.startVideoDecodingMID);
     return static_cast<jni_asplayer_result>(result);
 }
@@ -1166,6 +1174,8 @@ jni_asplayer_result JniASPlayer::stopVideoDecoding() {
         LOG_GET_JNIENV_FAILED(__FUNCTION__);
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
+
+    AP_LOGI("stopVideoDecoding");
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.stopVideoDecodingMID);
     return static_cast<jni_asplayer_result>(result);
@@ -1178,6 +1188,8 @@ jni_asplayer_result JniASPlayer::pauseVideoDecoding() {
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
+    AP_LOGI("pauseVideoDecoding");
+
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.pauseVideoDecodingMID);
     return static_cast<jni_asplayer_result>(result);
 }
@@ -1188,6 +1200,8 @@ jni_asplayer_result JniASPlayer::resumeVideoDecoding() {
         LOG_GET_JNIENV_FAILED(__FUNCTION__);
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
+
+    AP_LOGI("resumeVideoDecoding");
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.resumeVideoDecodingMID);
     return static_cast<jni_asplayer_result>(result);
@@ -1200,6 +1214,8 @@ jni_asplayer_result JniASPlayer::startAudioDecoding() {
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
+    AP_LOGI("startAudioDecoding");
+
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.startAudioDecodingMID);
     return static_cast<jni_asplayer_result>(result);
 }
@@ -1210,6 +1226,8 @@ jni_asplayer_result JniASPlayer::stopAudioDecoding() {
         LOG_GET_JNIENV_FAILED(__FUNCTION__);
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
+
+    AP_LOGI("stopAudioDecoding");
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.stopAudioDecodingMID);
     return static_cast<jni_asplayer_result>(result);
@@ -1222,6 +1240,8 @@ jni_asplayer_result JniASPlayer::pauseAudioDecoding() {
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
+    AP_LOGI("pauseAudioDecoding");
+
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.pauseAudioDecodingMID);
     return static_cast<jni_asplayer_result>(result);
 }
@@ -1232,6 +1252,8 @@ jni_asplayer_result JniASPlayer::resumeAudioDecoding() {
         LOG_GET_JNIENV_FAILED(__FUNCTION__);
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
+
+    AP_LOGI("resumeAudioDecoding");
 
     int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.resumeAudioDecodingMID);
     return static_cast<jni_asplayer_result>(result);
@@ -1261,7 +1283,7 @@ jni_asplayer_result JniASPlayer::setVideoParams(jni_asplayer_video_params *param
 
     CHECK_JNI_EXCEPTION(env);
 
-    jobject videoParam;
+    jobject videoParam = nullptr;
     if (!JniASPlayerJNI::createVideoParams(env, params, &videoParam)) {
         AP_LOGE("failed to convert VideoParams");
         CHECK_JNI_EXCEPTION(env);
@@ -1406,6 +1428,8 @@ jni_asplayer_result JniASPlayer::flush() {
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
+    AP_LOGI("flush");
+
     int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.flushMID);
     return static_cast<jni_asplayer_result>(ret);
 }
@@ -1416,6 +1440,8 @@ jni_asplayer_result JniASPlayer::flushDvr() {
         LOG_GET_JNIENV_FAILED(__FUNCTION__);
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
+
+    AP_LOGI("flushDvr");
 
     int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.flushDvrMID);
     return static_cast<jni_asplayer_result>(ret);
@@ -1460,18 +1486,16 @@ jni_asplayer_result JniASPlayer::setSurface(void *surface) {
     return static_cast<jni_asplayer_result>(result);
 }
 
-jni_asplayer_result JniASPlayer::setAudioMute(bool analogMute, bool digitMute) {
+jni_asplayer_result JniASPlayer::setAudioMute(bool mute) {
     JNIEnv *env = JniASPlayerJNI::getOrAttachJNIEnvironment();
     if (env == nullptr) {
         LOG_GET_JNIENV_FAILED(__FUNCTION__);
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
-    AP_LOGI("setAudioMute analogMute: %s, digitMute: %s",
-            analogMute ? "true" : "false",
-            digitMute ? "true" : "false");
+    AP_LOGI("setAudioMute mute: %s", mute ? "true" : "false");
 
-    int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setAudioMuteMID, (jboolean)analogMute, (jboolean)digitMute);
+    int result = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.setAudioMuteMID, (jboolean)mute);
     LOG_FUNCTION_INT_END(result);
     return static_cast<jni_asplayer_result>(result);
 }
@@ -1525,6 +1549,8 @@ jni_asplayer_result JniASPlayer::stopFast() {
         LOG_GET_JNIENV_FAILED(__FUNCTION__);
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
+
+    AP_LOGI("stopFast");
 
     int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.stopFastMID);
     return static_cast<jni_asplayer_result>(ret);
@@ -1650,7 +1676,7 @@ void JniASPlayer::release() {
         return;
     }
 
-    AP_LOGI("release start");
+    AP_LOGI("JniASPlayer release start");
 
     if (mPlaybackListener != nullptr) {
         jobject jPlaybackListener = mPlaybackListener->getJavaPlaybackListener();
@@ -1690,6 +1716,8 @@ jni_asplayer_result JniASPlayer::resetWorkMode() {
         LOG_GET_JNIENV_FAILED(__FUNCTION__);
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
+
+    AP_LOGI("resetWorkMode");
 
     int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.resetWorkModeMID);
     return static_cast<jni_asplayer_result>(ret);
@@ -1753,6 +1781,8 @@ jni_asplayer_result JniASPlayer::enableADMix() {
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
+    AP_LOGI("enableADMix");
+
     int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.enableADMixMID);
     return static_cast<jni_asplayer_result>(ret);
 }
@@ -1763,6 +1793,9 @@ jni_asplayer_result JniASPlayer::disableADMix() {
         LOG_GET_JNIENV_FAILED(__FUNCTION__);
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
+
+    AP_LOGI("disableADMix");
+
 
     int ret = env->CallIntMethod(mJavaPlayer, gASPlayerCtx.disableADMixMID);
     return static_cast<jni_asplayer_result>(ret);

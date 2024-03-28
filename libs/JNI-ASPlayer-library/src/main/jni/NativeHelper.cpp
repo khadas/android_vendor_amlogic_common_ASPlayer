@@ -15,14 +15,21 @@ int NativeHelper::registerNativeMethods(JNIEnv* env, const char* className,
                                  const JNINativeMethod* gMethods, int numMethods)
 {
     jclass clazz;
+    if (env == NULL) {
+        return JNI_FALSE;
+    }
+
     clazz = env->FindClass(className);
     if (clazz == NULL) {
-        ALOGE("Native registration unable to find class '%s'", className);
+        ALOGE("RegisterNatives failed, unable to find class '%s'", className);
         return JNI_FALSE;
     }
     if (env->RegisterNatives(clazz, gMethods, numMethods) < 0) {
         ALOGE("RegisterNatives failed for '%s'", className);
+        env->DeleteLocalRef(clazz);
         return JNI_FALSE;
     }
+
+    env->DeleteLocalRef(clazz);
     return JNI_TRUE;
 }

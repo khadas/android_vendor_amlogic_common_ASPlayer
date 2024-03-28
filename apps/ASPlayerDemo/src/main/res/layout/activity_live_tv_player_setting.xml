@@ -25,7 +25,8 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/dvbt_live_setting_label" />
+                android:text="@string/dvbt_live_setting_label"
+                android:textSize="10dp"/>
 
             <View
                 android:layout_width="0dp"

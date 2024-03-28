@@ -32,7 +32,9 @@ struct audio_format_change_event_t {
 
 // FirstFrameEvent
 struct first_frame_event_t {
+    jfieldID streamType;
     jfieldID pts;
+    jfieldID renderTime;
 };
 
 // PtsEvent
@@ -40,6 +42,12 @@ struct pts_event_t {
     jfieldID streamType;
     jfieldID pts;
     jfieldID renderTime;
+};
+
+// PlaybackInfoEvent
+struct playback_info_event_t {
+    jfieldID eventType;
+    jfieldID streamType;
 };
 
 // PlaybackListener
@@ -71,6 +79,7 @@ static jclass gPtsEventCls;
 static pts_event_t gPtsEventCtx;
 
 static jclass gPlaybackInfoEventCls;
+static playback_info_event_t gPlaybackInfoEventCtx;
 
 bool JniPlaybackListener::gInited = false;
 
@@ -85,7 +94,7 @@ static inline bool makeClassGlobalRef(jclass *globalRef, JNIEnv *env, const char
         env->DeleteLocalRef(localCls);
         return true;
     } else {
-        ALOGI("[%s/%d] failed to find class \"%s\"", __FUNCTION__, __LINE__, className);
+        AP_LOGE("failed to find class \"%s\"", className);
         *globalRef = nullptr;
         return false;
     }
@@ -103,7 +112,7 @@ JniPlaybackListener::~JniPlaybackListener() {
 static jint native_notifyPlaybackEvent(JNIEnv *env, jobject jListener, jobject jEvent) {
     JniPlaybackListener *listener = JniPlaybackListener::getNativeListener(env, jListener);
     if (listener == nullptr) {
-        ALOGE("%s[%d] notifyPlaybackEvent failed, listener is null", __func__, __LINE__);
+        AP_LOGE("notifyPlaybackEvent failed, listener is null");
         return 0;
     }
 
@@ -154,8 +163,12 @@ bool JniPlaybackListener::init(JNIEnv *env) {
     // FirstFrameEvent
     if (makeClassGlobalRef(&gFirstFrameEventCls, env,
                            "com/amlogic/asplayer/api/TsPlaybackListener$FirstFrameEvent")) {
+        gFirstFrameEventCtx.streamType = env->GetFieldID(
+                gFirstFrameEventCls, "mStreamType", "I");
         gFirstFrameEventCtx.pts = env->GetFieldID(
-                gFirstFrameEventCls, "mPositionMs", "J");
+                gFirstFrameEventCls, "mPts", "J");
+        gFirstFrameEventCtx.renderTime = env->GetFieldID(
+                gFirstFrameEventCls, "mRenderTime", "J");
     }
 
     // VideoFirstFrameEvent
@@ -183,13 +196,17 @@ bool JniPlaybackListener::init(JNIEnv *env) {
     }
 
     // PlaybackInfoEvent
-    makeClassGlobalRef(&gPlaybackInfoEventCls, env,
-                       "com/amlogic/asplayer/api/TsPlaybackListener$PlaybackInfoEvent");
+    if (makeClassGlobalRef(&gPlaybackInfoEventCls, env,
+                       "com/amlogic/asplayer/api/TsPlaybackListener$PlaybackInfoEvent")) {
+        gPlaybackInfoEventCtx.eventType = env->GetFieldID(gPlaybackInfoEventCls, "mEventType", "I");
+        gPlaybackInfoEventCtx.streamType = env->GetFieldID(gPlaybackInfoEventCls, "mStreamType", "I");
+    }
 
-    int ret = NativeHelper::registerNativeMethods(env, JNI_PLAYBACK_LISTENER_CLASS_NAME, gJniPlaybackListenerMethods, NELEM(gJniPlaybackListenerMethods));
+    int ret = NativeHelper::registerNativeMethods(env, JNI_PLAYBACK_LISTENER_CLASS_NAME,
+              gJniPlaybackListenerMethods, NELEM(gJniPlaybackListenerMethods));
     if (ret != JNI_TRUE) {
-        ALOGE("%s[%d] failed to register JniPlaybackListener native methods", __func__, __LINE__);
-        return -1;
+        AP_LOGE("failed to register JniPlaybackListener native methods, result: %d", ret);
+        return false;
     }
     gInited = true;
 
@@ -242,34 +259,34 @@ JniPlaybackListener* JniPlaybackListener::getNativeListener(JNIEnv *env, jobject
 
 void JniPlaybackListener::notifyPlaybackEvent(JNIEnv *env, jobject jEvent) {
     if (env == nullptr || jEvent == nullptr) {
-        ALOGI("[%s/%d] env is null or event is null", __FUNCTION__, __LINE__);
+        AP_LOGI("env is null or event is null");
         return;
     }
 
     if (env->IsInstanceOf(jEvent, gVideoFormatChangeEventCls)) {
         // VideoFormatChangeEvent
-        ALOGI("[%s/%d] VideoFormatChangeEvent", __FUNCTION__, __LINE__);
+        AP_LOGI("VideoFormatChangeEvent");
         handleVideoFormatChangeEvent(env, jEvent);
         return;
     } else if (env->IsInstanceOf(jEvent, gAudioFormatChangeEventCls)) {
         // AudioFormatChangeEvent
-        ALOGI("[%s/%d] AudioFormatChangeEvent", __FUNCTION__, __LINE__);
+        AP_LOGI("AudioFormatChangeEvent");
         handleAudioFormatChangeEvent(env, jEvent);
     } else if (env->IsInstanceOf(jEvent, gVideoFirstFrameEventCls)) {
         // VideoFirstFrameEvent
-        ALOGI("[%s/%d] VideoFirstFrameEvent", __FUNCTION__, __LINE__);
+        AP_LOGI("VideoFirstFrameEvent");
         handleVideoFirstFrameEvent(env, jEvent);
     } else if (env->IsInstanceOf(jEvent, gAudioFirstFrameEventCls)) {
         // AudioFirstFrameEvent
-        ALOGI("[%s/%d] AudioFirstFrameEvent", __FUNCTION__, __LINE__);
+        AP_LOGI("AudioFirstFrameEvent");
         handleAudioFirstFrameEvent(env, jEvent);
     } else if (env->IsInstanceOf(jEvent, gDecodeFirstVideoFrameEventCls)) {
         // DecodeFirstVideoFrameEvent
-        ALOGI("[%s/%d] DecodeFirstVideoFrameEvent", __FUNCTION__, __LINE__);
+        AP_LOGI("DecodeFirstVideoFrameEvent");
         handleDecodeFirstVideoFrameEvent(env, jEvent);
     } else if (env->IsInstanceOf(jEvent, gDecodeFirstAudioFrameEventCls)) {
         // DecodeFirstAudioFrameEvent
-        ALOGI("[%s/%d] DecodeFirstAudioFrameEvent", __FUNCTION__, __LINE__);
+        AP_LOGI("DecodeFirstAudioFrameEvent");
         handleDecodeFirstAudioFrameEvent(env, jEvent);
     } else if (env->IsInstanceOf(jEvent, gPtsEventCls)) {
         // PtsEvent
@@ -278,7 +295,7 @@ void JniPlaybackListener::notifyPlaybackEvent(JNIEnv *env, jobject jEvent) {
         // PlaybackInfoEvent
         handlePlaybackInfoEvent(env, jEvent);
     } else {
-        ALOGE("[%s/%d] notifyPlaybackEvent unknown event", __FUNCTION__, __LINE__);
+        AP_LOGE("notifyPlaybackEvent unknown event");
     }
 
     // warning: Attempt to remove non-JNI local reference, dumping thread
@@ -292,7 +309,7 @@ void JniPlaybackListener::handleVideoFormatChangeEvent(JNIEnv *env, jobject jEve
 
     jobject jVideoFormat = env->GetObjectField(jEvent, gVideoFormatChangeEventCtx.videoFormat);
     if (jVideoFormat == nullptr) {
-        ALOGE("%s[%d] video format is null", __func__, __LINE__);
+        AP_LOGE("video format is null");
         return;
     }
 
@@ -300,25 +317,28 @@ void JniPlaybackListener::handleVideoFormatChangeEvent(JNIEnv *env, jobject jEve
     int32_t height = 0;
     int32_t frameRate = 0;
     int32_t aspectratio = 0;
+    int32_t vfType = 0;
 
     if (!JniMediaFormat::getInteger(env, jVideoFormat, "width", &width)) {
-        ALOGE("[%s/%d] failed to get video width from MediaFormat", __FUNCTION__, __LINE__);
+        AP_LOGE("failed to get video width from MediaFormat");
         env->DeleteLocalRef(jVideoFormat);
         return;
     }
     if (!JniMediaFormat::getInteger(env, jVideoFormat, "height", &height)) {
-        ALOGE("[%s/%d] failed to get video height from MediaFormat", __FUNCTION__, __LINE__);
+        AP_LOGE("failed to get video height from MediaFormat");
         env->DeleteLocalRef(jVideoFormat);
         return;
     }
     frameRate = JniMediaFormat::getInteger(env, jVideoFormat, "frame-rate", frameRate);
     aspectratio = JniMediaFormat::getInteger(env, jVideoFormat, "aspect-ratio", aspectratio);
+    vfType = JniMediaFormat::getInteger(env, jVideoFormat, "vf-type", vfType);
 
     jni_asplayer_video_format_t videoFormat = {
         .frame_width = (uint32_t) width,
         .frame_height = (uint32_t) height,
         .frame_rate = (uint32_t) frameRate,
         .frame_aspectratio = (uint32_t) aspectratio,
+        .vf_type = (int32_t) vfType,
     };
 
     jni_asplayer_event event = {
@@ -338,7 +358,7 @@ void JniPlaybackListener::handleAudioFormatChangeEvent(JNIEnv *env, jobject jEve
 
     jobject jAudioFormat = env->GetObjectField(jEvent, gAudioFormatChangeEventCtx.audioFormat);
     if (jAudioFormat == nullptr) {
-        ALOGE("%s[%d] video format is null", __func__, __LINE__);
+        AP_LOGE("video format is null");
         return;
     }
 
@@ -347,17 +367,17 @@ void JniPlaybackListener::handleAudioFormatChangeEvent(JNIEnv *env, jobject jEve
     int32_t channelMask = 0;
 
     if (!JniMediaFormat::getInteger(env, jAudioFormat, "sample-rate", &sampleRate)) {
-        ALOGE("%s[%d] failed to get sampleRate from MediaFormat", __func__, __LINE__);
+        AP_LOGE("failed to get sampleRate from MediaFormat");
         env->DeleteLocalRef(jAudioFormat);
         return;
     }
     if (!JniMediaFormat::getInteger(env, jAudioFormat, "channel-count", &channels)) {
-        ALOGE("%s[%d] failed to get channelCount from MediaFormat", __func__, __LINE__);
+        AP_LOGE("failed to get channelCount from MediaFormat");
         env->DeleteLocalRef(jAudioFormat);
         return;
     }
     if (!JniMediaFormat::getInteger(env, jAudioFormat, "channel-mask", &channelMask)) {
-        ALOGE("%s[%d] failed to get channelMask from MediaFormat", __func__, __LINE__);
+        AP_LOGE("failed to get channelMask from MediaFormat");
         env->DeleteLocalRef(jAudioFormat);
         return;
     }
@@ -384,11 +404,12 @@ void JniPlaybackListener::handleVideoFirstFrameEvent(JNIEnv *env, jobject jEvent
     }
 
     jlong jPts = env->GetLongField(jEvent, gFirstFrameEventCtx.pts);
+    jlong jRenderTime = env->GetLongField(jEvent, gFirstFrameEventCtx.renderTime);
 
     jni_asplayer_pts_t pts = {
         .stream_type = JNI_ASPLAYER_TS_STREAM_VIDEO,
         .pts = static_cast<uint64_t>(jPts),
-        .renderTime = static_cast<uint64_t>(jPts)
+        .renderTime = static_cast<uint64_t>(jRenderTime)
     };
 
     jni_asplayer_event event = {
@@ -405,11 +426,12 @@ void JniPlaybackListener::handleAudioFirstFrameEvent(JNIEnv *env, jobject jEvent
     }
 
     jlong jPts = env->GetLongField(jEvent, gFirstFrameEventCtx.pts);
+    jlong jRenderTime = env->GetLongField(jEvent, gFirstFrameEventCtx.renderTime);
 
     jni_asplayer_pts_t pts = {
         .stream_type = JNI_ASPLAYER_TS_STREAM_AUDIO,
         .pts = static_cast<uint64_t>(jPts),
-        .renderTime = static_cast<uint64_t>(jPts)
+        .renderTime = static_cast<uint64_t>(jRenderTime)
     };
 
     jni_asplayer_event event = {
@@ -426,11 +448,12 @@ void JniPlaybackListener::handleDecodeFirstVideoFrameEvent(JNIEnv *env, jobject 
     }
 
     jlong jPts = env->GetLongField(jEvent, gFirstFrameEventCtx.pts);
+    jlong jRenderTime = env->GetLongField(jEvent, gFirstFrameEventCtx.renderTime);
 
     jni_asplayer_pts_t pts = {
         .stream_type = JNI_ASPLAYER_TS_STREAM_VIDEO,
         .pts = static_cast<uint64_t>(jPts),
-        .renderTime = static_cast<uint64_t>(jPts)
+        .renderTime = static_cast<uint64_t>(jRenderTime)
     };
 
     jni_asplayer_event event = {
@@ -447,11 +470,12 @@ void JniPlaybackListener::handleDecodeFirstAudioFrameEvent(JNIEnv *env, jobject 
     }
 
     jlong jPts = env->GetLongField(jEvent, gFirstFrameEventCtx.pts);
+    jlong jRenderTime = env->GetLongField(jEvent, gFirstFrameEventCtx.renderTime);
 
     jni_asplayer_pts_t pts = {
         .stream_type = JNI_ASPLAYER_TS_STREAM_AUDIO,
         .pts = static_cast<uint64_t>(jPts),
-        .renderTime = static_cast<uint64_t>(jPts)
+        .renderTime = static_cast<uint64_t>(jRenderTime)
     };
 
     jni_asplayer_event event = {
@@ -490,13 +514,17 @@ void JniPlaybackListener::handlePlaybackInfoEvent(JNIEnv *env, jobject jEvent) {
         return;
     }
 
-    jint jEventType = env->GetIntField(jEvent, gPlaybackEventCtx.eventType);
+    jint jEventType = env->GetIntField(jEvent, gPlaybackInfoEventCtx.eventType);
+    jint jStreamType = env->GetIntField(jEvent, gPlaybackInfoEventCtx.streamType);
 
-    ALOGI("[%s/%d] handlePlaybackInfoEvent, eventType: %d", __func__, __LINE__, jEventType);
+    AP_LOGI("handlePlaybackInfoEvent, eventType: %d, streamType: %d",
+        jEventType, jStreamType);
 
     jni_asplayer_event event = {
             .type = static_cast<jni_asplayer_event_type>(jEventType),
-            .event = { .bufptr = nullptr, },
+            .event = {
+                    .stream_type = static_cast<jni_asplayer_stream_type>(jStreamType)
+            },
     };
 
     notifyCallbackEvent(&event);
@@ -509,7 +537,7 @@ void JniPlaybackListener::notifyCallbackEvent(jni_asplayer_event *event) {
         return;
     }
 
-    ALOGD("[%s/%d] notifyCallbackEvent event: %d", __FUNCTION__, __LINE__, event->type);
+    AP_LOGD("notifyCallbackEvent event: %d", event->type);
 
     if (mCallback != nullptr) {
         mCallback(mUserData, event);

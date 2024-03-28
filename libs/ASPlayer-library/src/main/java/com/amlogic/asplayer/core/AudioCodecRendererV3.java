@@ -46,7 +46,6 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     private static final long AUDIO_TRACK_PREPARE_TIMEOUT = 200;
     private static final int AUDIO_BUFFER_SIZE = 256;
     private OutputBufferListener mOutputBufferListener;
-    private AudioFormatListener mAudioFormatListener;
     private AudioTimestamp timestamp = new AudioTimestamp();
     private final ByteBuffer mEmptyPacket = ByteBuffer.allocate(AUDIO_BUFFER_SIZE);
     private final ByteBuffer mMetadataPacket = ByteBuffer.allocate(AUDIO_BUFFER_SIZE);
@@ -86,11 +85,6 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
     }
 
     @Override
-    public void setAudioFormatListener(AudioFormatListener listener) {
-        mAudioFormatListener = listener;
-    }
-
-    @Override
     public void setClockOrigin(long timestampUs) {
 
     }
@@ -110,6 +104,11 @@ public class AudioCodecRendererV3 implements AudioCodecRenderer {
         synchronized (mMetadata) {
 //            mMetadata.removeIf(item -> item.getClass().equals(metadata.getClass()));
             mMetadata.add(metadata);
+        }
+
+        // wake up write thread
+        synchronized (mLock) {
+            mLock.notify();
         }
     }
 

@@ -69,6 +69,11 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    packagingOptions {
+        pickFirst 'lib/armeabi-v7a/libjniasplayer-jni.so'
+        pickFirst 'lib/arm64-v8a/libjniasplayer-jni.so'
+    }
 }
 
 dependencies {

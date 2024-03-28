@@ -138,8 +138,9 @@ class RendererTrickBySeek extends Renderer {
             mLastDisplayedPositionSet = true;
 
             // render
-            if (!skipFrame)
-                mVideoOutputPath.renderOneFrame();
+            if (!skipFrame) {
+//                mVideoOutputPath.renderOneFrame();
+            }
 
             // next position
             boolean isLimitOfStreamReached = false;

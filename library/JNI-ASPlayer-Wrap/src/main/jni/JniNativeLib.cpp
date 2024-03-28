@@ -569,8 +569,7 @@ asplayer_set_surface(JNIEnv* env, jobject jniASPlayerWrapperObj, jobject jSurfac
 }
 
 jni_asplayer_result
-asplayer_set_audio_mute(JNIEnv* env, jobject jniASPlayerWrapperObj,
-                        jboolean jAnalogMute, jboolean jDigitMute) {
+asplayer_set_audio_mute(JNIEnv* env, jobject jniASPlayerWrapperObj, jboolean jMute) {
     LOG_FUNCTION_ENTER();
     if (env == nullptr) {
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
@@ -582,7 +581,7 @@ asplayer_set_audio_mute(JNIEnv* env, jobject jniASPlayerWrapperObj,
         return JNI_ASPLAYER_ERROR_INVALID_OBJECT;
     }
 
-    jni_asplayer_result ret = player->setAudioMute(jAnalogMute, jDigitMute);
+    jni_asplayer_result ret = player->setAudioMute((bool)jMute);
     return ret;
 }
 

@@ -65,8 +65,6 @@ abstract class MediaOutputPath {
     private int mRenderingMode;
 
     // clock
-    // TODO : make private
-    // est ce que l'on peut le retirer de la classe de base pour le mettre dans video et audio ?
     MediaClock mClock;
 
     // listeners
@@ -75,9 +73,6 @@ abstract class MediaOutputPath {
     private DecoderListener mDecoderListener;
 
     // critical error : no decode for any reason
-    // TODO : la gestion des erreurs, comment integrer
-    // - configuration
-    // - erreur de decodage
     private String mError;
 
     // to limit spent time in pushInputBuffer

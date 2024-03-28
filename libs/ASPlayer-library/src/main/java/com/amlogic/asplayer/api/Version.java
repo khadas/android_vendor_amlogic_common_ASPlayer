@@ -8,9 +8,25 @@
  */
 package com.amlogic.asplayer.api;
 
+/**
+ * ASPlayer version info
+ */
 public class Version {
 
-    public int majorVersion;
+    private int mMajorVersion;
 
-    public int minorVersion;
+    private int mMinorVersion;
+
+    public Version(int majorVersion, int minorVersion) {
+        mMajorVersion = majorVersion;
+        mMinorVersion = minorVersion;
+    }
+
+    public int getMajorVersion() {
+        return mMajorVersion;
+    }
+
+    public int getMinorVersion() {
+        return mMinorVersion;
+    }
 }

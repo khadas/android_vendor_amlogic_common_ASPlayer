@@ -44,6 +44,7 @@ add_library( # Sets the name of the library.
         ${JNI_DIR}/PlaybackListenerWrapper.cpp
         ${JNI_DIR}/ASPlayerJni.cpp
         ${JNI_DIR}/JniNativeLib.cpp
+        ${JNI_DIR}/NativeHelper.cpp
         ${JNI_DIR}/native-lib.cpp)
 
 find_library( # Sets the name of the path variable.

@@ -44,11 +44,16 @@ public class ProgramInputSettingView extends LinearLayout {
         public int mAudioPid;
         public String mAudioMimeType;
         public String mAudioStreamType;
+
+        public int mCasSystemId;
+        public int mCasEcmPid;
+        public int mCasScramblingMode;
     }
 
     private TunerHalVersion mVersion = TunerHalVersion.VERSION_1_0;
 
     private View mLayoutTunerHal;
+    private View mLayoutTunerHalSettings;
     private RadioButton mRdoTunerVersion_1_0;
     private RadioButton mRdoTunerVersion_1_1;
 
@@ -71,6 +76,10 @@ public class ProgramInputSettingView extends LinearLayout {
     private String mVideoStreamType;
     private String mAudioStreamType;
 
+    // Cas Parameters
+    private EditText mEditCasSystemId;
+    private EditText mEditCasEcmPid;
+    private EditText mEditCasScramblingMode;
     public ProgramInputSettingView(Context context) {
         this(context, null);
     }
@@ -99,6 +108,7 @@ public class ProgramInputSettingView extends LinearLayout {
     }
 
     private void initViews() {
+        mLayoutTunerHalSettings = findViewById(R.id.layout_tuner_hal_settings);
         mLayoutTunerHal = findViewById(R.id.layout_tuner_hal);
         mRdoTunerVersion_1_0 = findViewById(R.id.rdo_tuner_hal_1_0);
         mRdoTunerVersion_1_1 = findViewById(R.id.rdo_tuner_hal_1_1);
@@ -114,6 +124,10 @@ public class ProgramInputSettingView extends LinearLayout {
         mEditAudioMimeType = findViewById(R.id.edit_audio_mime_type);
         mLayoutAudioStreamType = findViewById(R.id.layout_audio_stream_type);
         mSpinnerAudioStreamType = findViewById(R.id.spinner_audio_stream_type);
+
+        mEditCasSystemId = findViewById(R.id.edit_cas_id);
+        mEditCasEcmPid = findViewById(R.id.edit_cas_ecm_pid);
+        mEditCasScramblingMode = findViewById(R.id.edit_cas_scrambling_mode);
 
         mRdoTunerVersion_1_0.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -177,11 +191,9 @@ public class ProgramInputSettingView extends LinearLayout {
         if (tunerVersion > 0 && isTunerHal1_1 != null) {
             if (isTunerHal1_1) {
                 mRdoTunerVersion_1_0.setEnabled(false);
-                mRdoTunerVersion_1_1.setEnabled(true);
                 mRdoTunerVersion_1_1.setChecked(true);
             } else {
                 mRdoTunerVersion_1_0.setEnabled(true);
-                mRdoTunerVersion_1_0.setChecked(true);
                 mRdoTunerVersion_1_1.setEnabled(false);
             }
         } else {
@@ -205,6 +217,10 @@ public class ProgramInputSettingView extends LinearLayout {
         if (audioStreamTypeIndex >= 0) {
             mSpinnerAudioStreamType.setSelection(audioStreamTypeIndex);
         }
+
+        mEditCasSystemId.setHint(String.valueOf(Constant.DEFAULT_CAS_SYSTEM_ID));
+        mEditCasEcmPid.setHint(String.valueOf(Constant.DEFAULT_CAS_ECM_PID));
+        mEditCasScramblingMode.setHint(String.valueOf(Constant.DEFAULT_CAS_SCRAMBLING_MODE));
     }
 
     private static int findStreamTypeIndex(String[] streamTypes, String targetStreamType) {
@@ -234,6 +250,7 @@ public class ProgramInputSettingView extends LinearLayout {
 
     public void showTunerHalLayout(boolean show) {
         mLayoutTunerHal.setVisibility(show ? View.VISIBLE : View.GONE);
+        mLayoutTunerHalSettings.setVisibility(show ? View.VISIBLE : View.GONE);
     }
 
     public void setVideoPid(int videoPid) {
@@ -268,6 +285,17 @@ public class ProgramInputSettingView extends LinearLayout {
         }
     }
 
+    public void setCasSystemId(int casSystemId) {
+        mEditCasSystemId.setText(String.valueOf(casSystemId));
+    }
+
+    public void setCasEcmPid(int casEcmPid) {
+        mEditCasEcmPid.setText(String.valueOf(casEcmPid));
+    }
+
+    public void setCasScramblingMode(int casScramblingMode) {
+        mEditCasScramblingMode.setText(String.valueOf(casScramblingMode));
+    }
     private void selectTunerVersion(TunerHalVersion version) {
         switch (version) {
             case VERSION_1_1:
@@ -305,13 +333,17 @@ public class ProgramInputSettingView extends LinearLayout {
             programInfo.mTunerHalVersion = Constant.TUNER_HAL_VERSION_1_0;
         }
 
-        programInfo.mVideoPid = ViewUtils.getInputNumber(mEditVideoPid, 0);
+        programInfo.mVideoPid = ViewUtils.getInputOrHintNumber(mEditVideoPid, 0);
         programInfo.mVideoMimeType = ViewUtils.getInputText(mEditVideoMimeType);
         programInfo.mVideoStreamType = mVideoStreamType;
 
-        programInfo.mAudioPid = ViewUtils.getInputNumber(mEditAudioPid, 0);
+        programInfo.mAudioPid = ViewUtils.getInputOrHintNumber(mEditAudioPid, 0);
         programInfo.mAudioMimeType = ViewUtils.getInputText(mEditAudioMimeType);
         programInfo.mAudioStreamType = mAudioStreamType;
+
+        programInfo.mCasSystemId = ViewUtils.getInputOrHintNumber(mEditCasSystemId, 0x4AD4);
+        programInfo.mCasEcmPid = ViewUtils.getInputOrHintNumber(mEditCasEcmPid, 0);
+        programInfo.mCasScramblingMode = ViewUtils.getInputOrHintNumber(mEditCasScramblingMode, 0);
 
         return programInfo;
     }

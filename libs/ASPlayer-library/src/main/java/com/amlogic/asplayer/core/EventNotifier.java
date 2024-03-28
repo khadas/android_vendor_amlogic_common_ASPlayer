@@ -16,6 +16,7 @@ import static com.amlogic.asplayer.api.TsPlaybackListener.DecodeFirstVideoFrameE
 import static com.amlogic.asplayer.api.TsPlaybackListener.VideoFirstFrameEvent;
 import static com.amlogic.asplayer.api.TsPlaybackListener.VideoFormatChangeEvent;
 import static com.amlogic.asplayer.api.TsPlaybackListener.PtsEvent;
+import static com.amlogic.asplayer.api.TsPlaybackListener.AudioDecoderInitCompletedEvent;
 import static com.amlogic.asplayer.api.TsPlaybackListener.VideoDecoderInitCompletedEvent;
 import static com.amlogic.asplayer.api.TsPlaybackListener.DecoderDataLossEvent;
 import static com.amlogic.asplayer.api.TsPlaybackListener.DecoderDataResumeEvent;
@@ -28,7 +29,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 class EventNotifier {
 
     // Should be careful enabling this since may produce many traces!
-    private static final boolean LOG_NOTIFICATIONS = true;
+    private static final boolean LOG_PTS_NOTIFICATIONS = true;
 
     private final Handler mEventHandler;
 
@@ -81,14 +82,14 @@ class EventNotifier {
         postEvent(EventType.EVENT_TYPE_AUDIO_CHANGED, new AudioFormatChangeEvent(audioFormat));
     }
 
-    void notifyRenderFirstVideoFrame(long positionMs) {
+    void notifyRenderFirstVideoFrame(long pts, long renderTime) {
         postEvent(EventType.EVENT_TYPE_RENDER_FIRST_FRAME_VIDEO,
-                new VideoFirstFrameEvent(positionMs));
+                new VideoFirstFrameEvent(pts, renderTime));
     }
 
-    void notifyRenderFirstAudioFrame(long positionMs) {
+    void notifyRenderFirstAudioFrame(long pts, long renderTime) {
         postEvent(EventType.EVENT_TYPE_RENDER_FIRST_FRAME_AUDIO,
-                new AudioFirstFrameEvent(positionMs));
+                new AudioFirstFrameEvent(pts, renderTime));
     }
 
     void notifyDecodeFirstVideoFrame(long positionMs) {
@@ -101,8 +102,8 @@ class EventNotifier {
                 new DecodeFirstAudioFrameEvent(positionMs));
     }
 
-    void notifyFrameRendered(int type, long presentationTimeUs, long renderTime) {
-         postEvent(EventType.EVENT_TYPE_PTS, new PtsEvent(type, presentationTimeUs, renderTime));
+    private void notifyFrameRendered(int streamType, long presentationTimeUs, long renderTime) {
+         postEvent(EventType.EVENT_TYPE_PTS, new PtsEvent(streamType, presentationTimeUs, renderTime));
     }
 
     void notifyVideoFrameRendered(long presentationTimeUs, long renderTime) {
@@ -114,15 +115,19 @@ class EventNotifier {
     }
 
     void notifyVideoDecoderInitCompleted() {
-        postEvent(EventType.EVENT_TYPE_VIDEO_DECODER_INIT_COMPLETED, new VideoDecoderInitCompletedEvent());
+        postEvent(EventType.EVENT_TYPE_DECODER_INIT_COMPLETED, new VideoDecoderInitCompletedEvent());
     }
 
-    void notifyDecoderDataLoss() {
-        postEvent(EventType.EVENT_TYPE_DECODER_DATA_LOSS, new DecoderDataLossEvent());
+    void notifyAudioDecoderInitCompleted() {
+        postEvent(EventType.EVENT_TYPE_DECODER_INIT_COMPLETED, new AudioDecoderInitCompletedEvent());
     }
 
-    void notifyDecoderDataResume() {
-        postEvent(EventType.EVENT_TYPE_DECODER_DATA_RESUME, new DecoderDataResumeEvent());
+    void notifyDecoderDataLoss(int streamType) {
+        postEvent(EventType.EVENT_TYPE_DECODER_DATA_LOSS, new DecoderDataLossEvent(streamType));
+    }
+
+    void notifyDecoderDataResume(int streamType) {
+        postEvent(EventType.EVENT_TYPE_DECODER_DATA_RESUME, new DecoderDataResumeEvent(streamType));
     }
 
     private void postEvent(int eventType, Object object) {
@@ -133,8 +138,14 @@ class EventNotifier {
         final int eventType = msg.what;
 
         switch (eventType) {
-            case EventType.EVENT_TYPE_PTS:
-                notifyPlaybackEvent((PtsEvent) msg.obj);
+            case EventType.EVENT_TYPE_PTS: {
+                PtsEvent event = (PtsEvent) msg.obj;
+                if (LOG_PTS_NOTIFICATIONS) {
+                    logPlaybackEvent(event, String.format("%s pts: %d, renderTime: %d",
+                            StreamType.toString(event.getStreamType()), event.getPts(), event.getRenderTime()));
+                }
+                notifyPlaybackEvent(event);
+            }
                 break;
             case EventType.EVENT_TYPE_VIDEO_CHANGED: {
                 VideoFormatChangeEvent event = (VideoFormatChangeEvent) msg.obj;
@@ -150,29 +161,33 @@ class EventNotifier {
                 break;
             case EventType.EVENT_TYPE_DECODE_FIRST_FRAME_VIDEO: {
                 DecodeFirstVideoFrameEvent event = (DecodeFirstVideoFrameEvent) msg.obj;
-                logPlaybackEvent(event, String.format("pts: %d", event.getPositionMs()));
+                logPlaybackEvent(event, String.format("pts: %d, renderTime: %d",
+                        event.getPts(), event.getRenderTime()));
                 notifyPlaybackEvent(event);
             }
                 break;
             case EventType.EVENT_TYPE_DECODE_FIRST_FRAME_AUDIO: {
                 DecodeFirstAudioFrameEvent event = (DecodeFirstAudioFrameEvent) msg.obj;
-                logPlaybackEvent(event, String.format("pts: %d", event.getPositionMs()));
+                logPlaybackEvent(event, String.format("pts: %d, renderTime: %d",
+                        event.getPts(), event.getRenderTime()));
                 notifyPlaybackEvent(event);
             }
                 break;
             case EventType.EVENT_TYPE_RENDER_FIRST_FRAME_VIDEO: {
                 VideoFirstFrameEvent event = (VideoFirstFrameEvent) msg.obj;
-                logPlaybackEvent(event, String.format("pts: %d", event.getPositionMs()));
+                logPlaybackEvent(event, String.format("pts: %d, renderTime: %d",
+                        event.getPts(), event.getRenderTime()));
                 notifyPlaybackEvent(event);
             }
                 break;
             case EventType.EVENT_TYPE_RENDER_FIRST_FRAME_AUDIO: {
                 AudioFirstFrameEvent event = (AudioFirstFrameEvent) msg.obj;
-                logPlaybackEvent(event, String.format("pts: %d", event.getPositionMs()));
+                logPlaybackEvent(event, String.format("pts: %d, renderTime: %d",
+                        event.getPts(), event.getRenderTime()));
                 notifyPlaybackEvent(event);
             }
                 break;
-            case EventType.EVENT_TYPE_VIDEO_DECODER_INIT_COMPLETED:
+            case EventType.EVENT_TYPE_DECODER_INIT_COMPLETED:
             case EventType.EVENT_TYPE_DECODER_DATA_LOSS:
             case EventType.EVENT_TYPE_DECODER_DATA_RESUME: {
                 PlaybackInfoEvent event = (PlaybackInfoEvent) msg.obj;
@@ -192,12 +207,20 @@ class EventNotifier {
     }
 
     private void logPlaybackEvent(TsPlaybackListener.PlaybackEvent event, Object param) {
-        if (LOG_NOTIFICATIONS) {
-            if (param != null) {
-                ASPlayerLog.d("%s notifyEvent: %s(%s)", getTag(), event.getEventName(), param);
-            } else {
-                ASPlayerLog.d("%s notifyEvent: %s", getTag(), event.getEventName());
-            }
+        if (param != null) {
+            ASPlayerLog.d("%s: %s(%s)", getTag(), event.getEventName(), param);
+        } else {
+            ASPlayerLog.d("%s: %s", getTag(), event.getEventName());
+        }
+    }
+
+    private void logPlaybackEvent(TsPlaybackListener.PlaybackInfoEvent event, Object param) {
+        if (param != null) {
+            ASPlayerLog.d("%s: %s[%s](%s)", getTag(), event.getEventName(),
+                    StreamType.toString(event.getStreamType()), param);
+        } else {
+            ASPlayerLog.d("%s: %s[%s]", getTag(), event.getEventName(),
+                    StreamType.toString(event.getStreamType()));
         }
     }
 
@@ -241,8 +264,8 @@ class EventNotifier {
             case EventType.EVENT_TYPE_AV_SYNC_DONE:
                 eventName = "EVENT_TYPE_AV_SYNC_DONE";
                 break;
-            case EventType.EVENT_TYPE_VIDEO_DECODER_INIT_COMPLETED:
-                eventName = "EVENT_TYPE_VIDEO_DECODER_INIT_COMPLETED";
+            case EventType.EVENT_TYPE_DECODER_INIT_COMPLETED:
+                eventName = "EVENT_TYPE_DECODER_INIT_COMPLETED";
                 break;
             case EventType.EVENT_TYPE_DECODER_DATA_LOSS:
                 eventName = "EVENT_TYPE_DECODER_DATA_LOSS";

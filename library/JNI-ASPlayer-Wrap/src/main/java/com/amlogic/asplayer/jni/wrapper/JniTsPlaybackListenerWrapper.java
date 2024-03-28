@@ -3,6 +3,7 @@ package com.amlogic.asplayer.jni.wrapper;
 import android.util.Log;
 
 import com.amlogic.asplayer.api.EventType;
+import com.amlogic.asplayer.api.StreamType;
 import com.amlogic.asplayer.api.TsPlaybackListener;
 
 public class JniTsPlaybackListenerWrapper implements TsPlaybackListener {
@@ -23,17 +24,24 @@ public class JniTsPlaybackListenerWrapper implements TsPlaybackListener {
 
         if (event instanceof PlaybackInfoEvent) {
             // change playback info event to sub event
-            PlaybackInfoEvent ev = null;
+            PlaybackInfoEvent ev = (PlaybackInfoEvent) event;
+            int streamType = ev.getStreamType();
 
             switch (event.getEventType()) {
-                case EventType.EVENT_TYPE_VIDEO_DECODER_INIT_COMPLETED:
-                    ev = new VideoDecoderInitCompletedEvent();
+                case EventType.EVENT_TYPE_DECODER_INIT_COMPLETED:
+                    if (streamType == StreamType.VIDEO) {
+                        ev = new VideoDecoderInitCompletedEvent();
+                    } else if (streamType == StreamType.AUDIO) {
+                        ev = new AudioDecoderInitCompletedEvent();
+                    } else {
+                        ev = (PlaybackInfoEvent) event;
+                    }
                     break;
                 case EventType.EVENT_TYPE_DECODER_DATA_LOSS:
-                    ev = new DecoderDataLossEvent();
+                    ev = new DecoderDataLossEvent(ev.getStreamType());
                     break;
                 case EventType.EVENT_TYPE_DECODER_DATA_RESUME:
-                    ev = new DecoderDataResumeEvent();
+                    ev = new DecoderDataResumeEvent(ev.getStreamType());
                     break;
                 default:
                     Log.d(TAG, "unknown PlaybackInfoEvent");
