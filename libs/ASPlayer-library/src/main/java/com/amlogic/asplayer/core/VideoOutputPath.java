@@ -80,7 +80,6 @@ class VideoOutputPath extends MediaOutputPath {
     protected VideoParams mVideoParams;
 
     protected int mPixelAspectRatio;
-    private String mMimeType;
     protected int mVideoWidth;
     protected int mVideoHeight;
     protected int mFrameRate;
@@ -232,9 +231,8 @@ class VideoOutputPath extends MediaOutputPath {
     }
 
     private boolean switchWorkModeByReConfigure() {
-        if (TextUtils.isEmpty(mMimeType) || mVideoWidth <= 0 || mVideoHeight <= 0) {
-            ASPlayerLog.i("%s switch mediacodec work mode, video format not set mime: %s, width: %d, height: %d",
-                    getTag(), mMimeType, mVideoWidth, mVideoHeight);
+        if (mVideoParams == null || !mVideoParams.getHasVideo()) {
+            ASPlayerLog.i("%s switch mediacodec work mode failed, video params is null", getTag());
             return false;
         } else if (mMediaCodec == null) {
             ASPlayerLog.i("%s can not switch mediacodec work mode, mediacodec is null", getTag());
@@ -260,7 +258,9 @@ class VideoOutputPath extends MediaOutputPath {
                         getTag(), mTargetWorkMode, getCostTime(startTime));
             }
 
-            MediaFormat format = MediaFormat.createVideoFormat(mMimeType, mVideoWidth, mVideoHeight);
+            VideoParams videoParams = mVideoParams;
+            MediaFormat format = MediaFormat.createVideoFormat(videoParams.getMimeType(),
+                    videoParams.getWidth(), videoParams.getHeight());
             onSetVideoFormat(format);
 
             Surface surface = mSurface;
@@ -463,7 +463,6 @@ class VideoOutputPath extends MediaOutputPath {
         mTrickModeSpeed = 0;
 
         mVideoParams = null;
-        mMimeType = null;
 
         super.reset();
     }
@@ -546,7 +545,6 @@ class VideoOutputPath extends MediaOutputPath {
         super.release();
 
         mVideoParams = null;
-        mMimeType = null;
 
         mSurface = null;
         mDummySurface = null;

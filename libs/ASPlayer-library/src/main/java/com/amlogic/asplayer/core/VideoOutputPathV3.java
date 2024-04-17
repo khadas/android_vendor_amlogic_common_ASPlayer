@@ -39,7 +39,7 @@ import static com.amlogic.asplayer.core.VideoPassthroughParameters.ScreenColorMo
 
 
 class VideoOutputPathV3 extends VideoOutputPath {
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     public static final String KEY_VIDEO_FILTER_ID = "vendor.tunerhal.video-filter-id";
     public static final String KEY_AV_SYNC_HW_ID = "vendor.tunerhal." + KEY_HARDWARE_AV_SYNC_ID;
@@ -301,7 +301,6 @@ class VideoOutputPathV3 extends VideoOutputPath {
 
     @Override
     public boolean configure() {
-        if (DEBUG) ASPlayerLog.i("%s configure", getTag());
         if (isConfigured()) {
             ASPlayerLog.w("%s mediacodec is not null as it should be", getTag());
             return false;
@@ -329,7 +328,7 @@ class VideoOutputPathV3 extends VideoOutputPath {
 
         VideoParams videoParams = mVideoParams;
         if (videoParams == null) {
-            if (DEBUG) ASPlayerLog.i("%s configure failed, video params is null", getTag());
+            ASPlayerLog.i("%s configure failed, video params is null", getTag());
             return false;
         }
 
@@ -347,7 +346,7 @@ class VideoOutputPathV3 extends VideoOutputPath {
         }
 
         if (TextUtils.isEmpty(mimeType)) {
-            if (DEBUG) ASPlayerLog.i("%s configure failed, mimeType is null", getTag());
+            ASPlayerLog.i("%s configure failed, mimeType is null", getTag());
             return false;
         }
 

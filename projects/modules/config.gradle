@@ -10,10 +10,10 @@ static def releaseBuildTime() {
 ext {
     android = [
             // compilation
-            compileSdkVersion:  30,
-            minSdkVersion: 29,
+            compileSdkVersion:  34,
+            minSdkVersion: 30,
             targetSdkVersion: 30,
-            buildToolsVersion: "30.0.3",
+            buildToolsVersion: "34.0.0",
             ndkVersion: "21.4.7075529"
     ]
 
